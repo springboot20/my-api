@@ -14,6 +14,7 @@ export const signUp = async (req, res) => {
       return res.status(409).json({ message: "Password should match..." });
     const hashedPassword = await bcrypt.hash(password, 12);
     const result = await User.create({
+      id: new Date().getTime().toString(36) + new Date().getUTCMilliseconds(),
       username: `${firstname} ${lastname}`,
       email,
       password: hashedPassword,
@@ -24,6 +25,7 @@ export const signUp = async (req, res) => {
     });
     res.status(200).json({ result, token });
   } catch (error) {
+    console.log(error.message);
     return res
       .status(500)
       .json({ message: "Something went wrong!! try again." });
