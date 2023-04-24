@@ -1,14 +1,14 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User from "../model/UserSchema";
+import User from "../model/UserSchema.js";
 
 export const signUp = async (req, res) => {
   const { firstname, lastname, email, password, confirmPassword } = req.body;
 
   try {
-    const existingUser = User.findOne({ email });
-    if (existingUser)
-      return res.status(409).json({ message: "User already exists...." });
+    // const existingUser = User.findOne({ email });
+    // if (existingUser)
+    //   return res.status(409).json({ message: "User already exists...." });
 
     if (password !== confirmPassword)
       return res.status(409).json({ message: "Password should match..." });
@@ -34,14 +34,11 @@ export const signIn = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const existingUser = User.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (!existingUser)
       return res.status(409).json({ message: "User do not exist!!" });
 
-    const isCorrectPassword = await bcrypt.compare(
-      password,
-      existingUser.password
-    );
+    const isCorrectPassword = bcrypt.compare(password, existingUser.password);
     if (!isCorrectPassword)
       return res
         .status(409)
@@ -56,6 +53,7 @@ export const signIn = async (req, res) => {
     );
     res.status(200).json({ result: existingUser, token });
   } catch (error) {
+    console.log(error.message);
     return res
       .status(500)
       .json({ message: "Something went wrong!! tyr again." });

@@ -1,5 +1,6 @@
 import bodyParser from "body-parser";
 import express from "express";
+import userRouter from "./routes/users.js";
 import cors from "cors";
 import mongoose from "mongoose";
 
@@ -24,6 +25,8 @@ const corsConfig = {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors(corsConfig));
+
+app.use("/users", userRouter);
 
 app.get("/", (req, res) => {
   res.header("Access-Control-Allow-Headers", "*");
