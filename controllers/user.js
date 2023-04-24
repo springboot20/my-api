@@ -14,7 +14,6 @@ export const signUp = async (req, res) => {
       return res.status(409).json({ message: "Password should match..." });
     const hashedPassword = await bcrypt.hash(password, 12);
     const result = await User.create({
-      id: new Date().getTime().toString(36) + new Date().getUTCMilliseconds(),
       username: `${firstname} ${lastname}`,
       email,
       password: hashedPassword,
