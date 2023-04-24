@@ -6,9 +6,9 @@ export const signUp = async (req, res) => {
   const { firstname, lastname, email, password, confirmPassword } = req.body;
 
   try {
-    // const existingUser = User.findOne({ email });
-    // if (existingUser)
-    //   return res.status(409).json({ message: "User already exists...." });
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(409).json({ message: "User already exists...." });
 
     if (password !== confirmPassword)
       return res.status(409).json({ message: "Password should match..." });
@@ -26,7 +26,7 @@ export const signUp = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Something went wrong!! tyr again." });
+      .json({ message: "Something went wrong!! try again." });
   }
 };
 
