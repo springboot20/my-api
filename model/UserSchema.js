@@ -3,7 +3,11 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const UserScheme = new Schema({
-  username: {
+  firstname: {
+    type: String,
+    require: true,
+  },
+  lastname: {
     type: String,
     require: true,
   },
@@ -19,19 +23,6 @@ const UserScheme = new Schema({
     type: String,
     require: true,
   },
-  _balance: Number,
-  _transactionsIn: [
-    {
-      amount: {
-        type: Number,
-        require: true,
-      },
-      date: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
 });
 
 const User = mongoose.model("user", UserScheme);
