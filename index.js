@@ -33,6 +33,10 @@ app.get("/", (req, res) => {
   res.send("Hello world from home page");
 });
 
+app.use((err, req, res, next) => {
+  
+})
+
 app.listen(PORT, () => {
   console.log(`Server running at port : http://localhost:${PORT}`);
 });
