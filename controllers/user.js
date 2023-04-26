@@ -1,8 +1,8 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import User from "../model/UserSchema.js";
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const User = require("../model/UserSchema.js");
 
-export const signUp = async (req, res) => {
+const signUp = async (req, res) => {
   const { firstname, lastname, email, password, confirmPassword } = req.body;
 
   try {
@@ -30,8 +30,7 @@ export const signUp = async (req, res) => {
       .json({ message: "Something went wrong!! try again." });
   }
 };
-
-export const signIn = async (req, res) => {
+const signIn = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -59,4 +58,9 @@ export const signIn = async (req, res) => {
       .status(500)
       .json({ message: "Something went wrong!! tyr again." });
   }
+};
+
+module.exports = {
+  signIn,
+  signUp,
 };

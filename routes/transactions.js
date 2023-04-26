@@ -1,10 +1,10 @@
-import express from "express";
-import { transactionIn } from "../controllers/transactions.js";
-import Transaction from "../model/TransactionSchema";
+const express = require("express");
+const transactionIn = require("../controllers/transactions.js");
+const Transaction = require("../model/TransactionSchema.js");
 
 const router = express.Router();
 
-router.post("/transationIn", transactionIn);
+router.post("/transactionIn", transactionIn);
 
 router.get("/transactionIn", async (req, res) => {
   console.log(req.body);
@@ -17,4 +17,4 @@ router.get("/transactionIn", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

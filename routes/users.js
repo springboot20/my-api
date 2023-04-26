@@ -1,6 +1,6 @@
-import express from "express";
-import { signIn, signUp } from "../controllers/user.js";
-import User from "../model/UserSchema.js";
+const express = require("express");
+const { signIn, signUp } = require("../controllers/user.js");
+const User = require("../model/UserSchema.js");
 
 const router = express.Router();
 
@@ -29,4 +29,4 @@ router.get("/signin", async (req, res) => {
 router.post("/signup", signUp);
 router.post("/signin", signIn);
 
-export default router;
+module.exports = router;

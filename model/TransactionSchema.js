@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 const TransactionSchema = new Schema({
@@ -30,4 +30,4 @@ const TransactionSchema = new Schema({
 
 const Transaction = mongoose.model("transactionsIn", TransactionSchema);
 
-export default Transaction;
+module.exports = Transaction;

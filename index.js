@@ -1,8 +1,9 @@
-import bodyParser from "body-parser";
-import express from "express";
-import userRouter from "./routes/users.js";
-import cors from "cors";
-import mongoose from "mongoose";
+const bodyParser = require("body-parser");
+const express = require("express");
+const userRouter = require("./routes/users.js");
+const transactionRouter = require("./routes/transactions.js");
+const cors = require("cors");
+const mongoose = require("mongoose");
 
 const app = express();
 const PORT = 5000;
@@ -22,20 +23,21 @@ const corsConfig = {
   origin: true,
 };
 
+console.log(__dirname + "/index");
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors(corsConfig));
 
 app.use("/users", userRouter);
+app.use("/transactions", transactionRouter);
 
 app.get("/", (req, res) => {
   res.header("Access-Control-Allow-Headers", "*");
   res.send("Hello world from home page");
 });
 
-app.use((err, req, res, next) => {
-  
-})
+app.use((err, req, res, next) => {});
 
 app.listen(PORT, () => {
   console.log(`Server running at port : http://localhost:${PORT}`);

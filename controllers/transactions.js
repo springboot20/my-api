@@ -1,8 +1,9 @@
-import Transaction from "../model/TransactionSchema.js";
-import User from "../model/UserSchema.js";
+const Transaction = require("../model/TransactionSchema.js");
+const User = require("../model/UserSchema.js");
 
-export const transactionIn = async (req, res) => {
+const transactionIn = async (req, res) => {
   const { senderId, receiverId, amount } = req.body;
+  console.log(req.body);
   try {
     const sender = await User.findById(senderId);
     const receiver = await User.findById(receiverId);
@@ -33,3 +34,5 @@ export const transactionIn = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+module.exports = transactionIn;
