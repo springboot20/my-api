@@ -23,6 +23,22 @@ const UserScheme = new Schema({
     type: String,
     require: true,
   },
+  balance: {
+    type: Number,
+    default: 0,
+  },
+  transactionsIn: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+    },
+  ],
+  transactionsOut: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+    },
+  ],
 });
 
 const User = mongoose.model("user", UserScheme);
