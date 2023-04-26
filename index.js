@@ -23,8 +23,6 @@ const corsConfig = {
   origin: true,
 };
 
-console.log(__dirname + "/index");
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors(corsConfig));
