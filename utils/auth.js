@@ -1,18 +1,26 @@
-import jwt from "jsonwebtoken";
+const jwt = require("jsonwebtoken");
+const User = require("../model/UserSchema.js");
 
-const auth = async (req, res, next) => {
-  try {
-    const token = re.headers.authorization.split(" ")[1];
-    const isCustomAUth = token.length < 500;
-
-    let decodedData;
-    if (token && isCustomAUth) {
-      decodedData = jwt.verify(token, "secret");
-      re.userId = decodedData?.id;
+const auth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const decodedToken = jwt.verify(token, "secret");
+      req.userData = { email: decodedToken.email, userId: decodedToken.id };
+      // Check if the user with the decoded token exists in the database
+      User.findById(decodedToken.id).then((user) => {
+        if (!user) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        next();
+      });
+    } catch (error) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
-    next();
-  } catch (error) {
-    console.log(`auth middleware error ${error}`);
+  } else {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
-export default auth;
+
+module.exports = auth;

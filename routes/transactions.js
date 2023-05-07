@@ -1,10 +1,11 @@
 const express = require("express");
 const transactionIn = require("../controllers/transactions.js");
 const Transaction = require("../model/TransactionSchema.js");
+const auth = require("../utils/auth.js");
 
 const router = express.Router();
 
-router.post("/transactionIn", transactionIn);
+router.post("/transactionIn", auth, transactionIn);
 
 router.get("/transactionIn", async (req, res) => {
   console.log(req.body);

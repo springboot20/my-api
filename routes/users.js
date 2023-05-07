@@ -17,6 +17,7 @@ router.get("/signup", async (req, res) => {
 
 router.get("/signin", async (req, res) => {
   console.log(req.body);
+  console.log(req.token);
 
   try {
     const results = await User.find();

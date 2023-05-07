@@ -27,15 +27,33 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors(corsConfig));
 
-app.use("/users", userRouter);
-app.use("/transactions", transactionRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/transactions", transactionRouter);
+
+app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
   res.header("Access-Control-Allow-Headers", "*");
   res.send("Hello world from home page");
+  res.sendFile(`${__dirname}/index.html`);
 });
 
-app.use((err, req, res, next) => {});
+app.use((req, res, next) => {
+  const err = new Error("Not found");
+  err.status = 404;
+  next(err);
+});
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  res.send({
+    error: {
+      status: err.status || 500,
+      message: err.message,
+    },
+  });
+  next(err);
+});
 
 app.listen(PORT, () => {
   console.log(`Server running at port : http://localhost:${PORT}`);

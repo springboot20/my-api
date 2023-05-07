@@ -12,16 +12,20 @@ const signUp = async (req, res) => {
 
     if (password !== confirmPassword)
       return res.status(409).json({ message: "Password should match..." });
+
     const hashedPassword = await bcrypt.hash(password, 12);
+
     const result = await User.create({
       username: `${firstname} ${lastname}`,
       email,
       password: hashedPassword,
       confirmPassword,
     });
+
     const token = jwt.sign({ email: result.email, id: result._id }, "secret", {
       expiresIn: "7h",
     });
+
     res.status(200).json({ result, token });
   } catch (error) {
     console.log(error.message);
@@ -30,15 +34,21 @@ const signUp = async (req, res) => {
       .json({ message: "Something went wrong!! try again." });
   }
 };
+
 const signIn = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
+
     if (!existingUser)
       return res.status(409).json({ message: "User do not exist!!" });
 
-    const isCorrectPassword = bcrypt.compare(password, existingUser.password);
+    const isCorrectPassword = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
+
     if (!isCorrectPassword)
       return res
         .status(409)
