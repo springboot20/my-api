@@ -4,12 +4,14 @@ const userRouter = require("./routes/users.js");
 const transactionRouter = require("./routes/transactions.js");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 
 const app = express();
 const PORT = 5000;
 
+dotenv.config();
 mongoose
-  .connect("mongodb+srv://cluster0.prjuarl.mongodb.net/", {
+  .connect(process.env.MONGODB_URI, {
     dbName: "My_Rest_Api",
     user: "springboot",
     pass: "GexId4yCJi2JThY2",
@@ -18,14 +20,9 @@ mongoose
     console.log("Mongodb connected.....");
   });
 
-const corsConfig = {
-  credentials: true,
-  origin: true,
-};
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors(corsConfig));
+app.use(cors());
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/transactions", transactionRouter);
