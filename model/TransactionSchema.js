@@ -3,12 +3,14 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const TransactionSchema = new Schema({
   senderId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
+    type: mongoose.Types.ObjectId,
+    ref: "User",
+    require: [true, "Please provide a user"],
   },
   receiverId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
+    type: mongoose.Types.ObjectId,
+    ref: "User",
+    require: [true, "Please provide a user"],
   },
   senderEmail: {
     type: String,
@@ -34,16 +36,18 @@ const TransactionSchema = new Schema({
   account_number: {
     type: Number,
     require: [
-      10,
+      true,
       "Please account number should not greater or less than 10 digit",
     ],
+    maxlength: 10,
   },
   description: {
     type: String,
     require: [
-      150,
+      true,
       "message description should only less than or eqaul to 150 characters",
     ],
+    maxlength: 150,
   },
   date: {
     type: Date,

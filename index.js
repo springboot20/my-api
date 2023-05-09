@@ -5,6 +5,7 @@ const transactionRouter = require("./routes/transactions.js");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const auth = require("./utils/auth.js");
 
 const app = express();
 const PORT = 5000;
@@ -25,7 +26,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/transactions", transactionRouter);
+app.use("/api/v1/transactions", auth, transactionRouter);
 
 app.use(express.static(__dirname));
 
