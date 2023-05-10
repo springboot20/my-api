@@ -1,33 +1,33 @@
 const express = require("express");
 const { signIn, signUp } = require("../controllers/user.js");
 const User = require("../model/UserSchema.js");
+const auth = require("../utils/auth.js");
 
 const router = express.Router();
 
-router.get("/signup", async (req, res) => {
-  console.log(req.body);
-
+router.get("/", async (req, res) => {
   try {
-    const results = await User.find();
+    const results = await User.find({});
     res.send(results);
   } catch (error) {
     console.log(error.message);
   }
 });
 
-router.get("/signin", async (req, res) => {
-  console.log(req.body);
-  console.log(req.token);
-
+router.get("/me", auth, async (req, res) => {
   try {
-    const results = await User.find();
-    res.send(results);
+    console.log(req.userData.userId);
+    const user = await User.findById(req.userData.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json(user);
   } catch (error) {
-    console.log(error.message);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
-router.post("/signup", signUp);
-router.post("/signin", signIn);
+router.post("/auth/signup", signUp);
+router.post("/auth/signin", signIn);
 
 module.exports = router;
