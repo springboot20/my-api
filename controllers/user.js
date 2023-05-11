@@ -48,7 +48,7 @@ async function generateRefreshToken(user) {
   const refreshToken = jwt.sign({ userId: user._id }, "secret");
   const expires = new Date(Date.now() + 7 * 1000);
 
-  const tokenDoc = await new RefreshToken({
+  const tokenDoc = new RefreshToken({
     userr: user._id,
     token: refreshToken,
     expires,
