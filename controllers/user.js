@@ -78,8 +78,8 @@ const signIn = async (req, res) => {
         .status(409)
         .json({ message: "Invalid password, try aagain!!" });
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = await generateRefreshToken(user);
+    const accessToken = generateAccessToken(existingUser);
+    const refreshToken = await generateRefreshToken(existingUser);
 
     res.status(200).json({ accessToken, refreshToken });
   } catch (error) {
