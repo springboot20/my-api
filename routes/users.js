@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/me", auth, async (req, res) => {
+router.get("/auth/me", auth, async (req, res) => {
   try {
     console.log(req.userData.userId);
     const user = await User.findById(req.userData.userId);

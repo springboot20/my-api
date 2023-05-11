@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../model/UserSchema.js");
+const RefreshToken = require("../model/RefreshToken.js");
 
 const signUp = async (req, res) => {
   const { firstname, lastname, email, password, confirmPassword } = req.body;
@@ -35,6 +36,29 @@ const signUp = async (req, res) => {
   }
 };
 
+function generateAccessToken(user) {
+  const accessToken = jwt.sign({ userId: user._id }, "secret", {
+    expiresIn: "30d",
+  });
+
+  return accessToken;
+}
+
+async function generateRefreshToken(user) {
+  const refreshToken = jwt.sign({ userId: user._id }, "secret");
+  const expires = new Date(Date.now() + 7 * 1000);
+
+  const tokenDoc = await new RefreshToken({
+    userr: user._id,
+    token: refreshToken,
+    expires,
+  });
+
+  await tokenDoc.save();
+
+  return refreshToken;
+}
+
 const signIn = async (req, res) => {
   const { email, password } = req.body;
 
@@ -54,14 +78,10 @@ const signIn = async (req, res) => {
         .status(409)
         .json({ message: "Invalid password, try aagain!!" });
 
-    const token = jwt.sign(
-      { email: existingUser.email, id: existingUser._id },
-      "secret",
-      {
-        expiresIn: "7h",
-      }
-    );
-    res.status(200).json({ result: existingUser, token });
+    const accessToken = generateAccessToken(user);
+    const refreshToken = await generateRefreshToken(user);
+
+    res.status(200).json({ accessToken, refreshToken });
   } catch (error) {
     console.log(error.message);
     return res
