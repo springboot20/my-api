@@ -1,5 +1,11 @@
 const express = require("express");
-const { signIn, signUp } = require("../controllers/user.js");
+const {
+  signIn,
+  signUp,
+  newRefreshToken,
+  newAccessToken,
+  logout
+} = require("../controllers/user.js");
 const User = require("../model/UserSchema.js");
 const auth = require("../utils/auth.js");
 
@@ -29,5 +35,6 @@ router.get("/auth/me", auth, async (req, res) => {
 
 router.post("/auth/signup", signUp);
 router.post("/auth/signin", signIn);
+router.post("/auth/refresh-token", newRefreshToken);
 
 module.exports = router;

@@ -1,19 +1,10 @@
 const mongoose = require("mongoose");
 
 const refreshSchema = new mongoose.Schema({
-  users: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    require: true,
-  },
-  token: {
-    type: String,
-    require: true,
-  },
-  expires: {
-    type: Date,
-    require: true,
-  },
+  owner: {
+    type: mongoose.Types.ObjectId,
+    ref: "User"
+  }
 });
 
 const RefreshToken = mongoose.model("RefreshToken", refreshSchema);

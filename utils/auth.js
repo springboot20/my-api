@@ -1,30 +1,39 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/UserSchema.js");
 
-const auth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.split(" ")[1];
-    try {
-      const decodedToken = jwt.verify(token, "secret");
-      req.userData = {
-        email: decodedToken.email,
-        userId: decodedToken.id,
-        username: `${decodedToken.firstname} ${decodedToken.lastname}`,
-      };
-      // Check if the user with the decoded token exists in the database
-      User.findById(decodedToken.id).then((user) => {
-        if (!user) {
-          return res.status(401).json({ message: "Unauthorized" });
-        }
-        res.setHeader("authorization", authHeader);
-        next();
-      });
-    } catch (error) {
-      return res.status(401).json({ message: "Unauthorized" });
+const auth = async (req, res, next) => {
+  const accessToken = req.headers.authorization?.split(" ")[1];
+
+  if (!accessToken) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: access token missing" });
+  }
+
+  try {
+    const decodedToken = jwt.verify(accessToken, "secret");
+    req.userData = {
+      userId: decodedToken.userId,
+    };
+
+    // Check if the user with the decoded token exists in the database
+    const user = await User.findById(decodedToken.userId);
+    
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: invalid access token" });
     }
-  } else {
-    return res.status(401).json({ message: "Unauthorized" });
+
+    // If the access token is valid, allow the request
+    res.setHeader("Authorization", `Bearer ${accessToken}`);
+    next();
+  } catch (error) {
+    if (error) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: access token invalid or expired" });
+    }
   }
 };
 
