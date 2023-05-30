@@ -120,7 +120,7 @@ const newRefreshToken = async (req, res, next) => {
   res.status(200).json({ id: currentRefreshToken.userId, accessToken, refreshToken });
 };
 
-const newAccessToken = error(async (req, res, next) => {
+const newAccessToken = errorHandler(async (req, res, next) => {
   const refreshToken = await validateRefreshToken(req.body.refreshToken)
   const accessToken = generateAccessToken(refreshToken.userId)
 
