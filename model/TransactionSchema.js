@@ -7,7 +7,7 @@ const TransactionSchema = new Schema({
     require: [true, "Please provide a user"],
   },
   receiverId: {
-    type: schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     require: [true, "Please provide a user"],
   },
