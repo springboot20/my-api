@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 
 const TransactionSchema = new Schema({
   senderId: {
-    type: mongoose.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     require: [true, "Please provide a user"],
   },
@@ -46,6 +46,6 @@ const TransactionSchema = new Schema({
   },
 });
 
-const Transaction = mongoose.model("transaction", TransactionSchema);
+const Transaction = model("transaction", TransactionSchema);
 
 module.exports = Transaction;
