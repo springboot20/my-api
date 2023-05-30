@@ -74,7 +74,7 @@ const signUp = errorHandler(withTransactions(async (req, res, session) => {
 }))
 
 
-const signIn = errorHandler(withTransaction(async (req, res, session) => {
+const signIn = errorHandler(withTransactions(async (req, res, session) => {
   const { email, password } = req.body;
 
   const userDoc = await User.findOne({ email });
@@ -135,7 +135,7 @@ const logout = errorHandler(withTransactions(async (req, res, session) => {
 }))
 
 const me = errorHandler(async (req, res, next) => {
-  const user = await User.findById(req.userData.userId).exec()
+  const user = await User.findById(req.userId).exec()
 
   if (!user) {
     throw new HTTPError(404, "User not found");
