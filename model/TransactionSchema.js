@@ -1,6 +1,5 @@
-const mongoose = require("mongoose");
+const { Schema, model } = require("mongoose");
 
-const Schema = mongoose.Schema;
 const TransactionSchema = new Schema({
   senderId: {
     type: mongoose.Types.ObjectId,
@@ -12,15 +11,7 @@ const TransactionSchema = new Schema({
     ref: "User",
     require: [true, "Please provide a user"],
   },
-  senderEmail: {
-    type: String,
-    require: true,
-  },
-  receiverEmail: {
-    type: String,
-    require: true,
-  },
-  type: {
+  transactionType: {
     type: String,
     enum: ["in", "out"],
     require: true,
