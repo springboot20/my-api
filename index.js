@@ -14,9 +14,9 @@ const PORT = 5000;
 dotenv.config();
 mongoose
   .connect(process.env.MONGODB_URI, {
-    dbName: "My_Rest_Api",
-    user: "springboot",
-    pass: "GexId4yCJi2JThY2",
+    dbName: process.env.DBNAME,
+    user: process.env.USER,
+    pass: process.env.PASS,
   })
   .then(() => {
     console.log("Mongodb connected.....");
@@ -54,6 +54,6 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-app.listen(PORT, () => {
+app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running at port : http://localhost:${PORT}`);
 });
