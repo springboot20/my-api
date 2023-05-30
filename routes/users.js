@@ -14,8 +14,8 @@ const router = express.Router();
 
 router.get("/", getUsers);
 router.get("/auth/me", auth, me);
-router.post("/auth/signup", signUp);
-router.post("/auth/signin", signIn);
+router.post("/signup", signUp);
+router.post("/signin", signIn);
 router.post("/auth/logout", logout);
 router.post("/auth/refresh-token", newRefreshToken);
 router.post("/auth/access-token", newAccessToken);
