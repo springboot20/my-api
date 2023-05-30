@@ -1,33 +1,32 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/UserSchema.js");
+const { errorHandler, HTTPError } = require("../error/index.js");
 
-const auth = async (req, res, next) => {
+const auth = errorHandler(async (req, res, next) => {
   const accessToken = req.headers?.authorization.split(" ")[1]
 
   if (!accessToken) {
-    return res.status(401).json({ message: " Unauthorized: access token missing" })
+    throw new HTTPError(401, " Unauthorized: access token missing")
   }
 
   try {
-    const decodedToken = jwt.verify(accessToken, "secret")
-    req.userData = {
-      userId: decodedToken.userId
-    }
+    const decodedToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
+    req.userId = decodedToken.userId
 
     const user = await User.findById(decodedToken.userId)
 
     if (!user) {
-      return res.status(401).json({ message: " Unauthorized: invalid access token" })
+      throw new HTTPError(401, "Unauthorized: invalid access token")
     }
 
     res.setHeader("Authorization", `Bearer ${accessToken}`)
     next()
   } catch (error) {
     if (error) {
-      return res.status(401).json({ message: " Unauthorized: access token invalid or expired" })
+      throw new HTTPError(401, " Unauthorized: access token invalid or expired")
     }
   }
-};
+});
 
 module.exports = auth;
 

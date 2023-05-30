@@ -133,10 +133,28 @@ const logout = errorHandler(withTransactions(async (req, res, session) => {
 
   return { success: true }
 }))
+
+const me = errorHandler(async (req, res, next) => {
+  const user = await User.findById(req.userData.userId).exec()
+
+  if (!user) {
+    throw new HTTPError(404, "User not found");
+  }
+
+  return user;
+})
+
+const getUsers = errorHandler(async (req, res) => {
+  const results = await User.find({});
+  return results;
+})
+
 module.exports = {
   signIn,
   signUp,
   newRefreshToken,
   newAccessToken,
-  logout
+  logout,
+  me,
+  getUsers
 };
