@@ -23,7 +23,7 @@ async function validateRefreshToken(token) {
     try {
       return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
     } catch (error) {
-      return error.message
+      throw new HTTPError(401, "Unauthorized");
     }
   }
 
@@ -104,7 +104,7 @@ const signIn = errorHandler(withTransactions(async (req, res, session) => {
 }));
 
 // Middleware to authenticate the refresh token
-const newRefreshToken = async (req, res, next) => {
+const newRefreshToken = errorHandler(async (req, res, next) => {
   const currentRefreshToken = await validateRefreshToken(req.body.refreshToken)
   const refreshTokenDoc = new RefreshToken({
     userId: currentRefreshToken.userId
@@ -117,8 +117,8 @@ const newRefreshToken = async (req, res, next) => {
   const refreshToken = generateRefreshToken(currentRefreshToken.userId, refreshTokenDoc.id)
   const accessToken = generateAccessToken(currentRefreshToken.userId)
 
-  res.status(200).json({ id: currentRefreshToken.userId, accessToken, refreshToken });
-};
+  return { id: currentRefreshToken.userId, accessToken, refreshToken };
+});
 
 const newAccessToken = errorHandler(async (req, res, next) => {
   const refreshToken = await validateRefreshToken(req.body.refreshToken)
