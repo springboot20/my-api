@@ -144,7 +144,7 @@ const me = errorHandler(async (req, res, next) => {
   return user;
 })
 
-const getUsers = errorHandler(async (req, res) => {
+const getUsers = errorHandler(async (req, res,next) => {
   const results = await User.find({});
   return results;
 })
