@@ -53,5 +53,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(process.env.PORT || 5000, () => {
-  console.log(`Server running at port : http://localhost:${procees.env.PORT}`);
+  console.log(`Server running at port : http://localhost:${process.env.PORT}`);
 });
