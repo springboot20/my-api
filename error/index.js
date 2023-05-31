@@ -1,3 +1,5 @@
+const mongoose = require("mongoose")
+
 class HTTPError extends Error {
     constructor(statusCode, message) {
         super(message)
