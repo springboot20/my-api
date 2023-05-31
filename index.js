@@ -8,8 +8,6 @@ const dotenv = require("dotenv");
 const auth = require("./utils/auth.js");
 
 const app = express();
-const PORT = 5000;
-
 
 dotenv.config();
 mongoose
