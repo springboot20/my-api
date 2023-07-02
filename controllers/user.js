@@ -1,153 +1,148 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const User = require("../model/UserSchema.js");
-const RefreshToken = require("../model/RefreshToken.js");
-const { errorHandler, withTransactions, HTTPError } = require("../error/index.js");
-
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('../model/UserSchema.js');
+const RefreshToken = require('../model/RefreshToken.js');
+const { errorHandler, withTransactions, HTTPError } = require('../middleware/index.js');
 
 function generateAccessToken(userId) {
   const accessToken = jwt.sign({ userId: userId }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "1h",
+    expiresIn: '1h',
   });
 
   return accessToken;
 }
 
 function generateRefreshToken(userId, refreshId) {
-  const refreshToken = jwt.sign({ userId: userId, tokenId: refreshId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
+  const refreshToken = jwt.sign({ userId: userId, tokenId: refreshId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
   return refreshToken;
 }
 
 async function validateRefreshToken(token) {
   const decodeToken = () => {
     try {
-      return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
+      return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
     } catch (error) {
-      throw new HTTPError(401, "Unauthorized");
+      throw new HTTPError(401, 'Unauthorized');
     }
-  }
+  };
 
-  const decodedToken = decodeToken()
-  const tokenExist = await RefreshToken.exists({ _id: decodedToken.tokenId })
+  const decodedToken = decodeToken();
+  const tokenExist = await RefreshToken.exists({ _id: decodedToken.tokenId });
   if (tokenExist) {
-    return decodedToken
+    return decodedToken;
   } else {
-    return new HTTPError(401, "Unauthorized")
+    return new HTTPError(401, 'Unauthorized');
   }
 }
 
-const signUp = errorHandler(withTransactions(async (req, res, session) => {
-  const { firstname, lastname, email, password, confirmPassword } = req.body;
-  const existingUser = await User.findOne({ email });
+const signUp = errorHandler(
+  withTransactions(async (req, res, session) => {
+    const { firstname, lastname, email, password, confirmPassword } = req.body;
+    const existingUser = await User.findOne({ email });
 
-  if (existingUser)
-    throw new HTTPError(409, "User already exists....");
+    if (existingUser) throw new HTTPError(409, 'User already exists....');
 
-  if (password !== confirmPassword)
-    throw new HTTPError(409, "Password should match...");
+    if (password !== confirmPassword) throw new HTTPError(409, 'Password should match...');
 
-  const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-  const userDoc = new User({
-    firstname,
-    lastname,
-    email,
-    password: hashedPassword,
-    confirmPassword,
-  });
+    const userDoc = new User({
+      firstname,
+      lastname,
+      email,
+      password: hashedPassword,
+      confirmPassword,
+    });
 
-  const refreshTokenDoc = new RefreshToken({
-    owner: userDoc.id
+    const refreshTokenDoc = new RefreshToken({
+      owner: userDoc.id,
+    });
+
+    await userDoc.save({ session });
+    await refreshTokenDoc.save({ session });
+
+    const refreshToken = generateRefreshToken(userDoc.id, refreshTokenDoc.id);
+    const accessToken = generateAccessToken(userDoc.id);
+
+    return {
+      id: userDoc.id,
+      accessToken,
+      refreshToken,
+    };
   })
+);
 
-  await userDoc.save({ session })
-  await refreshTokenDoc.save({ session })
+const signIn = errorHandler(
+  withTransactions(async (req, res, session) => {
+    const { email, password } = req.body;
 
-  const refreshToken = generateRefreshToken(userDoc.id, refreshTokenDoc.id)
-  const accessToken = generateAccessToken(userDoc.id)
+    const userDoc = await User.findOne({ email });
 
-  return {
-    id: userDoc.id,
-    accessToken,
-    refreshToken
-  }
-}))
+    if (!userDoc) throw new HTTPError(409, 'User do not exist!!');
 
+    const isCorrectPassword = await bcrypt.compare(password, userDoc.password);
 
-const signIn = errorHandler(withTransactions(async (req, res, session) => {
-  const { email, password } = req.body;
+    if (!isCorrectPassword) throw new HTTPError(409, 'Invalid password, try aagain!!');
 
-  const userDoc = await User.findOne({ email });
+    const refreshTokenDoc = new RefreshToken({
+      owner: userDoc.id,
+    });
 
-  if (!userDoc)
-    throw new HTTPError(409, "User do not exist!!");
+    await refreshTokenDoc.save({ session });
 
-  const isCorrectPassword = await bcrypt.compare(
-    password,
-    userDoc.password
-  );
+    const refreshToken = generateRefreshToken(userDoc.id, refreshTokenDoc.id);
+    const accessToken = generateAccessToken(userDoc.id);
 
-  if (!isCorrectPassword)
-    throw new HTTPError(409, "Invalid password, try aagain!!");
-
-  const refreshTokenDoc = new RefreshToken({
-    owner: userDoc.id
+    return { id: userDoc.id, accessToken, refreshToken };
   })
-
-  await refreshTokenDoc.save({ session })
-
-  const refreshToken = generateRefreshToken(userDoc.id, refreshTokenDoc.id)
-  const accessToken = generateAccessToken(userDoc.id)
-
-  return { id: userDoc.id, accessToken, refreshToken };
-
-}));
+);
 
 // Middleware to authenticate the refresh token
 const newRefreshToken = errorHandler(async (req, res, next) => {
-  const currentRefreshToken = await validateRefreshToken(req.body.refreshToken)
+  const currentRefreshToken = await validateRefreshToken(req.body.refreshToken);
   const refreshTokenDoc = new RefreshToken({
-    userId: currentRefreshToken.userId
-  })
+    userId: currentRefreshToken.userId,
+  });
 
   await refreshTokenDoc.save();
-  await RefreshToken.deleteOne({ id: currentRefreshToken.tokenId })
+  await RefreshToken.deleteOne({ id: currentRefreshToken.tokenId });
 
-
-  const refreshToken = generateRefreshToken(currentRefreshToken.userId, refreshTokenDoc.id)
-  const accessToken = generateAccessToken(currentRefreshToken.userId)
+  const refreshToken = generateRefreshToken(currentRefreshToken.userId, refreshTokenDoc.id);
+  const accessToken = generateAccessToken(currentRefreshToken.userId);
 
   return { id: currentRefreshToken.userId, accessToken, refreshToken };
 });
 
 const newAccessToken = errorHandler(async (req, res, next) => {
-  const refreshToken = await validateRefreshToken(req.body.refreshToken)
-  const accessToken = generateAccessToken(refreshToken.userId)
+  const refreshToken = await validateRefreshToken(req.body.refreshToken);
+  const accessToken = generateAccessToken(refreshToken.userId);
 
   return { id: refreshToken.userId, accessToken, refreshToken: req.body.refreshToken };
 });
 
-const logout = errorHandler(withTransactions(async (req, res, session) => {
-  const refreshToken = await validateRefreshToken(req.body.refreshToken)
-  await RefreshToken.deleteOne({ _id: refreshToken.tokenId }, { session })
+const logout = errorHandler(
+  withTransactions(async (req, res, session) => {
+    const refreshToken = await validateRefreshToken(req.body.refreshToken);
+    await RefreshToken.deleteOne({ _id: refreshToken.tokenId }, { session });
 
-  return { success: true }
-}))
+    return { success: true };
+  })
+);
 
 const me = errorHandler(async (req, res, next) => {
-  const user = await User.findById(req.userId).exec()
+  const user = await User.findById(req.userId).exec();
 
   if (!user) {
-    throw new HTTPError(404, "User not found");
+    throw new HTTPError(404, 'User not found');
   }
 
   return user;
-})
+});
 
-const getUsers = errorHandler(async (req, res,next) => {
+const getUsers = errorHandler(async (req, res, next) => {
   const results = await User.find({});
   return results;
-})
+});
 
 module.exports = {
   signIn,
@@ -156,5 +151,5 @@ module.exports = {
   newAccessToken,
   logout,
   me,
-  getUsers
+  getUsers,
 };

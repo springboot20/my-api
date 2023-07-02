@@ -1,19 +1,19 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model } = require('mongoose');
 
 const TransactionSchema = new Schema({
   senderId: {
     type: Schema.Types.ObjectId,
-    ref: "User",
-    require: [true, "Please provide a user"],
+    ref: 'User',
+    require: [true, 'Please provide a user'],
   },
   receiverId: {
     type: Schema.Types.ObjectId,
-    ref: "User",
-    require: [true, "Please provide a user"],
+    ref: 'User',
+    require: [true, 'Please provide a user'],
   },
   transactionType: {
     type: String,
-    enum: ["in", "out"],
+    enum: ['in', 'out'],
     require: true,
   },
   amount: {
@@ -26,18 +26,12 @@ const TransactionSchema = new Schema({
   },
   account_number: {
     type: Number,
-    require: [
-      true,
-      "Please account number should not greater or less than 10 digit",
-    ],
+    require: [true, 'Please account number should not greater or less than 10 digit'],
     maxlength: 10,
   },
   description: {
     type: String,
-    require: [
-      true,
-      "message description should only less than or eqaul to 150 characters",
-    ],
+    require: [true, 'message description should only less than or eqaul to 150 characters'],
     maxlength: 150,
   },
   date: {
@@ -46,6 +40,6 @@ const TransactionSchema = new Schema({
   },
 });
 
-const Transaction = model("transaction", TransactionSchema);
+const Transaction = model('transaction', TransactionSchema);
 
 module.exports = Transaction;
