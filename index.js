@@ -1,26 +1,17 @@
 /** @format */
 
-const bodyParser = require('body-parser');
+const cors = require('cors');
+const dotenv = require('dotenv');
 const express = require('express');
+const bodyParser = require('body-parser');
+const connectDB = require('./middleware/db');
 const userRouter = require('./routes/users.js');
 const transactionRouter = require('./routes/transactions.js');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const { notFoundError, handleError } = require('./middleware');
 
-const app = express();
-
+connectDB();
 dotenv.config();
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    dbName: process.env.DBNAME,
-    user: process.env.USER,
-    pass: process.env.PASS,
-  })
-  .then(() => {
-    console.log('Mongodb connected.....');
-  });
+const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
