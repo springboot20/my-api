@@ -1,5 +1,3 @@
-/** @format */
-
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
@@ -9,10 +7,9 @@ const connectDB = async () => {
       user: process.env.USER,
       pass: process.env.PASS,
     });
-    console(`Mongodb Connected: ${conn.connection.host}`);
+    console.log(`MongoDB connected successfully: ${conn.connection.host}`);
   } catch (error) {
     console.log(error);
-    process.exit(1);
   }
 };
 
