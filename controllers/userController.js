@@ -85,7 +85,7 @@ const userStats = errorHandler(async (req, res) => {
       const date = moment()
         .month(month - 1)
         .year(year - 1)
-        .format('MMM');
+        .format('MMM YYYY');
       return { date, totalUser };
     })
     .reverse();
