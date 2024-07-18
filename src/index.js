@@ -7,17 +7,30 @@ dotenv.config({  path:'.env'})
 
 let port = process.env.PORT ?? 8080
 
+mongoose.connection.on('connect', () => {
+  console.log('Mongodb connected ....');
+});
+
+process.on('SIGINT', () => {
+  mongoose.connection.once('disconnect', () => {
+    console.log('Mongodb disconnected..... ');
+    process.exit(0);
+  });
+});
+
 const startServer = () => {
   httpServer.listen(port, () => {
-    console.info(
-      `📑 Visit the documentation at: http://localhost:${
-        port
-      }`
-    );
-    console.log("⚙️  Server is running on port: " + process.env.PORT);
+    console.log(`⚙️⚡ Server running at http://localhost:${port} 🌟🌟`);
   });
 };
 
+httpServer.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.log(`Port ${port} already in use`);
+  } else {
+    console.log(`Server error : ${error}`);
+  }
+});
 
 mongoDbConnection
 .then(() => {
