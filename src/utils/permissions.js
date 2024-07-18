@@ -1,21 +1,29 @@
-const customErrors = require('../middleware/customErrors');
+import { UnAuthenticated } from '@middleware/custom/custom.errors';
+import { UserModel } from '@models/index';
 
+/**
+ *
+ * @description utility function which handles role permissions
+ * @param {string[]} roles
+ */
 const checkPermissions = (...roles) => {
   return (req, res, next) => {
     if (Array.isArray(roles) && !roles.includes(req.user.role)) {
-      throw new customErrors.UnAuthenticated('UnAuthenticated to access this route');
+      throw new UnAuthenticated('UnAuthenticated to access this route');
     }
     next();
   };
 };
 
+/**
+ *
+ * @param {UserModel} requestUser
+ * @param {mongoose.ObjectId} resourceUserId
+ */
 const checkPermission = (requestUser, resourceUserId) => {
   if (requestUser.role === 'admin') return;
-  if (requestUser.userId === resourceUserId.toString()) return;
-  throw new customErrors.UnAuthorized('Not authorized to access this route');
+  if (requestUser._id === resourceUserId.toString()) return;
+  throw new UnAuthorized('Not authorized to access this route');
 };
 
-module.exports = {
-  checkPermissions,
-  checkPermission,
-};
+export { checkPermissions, checkPermission };
