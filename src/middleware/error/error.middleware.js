@@ -26,7 +26,7 @@ const handleError = (err, req, res, next) => {
     customError.statusCode = 404;
     customError.message = `No item found with id:${err.value}`;
   }
-
+  console.log(customError.message);
   return res.status(customError.statusCode).json({ message: customError.message });
 };
 

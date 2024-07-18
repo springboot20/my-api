@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-function withTransactions(fn) {
+export function mongooseTransactions(fn) {
   return async function (req, res) {
     let result;
     await mongoose.connection.transaction(async (session) => {
@@ -10,5 +10,3 @@ function withTransactions(fn) {
     return result;
   };
 }
-
-module.exports = withTransactions;

@@ -1,6 +1,6 @@
 /** @format */
 
-function errorResponseHandler(fn) {
+export function apiResponseHandler(fn) {
   return async function (req, res, next) {
     try {
       let nextCalled = false;
@@ -17,8 +17,4 @@ function errorResponseHandler(fn) {
     }
   };
 }
-
-
-
-module.exports = errorResponseHandler
 

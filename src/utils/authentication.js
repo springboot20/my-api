@@ -1,15 +1,16 @@
 /** @format */
 
-const { validateToken, createToken } = require('../utils/jwt');
+const { validateToken, createToken } = require('./jwt.js');
 const errorResponseHandler = require('../middleware/errorResponseHandler.js');
-const model = require('../model/index');
+const model = require('../models/index');
 const customErrors = require('../middleware/customErrors');
 
 const authenticateHeader = errorResponseHandler(async (req, res, next) => {
   const authHeader = req.headers?.authorization;
   const refreshHeader = req.headers?.refresh;
 
-  if (!authHeader || !authHeader.startWith('Bearer')) throw new customErrors.UnAuthenticated('Authentication invalid');
+  if (!authHeader || !authHeader.startWith('Bearer'))
+    throw new customErrors.UnAuthenticated('Authentication invalid');
 
   if (authHeader && authHeader.startWith('Bearer')) {
     let accessToken = authHeader.split(' ')[1];
@@ -18,7 +19,8 @@ const authenticateHeader = errorResponseHandler(async (req, res, next) => {
     return next();
   }
 
-  if (!refreshHeader || !refreshHeader.startWith('Bearer')) throw new customErrors.UnAuthenticated('Authentication invalid');
+  if (!refreshHeader || !refreshHeader.startWith('Bearer'))
+    throw new customErrors.UnAuthenticated('Authentication invalid');
 
   let refreshToken;
   if (refreshHeader && refreshHeader.startWith('Bearer')) {
@@ -32,7 +34,8 @@ const authenticateHeader = errorResponseHandler(async (req, res, next) => {
     refreshToken: payload?.refreshToken,
   });
 
-  if (!existingToken || !existingToken?.isValid) throw new customErrors.UnAuthenticated('Authentication invalid');
+  if (!existingToken || !existingToken?.isValid)
+    throw new customErrors.UnAuthenticated('Authentication invalid');
   createToken({ res, user: payload.user, refreshToken: existingToken?.refreshToken });
   req.user = payload.user;
   next();

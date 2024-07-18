@@ -1,4 +1,4 @@
-const { StatusCodes } = require('http-status-codes');
+import { StatusCodes } from 'http-status-codes'
 
 class CustomErrors extends Error {
   constructor(message) {
@@ -34,9 +34,12 @@ class UnAuthenticated extends CustomErrors {
   }
 }
 
-module.exports = {
-  BadRequest,
-  NotFound,
-  UnAuthorized,
-  UnAuthenticated,
-};
+
+class Conflict extends CustomErrors {
+  constructor(message) {
+    super(message);
+    this.statusCode = StatusCodes.CONFLICT;
+  }
+}
+
+export { BadRequest, NotFound, UnAuthorized, UnAuthenticated, Conflict };

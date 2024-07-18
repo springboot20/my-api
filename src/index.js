@@ -1,12 +1,12 @@
-/** @format */
+import 'module-alias/register'
 
-const cors = require('cors');
-const dotenv = require('dotenv');
-const express = require('express');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+import cors from 'cors'
+import dotenv from 'dotenv'
+import express from 'express'
+import bodyParser from 'body-parser'
+import cookieParser from 'cookie-parser'
 
-const routes = require('./routes/index.js');
+import routes from "@/routes"
 
 const connectDB = require('./connection/connection');
 const { notFoundError, handleError } = require('./middleware/errorHandler');

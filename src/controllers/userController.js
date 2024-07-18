@@ -1,4 +1,4 @@
-const model = require('../model/index.js');
+const model = require('../models/index.js');
 const errorHandler = require('../middleware/errorResponseHandler.js');
 const { checkPermission } = require('../utils/permissions');
 const { StatusCodes } = require('http-status-codes');
@@ -45,7 +45,11 @@ const updateUser = errorHandler(
     if (req.body.password) {
       req.body.password = await hashPassword(req.body.password);
     }
-    const user = await model.UserModel.findByIdAndUpdate(userId, { $set: { ...rest, password } }, { new: true });
+    const user = await model.UserModel.findByIdAndUpdate(
+      userId,
+      { $set: { ...rest, password } },
+      { new: true }
+    );
     await user.save({ session });
 
     res.status(StatusCodes.OK);
@@ -53,22 +57,23 @@ const updateUser = errorHandler(
   })
 );
 
-const userStats = errorHandler(async (req, res) => {
+const userStats = errorHandler(async (req, res, next) => {
   const date = new Date();
   let lastMonth = new Date(date.setMonth(date.getMonth() - 1));
   let lastYear = new Date(date.setYear(date.getFullYear() - 1));
 
   let monthlyStats = await model.UserModel.aggregate([
-    { $match: { createdAt: { $gte: lastMonth, $gte: lastYear } } },
+    { $match: { createdAt: { $gte: lastMonth, $gte: lastYear }, role: 'user' } },
     {
       $project: {
         month: { $month: '$createdAt' },
         year: { $year: '$createdAt' },
+        role: { $role: '$role' },
       },
     },
     {
       $group: {
-        _id: { month: '$month', year: '$year' },
+        _id: { month: '$month', year: '$year', role: '$role' },
         totalUser: { $sum: 1 },
       },
     },
@@ -79,14 +84,15 @@ const userStats = errorHandler(async (req, res) => {
   monthlyStats = monthlyStats
     .map((item) => {
       const {
-        _id: { year, month },
+        _id: { year, month, role },
         totalUser,
       } = item;
+
       const date = moment()
         .month(month - 1)
-        .year(year - 1)
-        .format('MMM YYYY');
-      return { date, totalUser };
+        .year(year)
+        .format('MMMM YYYY');
+      return { date, totalUser, role };
     })
     .reverse();
 

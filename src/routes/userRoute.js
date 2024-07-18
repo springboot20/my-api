@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.route('/').get([authenticate, checkPermissions('admin')], userControllers.getUsers);
 
-router.route('/stats').get(userControllers.userStats);
+router.route('/stats').get([authenticate, checkPermissions('admin')], userControllers.userStats);
 router.route('/current-user').get(authenticate, userControllers.currentUser);
 router.route('/:id').get(authenticate, userControllers.getSingleUser);
 router.route('/:id').patch(authenticate, userControllers.updateUser);
