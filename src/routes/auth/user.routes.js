@@ -1,5 +1,17 @@
 import { Router } from 'express';
-import { register, login, logout, refreshToken, forgotPassword } from '@controllers/auth/index';
+import {
+  register,
+  login,
+  logout,
+  refreshToken,
+  forgotPassword,
+  verifyEmail,
+  resendEmailVerification,
+  resetPassword,
+  changeCurrentPassword,
+  getUsers,
+  getCurrentUser,
+} from '@controllers/auth/index';
 import { verifyJWT } from '@middleware/auth/auth.middleware';
 import { checkPermissions } from '@utils/permissions';
 
@@ -10,13 +22,14 @@ router.route('/register').post(register);
 router.route('/login').post(login);
 router.route('/forgot-password').post(forgotPassword);
 router.route('/refresh-token').post(refreshToken);
+router.route('/verify-email/:verificationToken').get(verifyEmail);
 
 // secured routes
 router.route('/logout').post(verifyJWT, logout);
-router.route('/users').get(verifyJWT, checkPermissions('admin'));
-router.route('/stats').get(verifyJWT, checkPermissions('admin'));
-router.route('/current-user').get(verifyJWT);
-router.route('/:id').get(verifyJWT, userControllers.getSingleUser);
-router.route('/:id').patch(verifyJWT, userControllers.updateUser);
+router.route('/resend-email-verification/').post(verifyJWT, resendEmailVerification);
+router.route('/reset-password/:resetToken').post(verifyJWT, resetPassword);
+router.route('/change-password').patch(verifyJWT, changeCurrentPassword);
+router.route('/').get(verifyJWT, checkPermissions('admin'), getUsers);
+router.route('/current-user').get(verifyJWT, getCurrentUser);
 
 export { router };
