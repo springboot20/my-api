@@ -1,36 +1,28 @@
 import 'module-alias/register'
-
-import cors from 'cors'
 import dotenv from 'dotenv'
-import express from 'express'
-import bodyParser from 'body-parser'
-import cookieParser from 'cookie-parser'
+import {mongoDbConnection} from '@connection/mongodb.connection'
+import { httpServer } from './server';
 
-import routes from "@/routes"
+dotenv.config({  path:'.env'})
 
-const connectDB = require('./connection/connection');
-const { notFoundError, handleError } = require('./middleware/errorHandler');
+let port = process.env.PORT ?? 8080
 
-dotenv.config();
-connectDB();
+const startServer = () => {
+  httpServer.listen(port, () => {
+    console.info(
+      `📑 Visit the documentation at: http://localhost:${
+        port
+      }`
+    );
+    console.log("⚙️  Server is running on port: " + process.env.PORT);
+  });
+};
 
-const app = express();
 
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(cookieParser(process.env.JWT_SECRET));
-app.use(cors());
-
-app.use('/api/v1/auth', routes.authRoute);
-app.use('/api/v1/users', routes.userRoute);
-app.use('/api/v1/transactions', routes.transactionRoute);
-
-app.get('/', (req, res) => res.send('Hello world from home page'));
-
-app.use(notFoundError);
-app.use(handleError);
-
-app.listen(process.env.PORT || 5000, () => {
-  console.log(`Server running at port:http://localhost:${process.env.PORT}`);
-});
+mongoDbConnection
+.then(() => {
+      startServer();
+    })
+    .catch((err) => {
+      console.log("Mongo db connect error: ", err);
+    });

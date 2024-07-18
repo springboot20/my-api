@@ -30,7 +30,7 @@ const handleError = (err, req, res, next) => {
   return res.status(customError.statusCode).json({ message: customError.message });
 };
 
-module.exports = {
+export {
   handleError,
   notFoundError,
 };
