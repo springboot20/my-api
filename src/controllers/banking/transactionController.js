@@ -1,7 +1,7 @@
-const model = require('../models/index');
+const model = require('../../models/index');
 const customErrors = require('../middleware/customErrors');
 const { StatusCodes } = require('http-status-codes');
-const { checkPermission } = require('../utils/permissions');
+const { checkPermission } = require('../../utils/permissions');
 const withTransaction = require('../middleware/mongooseTransaction');
 const errorHandler = require('../middleware/errorResponseHandler');
 const mongoose = require('mongoose');
@@ -60,7 +60,12 @@ const transactionStatistics = errorHandler(async (req, res, next) => {
   let lastMonth = new Date(date.setMonth(date.getMonth() - 1));
 
   let monthlyTransaction = await model.TransactionModel.aggregate([
-    { $match: { createdAt: { $gte: lastMonth, $gte: lastYear }, user: new mongoose.Types.ObjectId(req.user.userId) } },
+    {
+      $match: {
+        createdAt: { $gte: lastMonth, $gte: lastYear },
+        user: new mongoose.Types.ObjectId(req.user.userId),
+      },
+    },
     {
       $project: {
         year: { $year: '$createdAt' },

@@ -1,6 +1,6 @@
-const model = require('../models/index.js');
+const model = require('../../models/index.js');
 const errorHandler = require('../middleware/errorResponseHandler.js');
-const { checkPermission } = require('../utils/permissions');
+const { checkPermission } = require('../../utils/permissions.js');
 const { StatusCodes } = require('http-status-codes');
 const customErrors = require('../middleware/customErrors.js');
 const bcrypt = require('bcryptjs');
