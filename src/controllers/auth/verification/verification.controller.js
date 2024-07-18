@@ -1,8 +1,51 @@
+import crypto from 'crypto';
 import { apiResponseHandler } from '@middleware/api/api.response.middleware';
 import { mongooseTransactions } from '@middleware/mongoose/mongoose.transactions';
 import { UserModel } from '@models/index';
-import { NotFound, UnAuthorized, Conflict } from '@middleware/custom/custom.errors';
+import { NotFound, UnAuthorized, Conflict, BadRequest } from '@middleware/custom/custom.errors';
 import { validateToken } from '@utils/jwt';
+
+export const resetPassword = apiResponseHandler(
+  mongooseTransactions(async (req, res) => {
+    const { resetToken } = req.params;
+    const { newPassword } = req.body;
+
+    if (!resetToken) throw new BadRequest('Reset password token is missing');
+
+    let hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    const user = await UserModel.findOne({
+      forgotPasswordToken: hashedToken,
+      forgotPasswordTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) throw new UnAuthorized('Token is invalid or expired');
+
+    user.emailVerificationToken = undefined;
+    user.emailVerificationTokenExpiry = undefined;
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return { message: 'Password reset successfully' };
+  })
+);
+export const changeCurrentPassword = apiResponseHandler(
+  mongooseTransactions(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await UserModel.findById(req.user?._id);
+
+    if (!(await user.matchPasswords(oldPassword))) throw new BadRequest('Invalid old password');
+
+    user.password = newPassword;
+    user.save({ validateBeforeSave: false });
+
+    return {
+      message: 'Password changed successfully',
+    };
+  })
+);
 
 export const forgotPassword = apiResponseHandler(
   mongooseTransactions(async (req, res, session) => {
@@ -16,7 +59,7 @@ export const forgotPassword = apiResponseHandler(
     user.forgotPasswordToken = hashedToken;
     user.forgotPasswordTokenExpiry = token;
     await user.save({ validateBeforeSave: false });
-    
+
     const resetLink = `${req.protocol}//:${req.get(
       'host'
     )}/api/v1/user/reset-password/${unHashedToken}`;
@@ -64,23 +107,26 @@ export const refreshToken = apiResponseHandler(
 
 export const verifyEmail = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
-    const { email } = req.body;
+    const { verificationToken } = req.params;
 
-    const user = await UserModel.findOne({ email });
-    if (!user) throw new NotFound('User not found');
+    if (!verificationToken) throw new BadRequest('Email verification token is missing');
 
-    const { unHashedToken, hashedToken, token } = user.generateTemporaryToken();
+    let hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
 
-    user.emailVerificationToken = hashedToken;
-    user.emailVerificationTokenExpiry = token;
+    const user = await UserModel.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationTokenExpiry: { $gt: Data.now() },
+    });
 
-    const verifyLink = `${req.protocol}//:${req.get(
-      'host'
-    )}/api/v1/users/verify-email/${unHashedToken}`;
-    // await sendMail(user.email, 'Password reset', { verifyLink, username: user.username }, 'verify-email');
+    if (!user) throw new UnAuthorized('Token is invalid or expired');
 
-    await user.save({ validateBeforeSave: false, session });
-    return { message: 'password reset link sent to your email' };
+    user.emailVerificationToken = undefined;
+    user.emailVerificationTokenExpiry = undefined;
+
+    user.isEmailVerified = true;
+    await user.save({ validateBeforeSave: false });
+
+    return { message: 'Email is verified', isEmailVerified: true };
   })
 );
 
@@ -95,7 +141,7 @@ export const resendEmailVerification = apiResponseHandler(
 
     user.emailVerificationToken = hashedToken;
     user.emailVerificationTokenExpiry = token;
-  await user.save({ validateBeforeSave: false });
+    await user.save({ validateBeforeSave: false });
 
     const verifyLink = `${req.protocol}//:${req.get(
       'host'

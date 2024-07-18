@@ -24,7 +24,7 @@ export const register = apiResponseHandler(
     user.emailVerificationToken = hashedToken;
     user.emailVerificationExpiry = tokenExpiry;
 
-    const verificationLink = `${req.protocol}://${req.get('host')}/api/v1/verify-email/${
+    const verificationLink = `${req.protocol}://${req.get('host')}/api/v1/users/verify-email/${
       user?._id
     }/${unHashedToken}`;
 
