@@ -1,6 +1,6 @@
-import { apiResponseHandler } from '@middleware/api/api.response.middleware';
-import { mongooseTransactions } from '@middleware/mongoose/mongoose.transactions';
-import { UserModel } from '@models/index';
+import { apiResponseHandler } from '../../../middleware/api/api.response.middleware.js';
+import { mongooseTransactions } from '../../../middleware/mongoose/mongoose.transactions.js';
+import { UserModel } from '../../../models/index.js';
 
 export const logout = apiResponseHandler(
   mongooseTransactions(

@@ -1,7 +1,7 @@
-import { apiResponseHandler } from '@middleware/api/api.response.middleware';
-import { Conflict } from '@middleware/custom/custom.errors';
-import { mongooseTransactions } from '@middleware/mongoose/mongoose.transactions';
-import { UserModel } from '@models/index';
+import { apiResponseHandler } from '../../../middleware/api/api.response.middleware.js';
+import { Conflict } from '../../../middleware/custom/custom.errors.js';
+import { mongooseTransactions } from '../../../middleware/mongoose/mongoose.transactions.js';
+import { UserModel } from '../../../models/index.js';
 
 export const register = apiResponseHandler(
   mongooseTransactions(async (req, res, session) => {

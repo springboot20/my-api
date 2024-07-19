@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 export function mongooseTransactions(fn) {
   return async function (req, res) {

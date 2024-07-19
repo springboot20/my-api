@@ -1,9 +1,9 @@
 import crypto from 'crypto';
-import { apiResponseHandler } from '@middleware/api/api.response.middleware';
-import { mongooseTransactions } from '@middleware/mongoose/mongoose.transactions';
-import { UserModel } from '@models/index';
-import { NotFound, UnAuthorized, Conflict, BadRequest } from '@middleware/custom/custom.errors';
-import { validateToken } from '@utils/jwt';
+import { apiResponseHandler } from '../../../middleware/api/api.response.middleware.js';
+import { mongooseTransactions } from '../../../middleware/mongoose/mongoose.transactions.js';
+import { UserModel } from '../../../models/index.js';
+import { NotFound, UnAuthorized, Conflict, BadRequest } from '../../../middleware/custom/custom.errors.js';
+import { validateToken } from '../../../utils/jwt.js';
 
 export const resetPassword = apiResponseHandler(
   mongooseTransactions(async (req, res) => {

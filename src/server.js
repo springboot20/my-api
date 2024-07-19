@@ -4,9 +4,9 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 
-import routes from '@/routes';
+import * as routes from './routes/index.js';
 
-import { notFoundError, handleError } from '@middleware/error/Handler';
+import { notFoundError, handleError } from './middleware/error/error.middleware.js';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -26,9 +26,8 @@ app.use(
   })
 );
 
-app.use('/api/v1/auth');
-app.use('/api/v1/users');
-app.use('/api/v1/transactions');
+app.use('/api/v1/users', routes.authRoute.router);
+// app.use('/api/v1/transactions');
 
 app.get('/', (req, res) => res.send('Hello world from home page'));
 

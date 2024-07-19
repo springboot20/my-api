@@ -1,4 +1,4 @@
-const { StatusCodes } = require('http-status-codes');
+import { StatusCodes } from 'http-status-codes'
 
 const notFoundError = (req, res, next) => {
   res.status(StatusCodes.NOT_FOUND).json({ message: 'Route not found' });

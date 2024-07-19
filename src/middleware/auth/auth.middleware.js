@@ -1,7 +1,7 @@
-import { validateToken } from '@utils/jwt';
-import { apiResponseHandler } from '../api/api.response.middleware';
-import { UserModel } from '@models/index';
-import { UnAuthorized } from '../custom/custom.errors';
+import { validateToken } from '../../utils/jwt.js';
+import { apiResponseHandler } from '../api/api.response.middleware.js';
+import { UserModel } from '../../models/index.js';
+import { UnAuthorized } from '../custom/custom.errors.js';
 
 export const verifyJWT = apiResponseHandler(async (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');

@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon ./src/index.js",
+    "dev": "nodemon ./src/index.js",
     "build": "npm build"
   },
   "keywords": [],
@@ -26,13 +26,5 @@
     "mongoose": "^7.4.2",
     "save": "^2.9.0",
     "stripe": "^12.17.0"
-  },
-  "_moduleAliases": {
-    "@connection": "src/connection",
-    "@controllers": "src/controllers",
-    "@middlewares": "src/middlewares",
-    "@models": "src/models",
-    "@routes": "src/routes",
-    "@utils": "src/utils"
   }
 }

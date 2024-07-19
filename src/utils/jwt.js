@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { BadRequest, NOTFOUND } from '@middleware/custom/custom.errors';
-import { UserModel } from '@models/index';
+import { BadRequest, NotFound} from '../middleware/custom/custom.errors.js';
+import { UserModel } from '../models/index.js';
 
 const validateToken = (token) => {
   try {
@@ -25,7 +25,7 @@ export const generateTokens = async (userId) => {
     const user = await UserModel.findById(userId);
 
     // check if the user is not found in the database
-    if (!user) throw new NOTFOUND('user does not exist in the database');
+    if (!user) throw new NotFound('user does not exist in the database');
 
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
@@ -41,4 +41,4 @@ export const generateTokens = async (userId) => {
   }
 };
 
-export { validateToken, generateTokens };
+export { validateToken };

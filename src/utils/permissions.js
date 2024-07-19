@@ -1,5 +1,5 @@
-import { UnAuthenticated } from '@middleware/custom/custom.errors';
-import { UserModel } from '@models/index';
+import { UnAuthenticated } from '../middleware/custom/custom.errors.js';
+import { UserModel } from '../models/index.js';
 
 /**
  *

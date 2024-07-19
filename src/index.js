@@ -1,11 +1,11 @@
-import 'module-alias/register'
-import dotenv from 'dotenv'
-import {mongoDbConnection} from '@connection/mongodb.connection'
-import { httpServer } from './server';
+import dotenv from 'dotenv';
+import { mongoDbConnection } from './connection/mongodb.connection.js';
+import { httpServer } from './server.js';
+import mongoose from 'mongoose';
 
-dotenv.config({  path:'.env'})
+dotenv.config({ path: '.env' });
 
-let port = process.env.PORT ?? 8080
+let port = process.env.PORT ?? 8080;
 
 mongoose.connection.on('connect', () => {
   console.log('Mongodb connected ....');
@@ -33,9 +33,9 @@ httpServer.on('error', (error) => {
 });
 
 mongoDbConnection
-.then(() => {
-      startServer();
-    })
-    .catch((err) => {
-      console.log("Mongo db connect error: ", err);
-    });
+  .then(() => {
+    startServer();
+  })
+  .catch((err) => {
+    console.log('Mongo db connect error: ', err);
+  });

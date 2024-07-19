@@ -1,8 +1,8 @@
-import { apiResponseHandler } from '@middleware/api/api.response.middleware';
-import { BadRequest, NotFound, UnAuthorized } from '@middleware/custom/custom.errors';
-import { mongooseTransactions } from '@middleware/mongoose/mongoose.transactions';
-import { UserModel } from '@models/index';
-import { generateTokens } from '@utils/jwt';
+import { apiResponseHandler } from '../../../middleware/api/api.response.middleware.js';
+import { BadRequest, NotFound, UnAuthorized } from '../../../middleware/custom/custom.errors.js';
+import { mongooseTransactions } from '../../../middleware/mongoose/mongoose.transactions.js';
+import { UserModel } from '../../../models/index.js';
+import { generateTokens } from '../../../utils/jwt.js';
 
 export const login = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
