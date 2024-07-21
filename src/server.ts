@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
+// import cookieParser from 'cookie-parser';
 import http from 'http';
 
 import * as routes from './routes/index.js';
@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 
 app.use(express.static('public'));
 
-app.use(cookieParser());
+// app.use(cookieParser());
 
 app.use(
   cors({
