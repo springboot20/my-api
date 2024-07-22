@@ -14,7 +14,6 @@ import {
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import { generateTokens } from "../login/login.controller.js";
-import { JwtPayload } from "jsonwebtoken";
 
 export const resetPassword = apiResponseHandler(
   mongooseTransactions(async (req, res) => {

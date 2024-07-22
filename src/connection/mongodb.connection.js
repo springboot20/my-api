@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const mongoDbConnection = async () => {
   try {
     const connectionInstance = await mongoose.connect(
-      process.env.MONGODB_URI as string,
+      process.env.MONGODB_URI ,
       {
         dbName: process.env.DBNAME,
         user: process.env.USER,

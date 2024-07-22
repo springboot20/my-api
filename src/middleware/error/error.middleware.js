@@ -1,5 +1,4 @@
 import { StatusCodes } from 'http-status-codes';
-import { NextFunction, Request, Response } from 'express';
 import { CustomErrors } from '../custom/custom.errors.js';
 
 const notFoundError = (req, res, next) => {

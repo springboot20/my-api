@@ -6,12 +6,12 @@ import http from 'http';
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
+dotenv.config({ path: './.env' });
 
 import * as routes from './routes/index.js';
 import { notFoundError, handleError } from './middleware/error/error.middleware.js';
 import mongoDbConnection from "./connection/mongodb.connection.js";
 
-dotenv.config({ path: './src/.env' });
 
 let port = process.env.PORT ?? 8080;
 

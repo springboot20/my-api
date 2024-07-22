@@ -1,13 +1,12 @@
 import jwt from "jsonwebtoken";
 import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
-import { User } from "../types/user.model";
 import crypto from "crypto";
 import argon2 from "argon2";
 
-const validateToken = (token: string) => {
+const validateToken = (token) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string);
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     return decodedToken;
   } catch (error) {
     throw new CustomErrors(
@@ -18,21 +17,21 @@ const validateToken = (token: string) => {
 };
 
 export const matchPasswords = async (
-  entered_password: string,
-  dbPassword: string
+  entered_password,
+  dbPassword
 ) => {
   return await argon2.verify(entered_password, dbPassword);
 };
 
-export const generateAccessToken = (payload: User) => {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET as string, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRY as string,
+export const generateAccessToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
+    expiresIn: process.env.JWT_ACCESS_EXPIRY,
   });
 };
 
-export const generateRefreshToken = (payload: { _id: string }) => {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET as string, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRY as string,
+export const generateRefreshToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRY,
   });
 };
 

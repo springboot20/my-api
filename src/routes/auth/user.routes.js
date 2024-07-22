@@ -1,4 +1,4 @@
-import { Router } from "express";
+import * as express from "express";
 import {
   register,
   login,
@@ -15,7 +15,11 @@ import {
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
 
-const router = Router();
+const { Router } = express;
+
+const router = Router({
+  caseSensitive: true,
+});
 
 // unsecured routes
 router.route("/register").post(register);

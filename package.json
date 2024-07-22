@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "./build/server.js",
   "scripts": {
-    "dev": "nodemon ./src/server.js",
-    "build": "tsc --watch"
+    "dev": "nodemon ./src/server.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +21,7 @@
     "argon2": "^0.40.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "express-session": "^1.18.0",
     "express-sessions": "^1.0.6",
     "handlebars": "^4.7.8",
@@ -35,6 +34,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tslib": "^2.6.3",
