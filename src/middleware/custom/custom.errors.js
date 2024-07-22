@@ -6,13 +6,7 @@ export class CustomErrors extends Error {
    * @param {string} stack
    */
 
-  public message: string;
-  public errors?: any[];
-  public stack?: string | undefined;
-  private data?: null;
-  public statusCode: number;
-
-  constructor(message: string, statusCode: number, errors?: any[], stack?: string) {
+  constructor(message, statusCode, errors = [], stack) {
     super(message);
 
     this.stack = stack;

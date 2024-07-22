@@ -1,27 +1,7 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model } from "mongoose";
 import argon from "argon2";
 
-interface userSchema extends Document {
-  email: string;
-  username: string;
-  password: string;
-  role: string;
-  refreshToken: string;
-  isEmailVerified: boolean;
-  emailVerificationToken: string | undefined;
-  emailVerificationTokenExpiry: Date | undefined;
-  forgotPasswordToken: string | undefined;
-  forgotPasswordTokenExpiry: Date | undefined;
-  loginType: string;
-  avatar: {
-    type: {
-      url: string;
-      localPath: string;
-    };
-  };
-}
-
-const userSchema = new Schema<userSchema>(
+const userSchema = new Schema(
   {
     avatar: {
       type: {
@@ -79,6 +59,6 @@ userSchema.pre("save", async function (next) {
   next()
 });
 
-const UserModel = model<userSchema>("User", userSchema);
+const UserModel = model("User", userSchema);
 
 export { UserModel };

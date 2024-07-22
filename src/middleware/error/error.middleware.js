@@ -1,12 +1,12 @@
 import { StatusCodes } from 'http-status-codes';
 import { NextFunction, Request, Response } from 'express';
-import { CustomErrors } from '../custom/custom.errors';
+import { CustomErrors } from '../custom/custom.errors.js';
 
-const notFoundError = (req: Request, res: Response, next: NextFunction) => {
+const notFoundError = (req, res, next) => {
   res.status(StatusCodes.NOT_FOUND).json({ message: 'Route not found' });
 };
 
-const handleError = (err: any, req: Request, res: Response, next: NextFunction) => {
+const handleError = (err, req, res, next) => {
   if (!(err instanceof CustomErrors)) {
     const customError = {
       statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
@@ -18,7 +18,7 @@ const handleError = (err: any, req: Request, res: Response, next: NextFunction) 
 
   if (err.name === 'ValidationError') {
     err.message = Object.values(err.errors)
-      .map((item: any) => item.message)
+      .map((item) => item.message)
       .join(',');
     err.statusCode = 404;
   }

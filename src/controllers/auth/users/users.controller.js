@@ -2,17 +2,15 @@ import argon from "argon2";
 import {
   ApiResponse,
   apiResponseHandler,
-} from "@middleware/api/api.response.middleware.js";
-import { mongooseTransactions } from "@middleware/mongoose/mongoose.transactions.js";
-import { UserModel } from "@models/index.js";
-import { checkPermission } from "@utils/permissions.js";
-import { CustomErrors } from "@middleware/custom/custom.errors.js";
-import { Request, Response } from "express";
+} from "../../../middleware/api/api.response.middleware.js";
+import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
+import { UserModel } from "../../../models/index.js";
+import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 
 export const getCurrentUser = apiResponseHandler(
-  async (req: Request, res: Response) => {
+  async (req, res) => {
     return new ApiResponse(
       StatusCodes.OK,
       {
@@ -24,11 +22,10 @@ export const getCurrentUser = apiResponseHandler(
 );
 
 export const getUsers = apiResponseHandler(
-  mongooseTransactions(async (req: Request, res: Response) => {
+  mongooseTransactions(async (req, res) => {
     const users = await UserModel.find({});
 
-    const user = await UserModel.findById(req.user?._id);
-    checkPermission(user, user?._id);
+    const user = await UserModel.findById(new mongoose.Schema.ObjectId(req.user?._id));
 
     return new ApiResponse(
       StatusCodes.OK,
@@ -43,9 +40,9 @@ export const getUsers = apiResponseHandler(
 export const updateCurrentUserProfile = apiResponseHandler(
   mongooseTransactions(
     async (
-      req: Request,
-      res: Response,
-      session: mongoose.mongo.ClientSession
+      req,
+      res,
+      session
     ) => {
       const { password, ...rest } = req.body;
       const { userId } = req.params;
@@ -60,7 +57,7 @@ export const updateCurrentUserProfile = apiResponseHandler(
         "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken"
       );
 
-      await updatedUser!.save({ session });
+      await updatedUser.save({ session });
 
       if (!updatedUser)
         throw new CustomErrors(

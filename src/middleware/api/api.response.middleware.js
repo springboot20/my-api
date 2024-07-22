@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 
-export function apiResponseHandler(fn: Function) {
-  return async function (req: Request, res: Response, next: NextFunction) {
+export function apiResponseHandler(fn) {
+  return async function (req, res, next) {
     try {
       let nextCalled = false;
-      const result = await fn(req, res, (params: any) => {
+      const result = await fn(req, res, (params) => {
         nextCalled = true;
         next(params);
       });
@@ -20,12 +20,7 @@ export function apiResponseHandler(fn: Function) {
 }
 
 export class ApiResponse {
-  public statusCode: number;
-  public data: any;
-  public message: string;
-  private success: boolean;
-
-  constructor(statusCode: number, data: any, message: string) {
+  constructor(statusCode, data, message) {
     this.statusCode = statusCode;
     this.data = data;
     this.message = message;

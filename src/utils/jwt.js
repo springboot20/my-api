@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { CustomErrors } from "../middleware/custom/custom.errors";
+import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { User } from "../types/user.model";
 import crypto from "crypto";

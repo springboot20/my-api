@@ -1,21 +1,20 @@
 import mongoose from "mongoose";
-import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
   apiResponseHandler,
   ApiResponse,
-} from "@middleware/api/api.response.middleware.js";
-import { CustomErrors } from "@middleware/custom/custom.errors.js";
-import { mongooseTransactions } from "@middleware/mongoose/mongoose.transactions.js";
-import { UserModel } from "@models/index.js";
-import { generateTemporaryTokens } from "@utils/jwt.js";
+} from "../../../middleware/api/api.response.middleware.js";
+import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
+import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
+import { UserModel } from "../../../models/index.js";
+import { generateTemporaryTokens } from "../../../utils/jwt.js";
 
 export const register = apiResponseHandler(
   mongooseTransactions(
     async (
-      req: Request,
-      res: Response,
-      session: mongoose.mongo.ClientSession
+      req,
+      res,
+      session
     ) => {
       const { email, password, username, role } = req.body;
 

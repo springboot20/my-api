@@ -1,19 +1,17 @@
-import { validateToken } from '@utils/jwt';
-import { apiResponseHandler } from '../api/api.response.middleware';
-import { UserModel } from '@models/index';
-import { CustomErrors } from '../custom/custom.errors';
-import { Request, Response, NextFunction } from 'express';
+import { validateToken } from '../../utils/jwt.js';
+import { apiResponseHandler } from '../api/api.response.middleware.js';
+import { UserModel } from '../../models/index.js';
+import { CustomErrors } from '../custom/custom.errors.js';
 import { StatusCodes } from 'http-status-codes';
-import { JwtPayload } from 'jsonwebtoken';
 
 export const verifyJWT = apiResponseHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) throw new CustomErrors('unauthorized request', StatusCodes.UNAUTHORIZED);
 
     try {
-      const decodedToken = validateToken(token) as JwtPayload;
+      const decodedToken = validateToken(token)
 
       const user = await UserModel.findById(decodedToken?._id).select(
         '-password -refreshToken -emailVerificationToken -emailVerificationTokenExpiry'

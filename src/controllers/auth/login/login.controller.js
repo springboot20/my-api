@@ -1,20 +1,19 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from "@middleware/api/api.response.middleware.js";
-import { CustomErrors } from "@middleware/custom/custom.errors.js";
-import { mongooseTransactions } from "@middleware/mongoose/mongoose.transactions.js";
-import { UserModel } from "@models/index.js";
+} from "../../../middleware/api/api.response.middleware.js";
+import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
+import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
+import { UserModel } from "../../../models/index.js";
 import {
   generateAccessToken,
   generateRefreshToken,
   matchPasswords,
-} from "@utils/jwt.js";
+} from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
-import { Request, Response } from "express";
 import mongoose from "mongoose";
 
-export const generateTokens = async (userId: string) => {
+export const generateTokens = async (userId) => {
   try {
     // find user with the id generated for a user when they create an account
     const user = await UserModel.findById(new mongoose.Schema.ObjectId(userId));
@@ -27,7 +26,7 @@ export const generateTokens = async (userId: string) => {
       );
 
     let accessPayload = {
-      _id: user._id as string,
+      _id: user._id ,
       username: user.username,
       role: user.role,
       email: user.email,
@@ -35,11 +34,11 @@ export const generateTokens = async (userId: string) => {
     };
 
     let refreshPayload = {
-      _id: user._id as string,
+      _id: user._id 
     };
 
-    const accessToken = generateAccessToken(accessPayload) as string;
-    const refreshToken = generateRefreshToken(refreshPayload) as string;
+    const accessToken = generateAccessToken(accessPayload)
+    const refreshToken = generateRefreshToken(refreshPayload);
 
     user.refreshToken = refreshToken;
 
@@ -55,7 +54,7 @@ export const generateTokens = async (userId: string) => {
   }
 };
 export const login = apiResponseHandler(
-  mongooseTransactions(async (req: Request, res: Response) => {
+  mongooseTransactions(async (req, res) => {
     const { email, password, username } = req.body;
 
     const user = await UserModel.findOne({ $or: [{ email }, { username }] });
@@ -75,8 +74,8 @@ export const login = apiResponseHandler(
       );
 
     const { accessToken, refreshToken } = (await generateTokens(
-      user?._id as string
-    )) as { accessToken: string; refreshToken: string };
+      user?._id 
+    )) 
 
     const loggedInUser = await UserModel.findById(user._id).select(
       "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
