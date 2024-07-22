@@ -14,6 +14,17 @@ import {
 } from "../../controllers/auth/index.js";
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
+import {
+  userLoginValidation,
+  userResetPasswordValidation,
+  userRegisterValidation,
+  userForgotPasswordValidation,
+} from "../../validation/app/auth/user.validators.js";
+import {
+  mongoPathVariableValidation,
+  mongoRequestBodyValidation,
+} from "../../validation/mongo/mongoId.validators.js";
+import { validate } from "../../validation/validate.middleware.js";
 
 const { Router } = express;
 
@@ -22,20 +33,35 @@ const router = Router({
 });
 
 // unsecured routes
-router.route("/register").post(register);
-router.route("/login").post(login);
-router.route("/forgot-password").post(forgotPassword);
+router.route("/register").post(userLoginValidation(), validate, register);
+
+router.route("/login").post(userRegisterValidation(), validate, login);
+
+router
+  .route("/forgot-password")
+  .post(userForgotPasswordValidation(), validate, forgotPassword);
+
 router.route("/refresh-token").post(refreshToken);
-router.route("/verify-email/:verificationToken").get(verifyEmail);
+
+router
+  .route("/verify-email/:userId/:verificationToken")
+  .get(mongoPathVariableValidation("userId"), validate, verifyEmail);
 
 // secured routes
 router.route("/logout").post(verifyJWT, logout);
+
 router
   .route("/resend-email-verification/")
   .post(verifyJWT, resendEmailVerification);
-router.route("/reset-password/:resetToken").post(verifyJWT, resetPassword);
+
+router
+  .route("/reset-password/:resetToken")
+  .post(verifyJWT, userResetPasswordValidation(), validate, resetPassword);
+
 router.route("/change-password").patch(verifyJWT, changeCurrentPassword);
+
 router.route("/").get(verifyJWT, checkPermissions("admin"), getUsers);
+
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 
 export { router };

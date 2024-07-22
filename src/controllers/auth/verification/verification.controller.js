@@ -132,7 +132,7 @@ export const refreshToken = apiResponseHandler(
 
 export const verifyEmail = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
-    const { verificationToken } = req.params;
+    const { verificationToken,userId } = req.params;
 
     if (!verificationToken)
       throw new CustomErrors(
@@ -146,6 +146,7 @@ export const verifyEmail = apiResponseHandler(
       .digest("hex");
 
     const user = await UserModel.findOne({
+      _id:new mongoose.Schema.ObjectId(userId),
       emailVerificationToken: hashedToken,
       emailVerificationTokenExpiry: { $gt: Date.now() },
     });
