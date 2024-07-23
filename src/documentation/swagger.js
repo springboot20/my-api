@@ -1,28 +1,43 @@
-import swaggerUi from "swagger-ui-express";
-// import swaggerJsdoc from "swagger-jsdoc";
-import swaggerAutoGen from 'swagger-autogen'
+import swaggerJsdoc from "swagger-jsdoc";
+import { join, dirname } from "path";
+import * as url from "url";
 
-const endpoints = ["../routes/*.js"]
-const outputFile = './docs.json';
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * @type {swaggerJsdoc.Options} options
  */
 const options = {
   definition: {
-    openapi: "3.0.0",
+    openapi: "3.1.0",
     info: {
       title: "Banking Rest Api Docs",
-      version: "1.0.0",
+      version: "0.1.0",
+      description: "",
+      license: {
+        name: "MIT",
+        url: "https://spdx.org/licenses/MIT.html",
+      },
+      contact: {
+        name: "CodeSuite",
+        url: "https://github.com/springboot20",
+        email: "opeyemiakanbi328@email.com",
+      },
     },
-    tags:[],
-    host:'http://localhost:5010/api/v1',
-    schemes:["http", 'https']
+    servers: [
+      {
+        url: "http://localhost:5010/api/v1",
+      },
+    ],
   },
-  apis: ["../routes.js", "../validation/**/**/*.js"],
+  apis: [
+    join(__dirname, "../routes/routes.js"),
+    join(__dirname, "../validation/**/*.js"),
+  ],
 };
 
-// export const swaggerSpec = swaggerJsdoc(options);
-export { swaggerUi };
+export const specs = swaggerJsdoc(options);
 
-swaggerAutoGen(outputFile, endpoints, options);
+
+console.log(join(__dirname, "../validation/**/*.js"))

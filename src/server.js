@@ -4,8 +4,7 @@ import bodyParser from "body-parser";
 import http from "http";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { swaggerUi } from "./documentation/swagger.js";
-import swaggerDocs from "./docs.json"
+import swaggerUi from "swagger-ui-express";
 
 dotenv.config({ path: ".env" });
 
@@ -15,9 +14,11 @@ import {
   handleError,
 } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
+import { specs } from "./documentation/swagger.js";
 
 let port = process.env.PORT ?? 8080;
 
+// Log MongoDB connection status
 mongoose.connection.on("connected", () => {
   console.log("Mongodb connected ....");
 });
@@ -32,22 +33,23 @@ process.on("SIGINT", () => {
 const app = express();
 const httpServer = http.createServer(app);
 
+// Serve Swagger UI
 app.use(
-  "/api/v1/docs",
+  "/api/v1/api-docs",
   swaggerUi.serve,
-  swaggerUi.setup(swaggerDocs, {
+  swaggerUi.setup(specs, {
+    explorer: true,
     swaggerOptions: {
       docExpansion: "none", // keep all the sections collapsed by default
     },
-    customSiteTitle: "Banking Rest Api Docs",
   })
 );
 
-app.get("docs.json", (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.send(swaggerSpec);
-
-  console.log(`Docs available at http://localhost:${port}`);
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "*");
+  next();
 });
 
 app.use(express.json({ limit: "16kb" }));
@@ -59,23 +61,12 @@ app.use(express.static("public"));
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
 
 app.use("/api/v1", router);
-
-/**
- * @openapi
- *    /api/v1/healthcheck:
- *        get:
- *          tags:
- *             - HealthCheck
- *              description: Responds if the app is up and running
- *
- *
- */
-app.get("/api/v1/healthcheck", (req, res) => res.sendStatus(200));
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {
@@ -90,7 +81,7 @@ httpServer.on("error", (error) => {
 const startServer = () => {
   httpServer.listen(port, () => {
     console.log(
-      `⚙️⚡ Server running at http://localhost:${port}/api/v1/docs 🌟🌟`
+      `⚙️⚡ Server running at http://localhost:${port} 🌟🌟`
     );
   });
 };

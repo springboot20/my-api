@@ -25,7 +25,44 @@ import { validate } from "../validation/validate.middleware.js";
 
 const router = Router();
 
-// unsecured routes
+/**
+ * @swagger
+ * /healthcheck:
+ *    get:
+ *       summary: Check if the application is up an running
+ *       description: Response if the app is up and running
+ *       responses:
+ *         200:
+ *           description: Check if is running well
+ *         400:
+ *           description: Server could not understand the request due to invalid syntax
+ */
+router.get("/healthcheck", (req, res) => res.sendStatus(200));
+
+/**
+ * @swagger
+ * /users/register:
+ *    post:
+ *       summary: Register new user
+ *       requestBody:
+ *          required: true
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  username:
+ *                   type: string
+ *                  email:
+ *                   type: string
+ *                  password:
+ *                   type: string
+ *       responses:
+ *         '201':
+ *            description: user successfully created
+ *         '409':
+ *            description: user with username or email alredy exists
+ */
 router
   .route("/users/register")
   .post(userRegisterValidation(), validate, register);
@@ -60,3 +97,11 @@ router.route("/users/").get(verifyJWT, checkPermissions("admin"), getUsers);
 router.route("/users/current-user").get(verifyJWT, getCurrentUser);
 
 export { router };
+
+/**
+ * {
+  "username": "abbas",
+  "email": "abbas@gmail.com",
+  "password": "@codesuitedev20"
+}
+ */

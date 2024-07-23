@@ -52,7 +52,7 @@ export const register = apiResponseHandler(
       await user.save({ validateBeforeSave: false });
 
       return new ApiResponse(
-        StatusCodes.OK,
+        StatusCodes.CREATED,
         {
           user: createdUser,
         },
