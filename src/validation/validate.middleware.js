@@ -14,6 +14,7 @@ const validate = (req, res, next) => {
   if (validationErrors.isEmpty()) {
     return next();
   } else {
+    
     let extractedError = [];
     validationErrors.array().map((error) => extractedError.push({ [error.path]: error.msg }));
 

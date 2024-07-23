@@ -1,17 +1,14 @@
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
-import { version } from "../../package.json";
-
 /**
- *
  * @type {swaggerJsdoc.Options} options
  */
 const options = {
-  definitions: {
+  definition: {
     openapi: "3.0.0",
     info: {
       title: "Banking Rest Api Docs",
-      version,
+      version: "1.0.0",
     },
     components: {
       securitySchemas: {
@@ -28,5 +25,8 @@ const options = {
       },
     ],
   },
-  apis: ["../routes/*"],
+  apis: ["../routes/**/*.js", "../validation/**/*.js"],
 };
+
+export const swaggerSpec = swaggerJsdoc(options);
+export { swaggerUi };

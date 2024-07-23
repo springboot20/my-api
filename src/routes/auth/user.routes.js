@@ -1,4 +1,4 @@
-import * as express from "express";
+import { Router } from "express";
 import {
   register,
   login,
@@ -20,22 +20,15 @@ import {
   userRegisterValidation,
   userForgotPasswordValidation,
 } from "../../validation/app/auth/user.validators.js";
-import {
-  mongoPathVariableValidation,
-  mongoRequestBodyValidation,
-} from "../../validation/mongo/mongoId.validators.js";
+import { mongoPathVariableValidation } from "../../validation/mongo/mongoId.validators.js";
 import { validate } from "../../validation/validate.middleware.js";
 
-const { Router } = express;
-
-const router = Router({
-  caseSensitive: true,
-});
+const router = Router();
 
 // unsecured routes
-router.route("/register").post(userLoginValidation(), validate, register);
+router.route("/register").post(userRegisterValidation(), validate, register);
 
-router.route("/login").post(userRegisterValidation(), validate, login);
+router.route("/login").post(userLoginValidation(), validate, login);
 
 router
   .route("/forgot-password")

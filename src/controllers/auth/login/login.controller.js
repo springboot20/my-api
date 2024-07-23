@@ -26,7 +26,7 @@ export const generateTokens = async (userId) => {
       );
 
     let accessPayload = {
-      _id: user._id ,
+      _id: user._id,
       username: user.username,
       role: user.role,
       email: user.email,
@@ -34,10 +34,10 @@ export const generateTokens = async (userId) => {
     };
 
     let refreshPayload = {
-      _id: user._id 
+      _id: user._id,
     };
 
-    const accessToken = generateAccessToken(accessPayload)
+    const accessToken = generateAccessToken(accessPayload);
     const refreshToken = generateRefreshToken(refreshPayload);
 
     user.refreshToken = refreshToken;
@@ -53,9 +53,10 @@ export const generateTokens = async (userId) => {
     }
   }
 };
+
 export const login = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
-    const { email, password, username } = req.body;
+    const { username, email, password } = req.body;
 
     const user = await UserModel.findOne({ $or: [{ email }, { username }] });
 
@@ -67,15 +68,13 @@ export const login = apiResponseHandler(
         StatusCodes.BAD_REQUEST
       );
 
-    if (!(await matchPasswords(password, user.password)))
+    if (!(await matchPasswords(user.password, password)))
       throw new CustomErrors(
         "invalid password entered",
         StatusCodes.UNAUTHORIZED
       );
 
-    const { accessToken, refreshToken } = (await generateTokens(
-      user?._id 
-    )) 
+    const { accessToken, refreshToken } = await generateTokens(user?._id);
 
     const loggedInUser = await UserModel.findById(user._id).select(
       "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"

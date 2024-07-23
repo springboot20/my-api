@@ -8,8 +8,7 @@ export function apiResponseHandler(fn) {
       });
 
       if (!res.headersSent && !nextCalled) {
-        res.status(200);
-        return result;
+        res.status(200).json(result);
       }
     } catch (error) {
       next(error);

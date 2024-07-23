@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import argon from "argon2";
+import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
   {
@@ -8,7 +8,6 @@ const userSchema = new Schema(
         url: String,
         localPath: String,
       },
-      default:''
     },
     username: {
       type: String,
@@ -54,9 +53,9 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
-
-  this.password = await argon.hash(this.password);
-  next()
+  const salt = await bcrypt.genSalt(20);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 const UserModel = model("User", userSchema);

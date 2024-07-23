@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import crypto from "crypto";
-import argon2 from "argon2";
+import bcrypt from "bcrypt";
 
 const validateToken = (token) => {
   try {
@@ -16,11 +16,8 @@ const validateToken = (token) => {
   }
 };
 
-export const matchPasswords = async (
-  entered_password,
-  dbPassword
-) => {
-  return await argon2.verify(entered_password, dbPassword);
+export const matchPasswords = async (entered_password, dbPassword) => {
+  return await bcrypt.compare(entered_password,dbPassword);
 };
 
 export const generateAccessToken = (payload) => {
@@ -46,6 +43,5 @@ export const generateTemporaryTokens = async () => {
 
   return { unHashedToken, hashedToken, tokenExpiry };
 };
-
 
 export { validateToken };
