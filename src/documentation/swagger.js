@@ -1,5 +1,10 @@
 import swaggerUi from "swagger-ui-express";
-import swaggerJsdoc from "swagger-jsdoc";
+// import swaggerJsdoc from "swagger-jsdoc";
+import swaggerAutoGen from 'swagger-autogen'
+
+const endpoints = ["../routes/*.js"]
+const outputFile = './docs.json';
+
 /**
  * @type {swaggerJsdoc.Options} options
  */
@@ -10,23 +15,14 @@ const options = {
       title: "Banking Rest Api Docs",
       version: "1.0.0",
     },
-    components: {
-      securitySchemas: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+    tags:[],
+    host:'http://localhost:5010/api/v1',
+    schemes:["http", 'https']
   },
-  apis: ["../routes/**/*.js", "../validation/**/*.js"],
+  apis: ["../routes.js", "../validation/**/**/*.js"],
 };
 
-export const swaggerSpec = swaggerJsdoc(options);
+// export const swaggerSpec = swaggerJsdoc(options);
 export { swaggerUi };
+
+swaggerAutoGen(outputFile, endpoints, options);

@@ -4,11 +4,12 @@ import bodyParser from "body-parser";
 import http from "http";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { swaggerSpec, swaggerUi } from "./documentation/swagger.js";
+import { swaggerUi } from "./documentation/swagger.js";
+import swaggerDocs from "./docs.json"
 
 dotenv.config({ path: ".env" });
 
-import {router} from "./routes/auth/user.routes.js"
+import { router } from "./routes/routes.js";
 import {
   notFoundError,
   handleError,
@@ -17,7 +18,7 @@ import mongoDbConnection from "./connection/mongodb.connection.js";
 
 let port = process.env.PORT ?? 8080;
 
-mongoose.connection.on("connect", () => {
+mongoose.connection.on("connected", () => {
   console.log("Mongodb connected ....");
 });
 
@@ -34,7 +35,7 @@ const httpServer = http.createServer(app);
 app.use(
   "/api/v1/docs",
   swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
+  swaggerUi.setup(swaggerDocs, {
     swaggerOptions: {
       docExpansion: "none", // keep all the sections collapsed by default
     },
@@ -42,7 +43,7 @@ app.use(
   })
 );
 
-app.use("docs.json", (req, res) => {
+app.get("docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
 
@@ -62,16 +63,19 @@ app.use(
   })
 );
 
-app.use("/api/v1/users", router);
+app.use("/api/v1", router);
 
 /**
  * @openapi
  *    /api/v1/healthcheck:
- *        tag
- * 
+ *        get:
+ *          tags:
+ *             - HealthCheck
+ *              description: Responds if the app is up and running
+ *
+ *
  */
 app.get("/api/v1/healthcheck", (req, res) => res.sendStatus(200));
-
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {
@@ -85,7 +89,9 @@ httpServer.on("error", (error) => {
 
 const startServer = () => {
   httpServer.listen(port, () => {
-    console.log(`⚙️⚡ Server running at http://localhost:${port}/api/v1/docs 🌟🌟`);
+    console.log(
+      `⚙️⚡ Server running at http://localhost:${port}/api/v1/docs 🌟🌟`
+    );
   });
 };
 

@@ -1,0 +1,56 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "REST API",
+    "description": ""
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {},
+  "definitions": {
+    "openapi": {
+      "type": "string",
+      "example": "3.0.0"
+    },
+    "info": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "Banking Rest Api Docs"
+        },
+        "version": {
+          "type": "string",
+          "example": "1.0.0"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "example": [],
+      "items": {}
+    },
+    "host": {
+      "type": "string",
+      "example": "http://localhost:5010/api/v1"
+    },
+    "schemes": {
+      "type": "array",
+      "example": [
+        "http",
+        "https"
+      ],
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "apis": [
+    "../routes.js",
+    "../validation/**/**/*.js"
+  ]
+}
