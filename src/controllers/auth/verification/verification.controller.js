@@ -8,7 +8,6 @@ import { UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import {
   generateTemporaryTokens,
-  matchPasswords,
   validateToken,
 } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
@@ -58,11 +57,11 @@ export const changeCurrentPassword = apiResponseHandler(
 
     const user = await UserModel.findById(req.user?._id);
 
-    if (!(await matchPasswords(oldPassword, user.password)))
+    if (!(await user.matchPasswords(oldPassword)))
       throw new CustomErrors("Invalid old password", StatusCodes.BAD_REQUEST);
 
     user.password = newPassword;
-    use.save({ validateBeforeSave: false });
+    user.save({ validateBeforeSave: false });
 
     return {
       message: "Password changed successfully",

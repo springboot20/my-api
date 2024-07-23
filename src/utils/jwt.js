@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import crypto from "crypto";
-import bcrypt from "bcrypt";
 
 const validateToken = (token) => {
   try {
@@ -16,19 +15,15 @@ const validateToken = (token) => {
   }
 };
 
-export const matchPasswords = async (entered_password, dbPassword) => {
-  return await bcrypt.compare(entered_password,dbPassword);
-};
-
 export const generateAccessToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRY,
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRES,
   });
 };
 
 export const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRY,
+  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRES,
   });
 };
 

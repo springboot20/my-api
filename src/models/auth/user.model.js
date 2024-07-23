@@ -50,13 +50,28 @@ const userSchema = new Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
+  if (!this.isModified("password")) return next();
+  try {
+    const salt = await bcrypt.genSalt(10); // 10 is a reasonable salt rounds value
+
+    this.password = await bcrypt.hash(this.password, salt);
+
     next();
+  } catch (error) {
+    next(error); // Pass error to next middleware
   }
-  const salt = await bcrypt.genSalt(20);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
+
+/**
+ *
+ * @param {string} entered_password
+ * @param {string} dbPassword
+ * @returns Promise<boolean>
+ */
+userSchema.methods.matchPasswords = async function (entered_password) {
+  console.log(this.password);
+  return await bcrypt.compare(entered_password, this.password);
+};
 
 const UserModel = model("User", userSchema);
 

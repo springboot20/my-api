@@ -7,16 +7,14 @@ import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.tran
 import { UserModel } from "../../../models/index.js";
 import {
   generateAccessToken,
-  generateRefreshToken,
-  matchPasswords,
+  generateRefreshToken
 } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose";
 
 export const generateTokens = async (userId) => {
   try {
     // find user with the id generated for a user when they create an account
-    const user = await UserModel.findById(new mongoose.Schema.ObjectId(userId));
+    const user = await UserModel.findById(userId);
 
     // check if the user is not found in the database
     if (!user)
@@ -68,7 +66,7 @@ export const login = apiResponseHandler(
         StatusCodes.BAD_REQUEST
       );
 
-    if (!(await matchPasswords(user.password, password)))
+    if (!(await user.matchPasswords(password)))
       throw new CustomErrors(
         "invalid password entered",
         StatusCodes.UNAUTHORIZED

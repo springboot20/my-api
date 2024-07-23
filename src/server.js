@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { swaggerSpec, swaggerUi } from "./documentation/swagger.js";
 
-dotenv.config({ path: "./.env" });
+dotenv.config({ path: ".env" });
 
 import {router} from "./routes/auth/user.routes.js"
 import {
@@ -97,5 +97,5 @@ mongoDbConnection()
     console.log(error);
   });
 
-// app.use(notFoundError);
+app.use(notFoundError);
 app.use(handleError);

@@ -18,7 +18,7 @@ export const register = apiResponseHandler(
       const { email, password, username, role } = req.body;
 
       const existingUser = await UserModel.findOne({
-        $or: [{ email }, { password }],
+        $or: [{ email }, { username }],
       });
 
       if (existingUser)
