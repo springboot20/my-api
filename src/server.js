@@ -80,9 +80,8 @@ httpServer.on("error", (error) => {
 
 const startServer = () => {
   httpServer.listen(port, () => {
-    console.log(
-      `⚙️⚡ Server running at http://localhost:${port} 🌟🌟`
-    );
+    console.info(`📑 Visit the documentation at: http://localhost:${port}/api/v1/api-docs`);
+    console.log(`⚙️⚡ Server running at http://localhost:${port} 🌟🌟`);
   });
 };
 
