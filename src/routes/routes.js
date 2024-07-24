@@ -43,7 +43,12 @@ router.get("/healthcheck", (req, res) => res.sendStatus(200));
  * @swagger
  * /users/register:
  *    post:
+ *       tags:
+ *         - 🔐 Authentication
  *       summary: Register new user
+ *       description: >- 
+ *          Api endopint that allows users to register or signup to create an account
+ *       operationId: registerUser
  *       requestBody:
  *          required: true
  *          content:
@@ -52,20 +57,105 @@ router.get("/healthcheck", (req, res) => res.sendStatus(200));
  *                type: object
  *                properties:
  *                  username:
- *                   type: string
+ *                    type: string
+ *                    example: '@codesuite2004'
  *                  email:
- *                   type: string
+ *                    type: string
+ *                    example: codesuite2004@gmail.com
  *                  password:
- *                   type: string
+ *                    type: string
+ *                    example: '@codesuite2004'
+ *                  role:
+ *                    type: string
+ *                    example: ADMIN
+ *              example:
+ *                username: '@codesuite2004'
+ *                email: codesuite2004@gmail.com
+ *                password: '@codesuite2004'
+ *                role: ADMIN
  *       responses:
  *         '201':
- *            description: user successfully created
+ *            description: Register user
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message: 
+ *                          type: string 
+ *                          example: user successfully created
+ *                        statusCode:
+ *                          type: number
+ *                          example: 201
+ *                        success:
+ *                          type: boolean
+ *                          example: true
  *         '409':
  *            description: user with username or email alredy exists
  */
+
 router
   .route("/users/register")
   .post(userRegisterValidation(), validate, register);
+
+
+/**
+ * @swagger
+ * /users/login:
+ *    post:
+ *       tags:
+ *         - 🔐 Authentication
+ *       summary: Login user
+ *       description: >- 
+ *          Api endopint that allows users to login into their register account
+ *       operationId: loginUser
+ *       requestBody:
+ *          required: true
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  username:
+ *                    type: string
+ *                    example: '@codesuite2004'
+ *                  email:
+ *                    type: string
+ *                    example: codesuite2004@gmail.com
+ *                  password:
+ *                    type: string
+ *                    example: '@codesuite2004'
+ *              example:
+ *                username: '@codesuite2004'
+ *                email: codesuite2004@gmail.com
+ *                password: '@codesuite2004'
+ *       responses:
+ *         '200':
+ *            description: Login registered user
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message: 
+ *                          type: string 
+ *                          example: user logged in successfully
+ *                        statusCode:
+ *                          type: number
+ *                          example: 200
+ *                        success:
+ *                          type: boolean
+ *                          example: true
+ *         '409':
+ *            description: user with username or email alredy exists
+ */
+
 
 router.route("/users/login").post(userLoginValidation(), validate, login);
 
