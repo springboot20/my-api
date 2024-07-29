@@ -187,11 +187,3 @@ router.route("/users/").get(verifyJWT, checkPermissions("admin"), getUsers);
 router.route("/users/current-user").get(verifyJWT, getCurrentUser);
 
 export { router };
-
-/**
- * {
-  "username": "abbas",
-  "email": "abbas@gmail.com",
-  "password": "@codesuitedev20"
-}
- */

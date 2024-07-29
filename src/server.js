@@ -5,9 +5,6 @@ import http from "http";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
-
-dotenv.config({ path: ".env" });
-
 import { router } from "./routes/routes.js";
 import {
   notFoundError,
@@ -15,6 +12,8 @@ import {
 } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
 import { specs } from "./documentation/swagger.js";
+
+dotenv.config({ path: ".env" });
 
 let port = process.env.PORT ?? 8080;
 
@@ -42,7 +41,7 @@ app.use(
     swaggerOptions: {
       docExpansion: "none", // keep all the sections collapsed by default
     },
-  })
+  }),
 );
 
 app.use((req, res, next) => {
@@ -63,7 +62,7 @@ app.use(
     origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-  })
+  }),
 );
 
 app.use("/api/v1", router);
@@ -80,7 +79,9 @@ httpServer.on("error", (error) => {
 
 const startServer = () => {
   httpServer.listen(port, () => {
-    console.info(`📑 Visit the documentation at: http://localhost:${port}/api/v1/api-docs`);
+    console.info(
+      `📑 Visit the documentation at: http://localhost:${port}/api/v1/api-docs`,
+    );
     console.log(`⚙️⚡ Server running at http://localhost:${port} 🌟🌟`);
   });
 };
