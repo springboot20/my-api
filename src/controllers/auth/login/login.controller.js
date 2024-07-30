@@ -60,6 +60,7 @@ export const login = apiResponseHandler(
 
     if (!user)
       throw new CustomErrors("user does not exists", StatusCodes.NOT_FOUND);
+    
     if (!(email && password))
       throw new CustomErrors(
         "please provide an email and a password",

@@ -46,7 +46,7 @@ router.get("/healthcheck", (req, res) => res.sendStatus(200));
  *       tags:
  *         - 🔐 Authentication
  *       summary: Register new user
- *       description: >- 
+ *       description: >-
  *          Api endopint that allows users to register or signup to create an account
  *       operationId: registerUser
  *       requestBody:
@@ -84,8 +84,8 @@ router.get("/healthcheck", (req, res) => res.sendStatus(200));
  *                    data:
  *                      types: object
  *                      properties:
- *                        message: 
- *                          type: string 
+ *                        message:
+ *                          type: string
  *                          example: user successfully created
  *                        statusCode:
  *                          type: number
@@ -101,7 +101,6 @@ router
   .route("/users/register")
   .post(userRegisterValidation(), validate, register);
 
-
 /**
  * @swagger
  * /users/login:
@@ -109,7 +108,7 @@ router
  *       tags:
  *         - 🔐 Authentication
  *       summary: Login user
- *       description: >- 
+ *       description: >-
  *          Api endopint that allows users to login into their register account
  *       operationId: loginUser
  *       requestBody:
@@ -143,8 +142,8 @@ router
  *                    data:
  *                      types: object
  *                      properties:
- *                        message: 
- *                          type: string 
+ *                        message:
+ *                          type: string
  *                          example: user logged in successfully
  *                        statusCode:
  *                          type: number
@@ -155,7 +154,6 @@ router
  *         '409':
  *            description: user with username or email alredy exists
  */
-
 
 router.route("/users/login").post(userLoginValidation(), validate, login);
 

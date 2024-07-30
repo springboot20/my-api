@@ -38,6 +38,3 @@ const options = {
 };
 
 export const specs = swaggerJsdoc(options);
-
-
-console.log(join(__dirname, "../validation/**/*.js"))

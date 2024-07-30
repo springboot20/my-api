@@ -3,14 +3,14 @@ import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import crypto from "crypto";
 
-const validateToken = (token) => {
+const validateToken = (token, key) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(token, key);
     return decodedToken;
   } catch (error) {
     throw new CustomErrors(
-      "Token verif.toString(ication failed",
-      StatusCodes.BAD_REQUEST
+      "Token verification failed",
+      StatusCodes.BAD_REQUEST,
     );
   }
 };

@@ -7,26 +7,23 @@ import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.tran
 import { UserModel } from "../../../models/index.js";
 
 export const logout = apiResponseHandler(
-  mongooseTransactions(
-    async (
-      req,
-      res
-    ) => {
-      await UserModel.findOneAndUpdate(
-        { _id: req.user._id },
-        {
-          $set: {
-            refreshToken: undefined,
-          },
-        },
-        { new: true }
-      );
+  mongooseTransactions(async (req, res) => {
 
-      return new ApiResponse(
-        StatusCodes.OK,
-        {},
-        "you have successfully logged out"
-      );
-    }
-  )
+    console.log(req.user._id)
+    await UserModel.findOneAndUpdate(
+      { _id: req.user._id },
+      {
+        $set: {
+          refreshToken: undefined,
+        },
+      },
+      { new: true },
+    );
+
+    return new ApiResponse(
+      StatusCodes.OK,
+      {},
+      "you have successfully logged out",
+    );
+  }),
 );
