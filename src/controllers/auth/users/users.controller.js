@@ -1,4 +1,4 @@
-import argon from "argon2";
+import bcrypt from "bcrypt";
 import {
   ApiResponse,
   apiResponseHandler,
@@ -9,69 +9,60 @@ import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 
-export const getCurrentUser = apiResponseHandler(
-  async (req, res) => {
-    return new ApiResponse(
-      StatusCodes.OK,
-      {
-        currentUser: req.user,
-      },
-      "Current user fetched successfully"
-    );
-  }
-);
+export const getCurrentUser = apiResponseHandler(async (req, res) => {
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      currentUser: req.user,
+    },
+    "Current user fetched successfully",
+  );
+});
 
 export const getUsers = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
     const users = await UserModel.find({});
-
-    const user = await UserModel.findById(new mongoose.Schema.ObjectId(req.user?._id));
 
     return new ApiResponse(
       StatusCodes.OK,
       {
         users: users,
       },
-      "users fetched successfully"
+      "users fetched successfully",
     );
-  })
+  }),
 );
 
 export const updateCurrentUserProfile = apiResponseHandler(
-  mongooseTransactions(
-    async (
-      req,
-      res,
-      session
-    ) => {
-      const { password, ...rest } = req.body;
-      const { userId } = req.params;
+  mongooseTransactions(async (req, res, session) => {
+    const { password, ...rest } = req.body;
+    const { userId } = req.params;
 
-      const hashedPassword = await argon.hash(password);
+    const salt = await bcrypt.genSalt(20);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-      const updatedUser = await UserModel.findByIdAndUpdate(
-        new mongoose.Schema.ObjectId(userId),
-        { $set: { ...rest, password: hashedPassword } },
-        { new: true }
-      ).select(
-        "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken"
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      new mongoose.Schema.ObjectId(userId),
+      { $set: { ...rest, password: hashedPassword } },
+      { new: true },
+    ).select(
+      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken",
+    );
+
+    await updatedUser.save({ session });
+
+    if (!updatedUser)
+      throw new CustomErrors(
+        "unable to updated user profile",
+        StatusCodes.BAD_REQUEST,
       );
 
-      await updatedUser.save({ session });
-
-      if (!updatedUser)
-        throw new CustomErrors(
-          "unable to updated user profile",
-          StatusCodes.BAD_REQUEST
-        );
-
-      return new ApiResponse(
-        StatusCodes.OK,
-        {
-          user: updatedUser,
-        },
-        "user updated successfully"
-      );
-    }
-  )
+    return new ApiResponse(
+      StatusCodes.OK,
+      {
+        user: updatedUser,
+      },
+      "user updated successfully",
+    );
+  }),
 );

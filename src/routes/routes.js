@@ -22,6 +22,10 @@ import {
 } from "../validation/app/auth/user.validators.js";
 import { mongoPathVariableValidation } from "../validation/mongo/mongoId.validators.js";
 import { validate } from "../validation/validate.middleware.js";
+import {
+  uploadAvatar,
+  upload,
+} from "../controllers/auth/upload/uploads.controller.js";
 
 const router = Router();
 
@@ -157,6 +161,8 @@ router
 
 router.route("/users/login").post(userLoginValidation(), validate, login);
 
+router.route("/users/upload").post(verifyJWT, upload, uploadAvatar);
+
 router
   .route("/users/forgot-password")
   .post(userForgotPasswordValidation(), validate, forgotPassword);
@@ -180,7 +186,7 @@ router
 
 router.route("/users/change-password").patch(verifyJWT, changeCurrentPassword);
 
-router.route("/users/").get(verifyJWT, checkPermissions("admin"), getUsers);
+router.route("/users/").get(verifyJWT, getUsers);
 
 router.route("/users/current-user").get(verifyJWT, getCurrentUser);
 

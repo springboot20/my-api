@@ -4,10 +4,7 @@ import bcrypt from "bcrypt";
 const userSchema = new Schema(
   {
     avatar: {
-      type: {
-        url: String,
-        localPath: String,
-      },
+      type: String,
     },
     username: {
       type: String,
@@ -46,7 +43,7 @@ const userSchema = new Schema(
       default: "email_and_password",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.pre("save", async function (next) {
