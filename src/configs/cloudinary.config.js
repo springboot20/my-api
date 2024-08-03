@@ -17,7 +17,7 @@ const uploadFileToCloudinary = async (buffer, folder) => {
         if (error) {
           reject(new CustomErrors(error.message, null));
         } else {
-          resolve(result.secure_url);
+          resolve(result);
         }
       })
       .end(buffer);

@@ -13,7 +13,7 @@ import {
   getCurrentUser,
 } from "../controllers/auth/index.js";
 import { verifyJWT } from "../middleware/auth/auth.middleware.js";
-import { checkPermissions } from "../utils/permissions.js";
+// import { checkPermissions } from "../utils/permissions.js";
 import {
   userLoginValidation,
   userResetPasswordValidation,
@@ -161,7 +161,7 @@ router
 
 router.route("/users/login").post(userLoginValidation(), validate, login);
 
-router.route("/users/upload").post(verifyJWT, upload, uploadAvatar);
+router.route("/users/upload").post(upload, uploadAvatar);
 
 router
   .route("/users/forgot-password")

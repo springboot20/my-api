@@ -4,7 +4,10 @@ import bcrypt from "bcrypt";
 const userSchema = new Schema(
   {
     avatar: {
-      type: String,
+      type: {
+        public_id: String,
+        url: String,
+      },
     },
     username: {
       type: String,

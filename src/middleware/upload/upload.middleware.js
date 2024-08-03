@@ -2,7 +2,8 @@ import multer from "multer";
 import DatauriParser from "datauri/parser.js";
 import path from "path";
 
-const storage = multer.memoryStorage();
+const storage = multer.memoryStorage({});
+
 const multerUploads = multer({
   storage,
   limits: {
