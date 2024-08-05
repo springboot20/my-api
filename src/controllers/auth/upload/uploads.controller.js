@@ -8,25 +8,17 @@ import { StatusCodes } from "http-status-codes";
 import { uploadFileToCloudinary } from "../../../configs/cloudinary.config.js";
 import { multerUploads } from "../../../middleware/upload/upload.middleware.js";
 
-export const upload = multerUploads.fields([
-  {
-    name: "avatar",
-    maxCount: 1,
-  },
-]);
+export const upload = multerUploads.single("avatar");
 
 export const uploadAvatar = apiResponseHandler(async (req, res) => {
-  if (!req.files.avatar) {
+  if (!req.file) {
     throw new CustomErrors("avatar image is required", StatusCodes.NOT_FOUND);
   }
 
   let uploadImage;
 
-  if (req.files) {
-    uploadImage = await uploadFileToCloudinary(
-      req.files.avatar.buffer,
-      "initial",
-    );
+  if (req.file) {
+    uploadImage = await uploadFileToCloudinary(req.file.buffer, "banking");
   }
 
   const updatedUserAvatar = await UserModel.findByIdAndUpdate(

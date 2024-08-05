@@ -161,7 +161,7 @@ router
 
 router.route("/users/login").post(userLoginValidation(), validate, login);
 
-router.route("/users/upload").post(upload, uploadAvatar);
+router.route("/users/upload").patch(verifyJWT, upload, uploadAvatar);
 
 router
   .route("/users/forgot-password")
