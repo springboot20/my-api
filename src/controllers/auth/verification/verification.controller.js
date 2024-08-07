@@ -153,6 +153,9 @@ export const verifyEmail = apiResponseHandler(async (req, res) => {
     );
   }
 
+  if (user.isEmailVerified)
+    throw new CustomErrors("Email already verified", StatusCodes.CONFLICT);
+
   const validToken = await bcrypt.compare(
     verificationToken,
     user.emailVerificationToken,
