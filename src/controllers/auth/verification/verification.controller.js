@@ -144,7 +144,7 @@ export const verifyEmail = apiResponseHandler(async (req, res) => {
 
   const user = await UserModel.findOne({
     _id: userId,
-    emailVerificationTokenExpiry: { $gte: Date.now() },
+    emailVerificationTokenExpiry: { $gt: Date.now() },
   });
 
   if (!user) {
@@ -154,13 +154,12 @@ export const verifyEmail = apiResponseHandler(async (req, res) => {
     );
   }
 
-  if (user.isEmailVerified)
-    throw new CustomErrors("Email already verified", StatusCodes.CONFLICT);
-
   const validToken = await bcrypt.compare(
     verificationToken,
     user.emailVerificationToken,
   );
+
+  console.log(validToken);
 
   if (!validToken)
     throw new CustomErrors(
