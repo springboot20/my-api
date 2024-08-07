@@ -172,7 +172,7 @@ export const verifyEmail = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
     StatusCodes.OK,
     { isEmailVerified: true },
-    "Email verified successfuully",
+    "Email verified successfully",
   );
 });
 
