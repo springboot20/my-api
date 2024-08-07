@@ -210,7 +210,7 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
     "email",
   );
 
-  return ApiResponse(
+  return new ApiResponse(
     StatusCodes.OK,
     {},
     "email verification link sent to your email",
