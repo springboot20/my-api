@@ -95,38 +95,41 @@ export const forgotPassword = apiResponseHandler(async (req, res) => {
   );
 });
 
-export const refreshToken = apiResponseHandler(async (req, res, session) => {
+export const refreshToken = apiResponseHandler(async (req, res) => {
   const {
     body: { inComingRefreshToken },
   } = req;
 
-  try {
-    const decodedRefreshToken = validateToken(inComingRefreshToken);
-    let user = await UserModel.findByIdAndUpdate(decodedRefreshToken?._id);
+  const decodedRefreshToken = validateToken(
+    inComingRefreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+  );
 
-    if (!user) {
-      throw new CustomErrors("Invalid Token", StatusCodes.UNAUTHORIZED);
-    }
+  let user = await UserModel.findByIdAndUpdate(decodedRefreshToken?._id);
 
-    if (inComingRefreshToken !== user?.refreshToken) {
-      throw new CustomErrors(
-        "Token has expired or has already been used",
-        StatusCodes.UNAUTHORIZED,
-      );
-    }
-
-    const { accessToken, refreshToken } = await generateTokens(user?._id);
-
-    user.refreshToken = refreshToken;
-    await user.save({ session });
-
-    return {
-      message: "access token refreshed successfully",
-      tokens: { accessToken, refreshToken },
-    };
-  } catch (error) {
-    return new CustomErrors(`Error : ${error}`, StatusCodes.UNAUTHORIZED);
+  if (!user) {
+    throw new CustomErrors("Invalid Token", StatusCodes.UNAUTHORIZED);
   }
+
+  if (inComingRefreshToken !== user?.refreshToken) {
+    throw new CustomErrors(
+      "Token has expired or has already been used",
+      StatusCodes.UNAUTHORIZED,
+    );
+  }
+
+  const { accessToken, refreshToken } = await generateTokens(user?._id);
+
+  user.refreshToken = refreshToken;
+  await user.save({});
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      tokens: { accessToken, refreshToken },
+    },
+    "access token refreshed successfully",
+  );
 });
 
 export const verifyEmail = apiResponseHandler(async (req, res) => {
