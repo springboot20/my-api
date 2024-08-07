@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const userSchema = new Schema(
   {
@@ -37,9 +38,9 @@ const userSchema = new Schema(
     },
     refreshToken: { type: String },
     forgotPasswordToken: { type: String },
-    forgotPasswordTokenExpiry: { type: Date, default: Date.now() },
+    forgotPasswordTokenExpiry: { type: Date },
     emailVerificationToken: { type: String },
-    emailVerificationTokenExpiry: { type: Date, default: Date.now() },
+    emailVerificationTokenExpiry: { type: Date },
     loginType: {
       type: String,
       enum: ["email_and_password", "google"],
@@ -70,6 +71,18 @@ userSchema.pre("save", async function (next) {
  */
 userSchema.methods.matchPasswords = async function (entered_password) {
   return await bcrypt.compare(entered_password, this.password);
+};
+
+userSchema.methods.generateTemporaryTokens = function () {
+  const unHashedToken = crypto.randomBytes(20).toString("hex");
+
+  // Generate salt and hash the token synchronously
+  const salt = bcrypt.genSaltSync(10); // Use synchronous version for hashing
+  const hashedToken = bcrypt.hashSync(unHashedToken, salt);
+
+  const tokenExpiry = Date.now() + 20 * 60 * 1000; // 20 minutes from now
+
+  return { unHashedToken, hashedToken, tokenExpiry };
 };
 
 const UserModel = model("User", userSchema);

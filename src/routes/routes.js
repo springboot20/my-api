@@ -169,9 +169,7 @@ router
 
 router.route("/users/refresh-token").post(refreshToken);
 
-router
-  .route("/users/verify-email/:userId/:verificationToken")
-  .get(mongoPathVariableValidation("userId"), validate, verifyEmail);
+router.route("/users/:userId/verify-email/:verificationToken").get(verifyEmail);
 
 // secured routes
 router.route("/users/logout").post(verifyJWT, logout);

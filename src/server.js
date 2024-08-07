@@ -12,9 +12,14 @@ import {
 } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
 import { specs } from "./documentation/swagger.js";
+import { create } from "express-handlebars";
+import path from "path";
+import { __dirname } from "./utils/index.js";
 
 dotenv.config({ path: ".env" });
 
+const app = express();
+const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
 // Log MongoDB connection status
@@ -22,15 +27,20 @@ mongoose.connection.on("connected", () => {
   console.log("Mongodb connected ....");
 });
 
+const hsb = create({
+  extname: ".hbs",
+});
+
+app.engine("hsb", hsb.engine);
+app.set("view engine", "hsb");
+app.set("views", path.resolve(`${__dirname}/views`));
+
 process.on("SIGINT", () => {
   mongoose.connection.once("disconnect", () => {
     console.log("Mongodb disconnected..... ");
     process.exit(0);
   });
 });
-
-const app = express();
-const httpServer = http.createServer(app);
 
 // Serve Swagger UI
 app.use(

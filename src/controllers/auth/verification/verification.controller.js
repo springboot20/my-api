@@ -6,13 +6,10 @@ import {
 import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
 import { UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
-import {
-  generateTemporaryTokens,
-  validateToken,
-} from "../../../utils/jwt.js";
+import { validateToken } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose";
 import { generateTokens } from "../login/login.controller.js";
+import bcrypt from "bcrypt";
 
 export const resetPassword = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
@@ -22,7 +19,7 @@ export const resetPassword = apiResponseHandler(
     if (!resetToken)
       throw new CustomErrors(
         "Reset password token is missing",
-        StatusCodes.BAD_REQUEST
+        StatusCodes.BAD_REQUEST,
       );
 
     let hashedToken = crypto
@@ -38,7 +35,7 @@ export const resetPassword = apiResponseHandler(
     if (!user)
       throw new CustomErrors(
         "Token is invalid or expired",
-        StatusCodes.UNAUTHORIZED
+        StatusCodes.UNAUTHORIZED,
       );
 
     user.emailVerificationToken = undefined;
@@ -48,7 +45,7 @@ export const resetPassword = apiResponseHandler(
     await user.save({ validateBeforeSave: false });
 
     return new ApiResponse(StatusCodes.OK, {}, "Password reset successfully");
-  })
+  }),
 );
 
 export const changeCurrentPassword = apiResponseHandler(
@@ -63,10 +60,8 @@ export const changeCurrentPassword = apiResponseHandler(
     user.password = newPassword;
     user.save({ validateBeforeSave: false });
 
-    return {
-      message: "Password changed successfully",
-    };
-  })
+    return new ApiResponse(StatusCodes.OK, {}, "Password changed successfully");
+  }),
 );
 
 export const forgotPassword = apiResponseHandler(
@@ -77,20 +72,27 @@ export const forgotPassword = apiResponseHandler(
     if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
     const { unHashedToken, hashedToken, tokenExpiry } =
-      await generateTemporaryTokens();
+      await user.generateTemporaryTokens();
 
     user.forgotPasswordToken = hashedToken;
     user.forgotPasswordTokenExpiry = new Date(tokenExpiry);
     await user.save({ validateBeforeSave: false });
 
-    const resetLink = `${req.protocol}//:${req.get(
-      "host"
-    )}/api/v1/user/reset-password/${unHashedToken}`;
-    // await sendMail(user.email, 'Password reset', { resetLink, username: user.username }, 'reset-password');
+    const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
+    await sendMail(
+      user.email,
+      "Password reset",
+      { resetLink, username: user.username },
+      "reset-password",
+    );
 
     await user.save({ validateBeforeSave: false, session });
-    return { message: "Password reset link sent to your email" };
-  })
+    return new ApiResponse(
+      StatusCodes.OK,
+      {},
+      "Password reset link sent to your email",
+    );
+  }),
 );
 
 export const refreshToken = apiResponseHandler(
@@ -110,7 +112,7 @@ export const refreshToken = apiResponseHandler(
       if (inComingRefreshToken !== user?.refreshToken) {
         throw new CustomErrors(
           "Token has expired or has already been used",
-          StatusCodes.UNAUTHORIZED
+          StatusCodes.UNAUTHORIZED,
         );
       }
 
@@ -126,45 +128,53 @@ export const refreshToken = apiResponseHandler(
     } catch (error) {
       return new CustomErrors(`Error : ${error}`, StatusCodes.UNAUTHORIZED);
     }
-  })
+  }),
 );
 
-export const verifyEmail = apiResponseHandler(
-  mongooseTransactions(async (req, res) => {
-    const { verificationToken,userId } = req.params;
+export const verifyEmail = apiResponseHandler(async (req, res) => {
+  const { verificationToken, userId } = req.params;
 
-    if (!verificationToken)
-      throw new CustomErrors(
-        "Email verification token is missing",
-        StatusCodes.BAD_REQUEST
-      );
+  if (!verificationToken) {
+    throw new CustomErrors(
+      "Email verification token is missing",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
 
-    let hashedToken = crypto
-      .createHash("sha256")
-      .update(verificationToken)
-      .digest("hex");
+  const user = await UserModel.findOne({
+    _id: userId,
+    emailVerificationTokenExpiry: { $gte: Date.now() },
+  });
 
-    const user = await UserModel.findOne({
-      _id:new mongoose.Schema.ObjectId(userId),
-      emailVerificationToken: hashedToken,
-      emailVerificationTokenExpiry: { $gt: Date.now() },
-    });
+  if (!user) {
+    throw new CustomErrors(
+      "Token is invalid or expired",
+      StatusCodes.UNAUTHORIZED,
+    );
+  }
 
-    if (!user)
-      throw new CustomErrors(
-        "Token is invalid or expired",
-        StatusCodes.UNAUTHORIZED
-      );
+  const validToken = await bcrypt.compare(
+    verificationToken,
+    user.emailVerificationToken,
+  );
 
-    user.emailVerificationToken = undefined;
-    user.emailVerificationTokenExpiry = undefined;
+  if (!validToken)
+    throw new CustomErrors(
+      "Invalid email verification token provided",
+      StatusCodes.UNAUTHORIZED,
+    );
 
-    user.isEmailVerified = true;
-    await user.save({ validateBeforeSave: false });
+  user.emailVerificationToken = undefined;
+  user.emailVerificationTokenExpiry = undefined;
+  user.isEmailVerified = true;
+  await user.save({ validateBeforeSave: false });
 
-    return { message: "Email is verified", isEmailVerified: true };
-  })
-);
+  return new ApiResponse(
+    StatusCodes.OK,
+    { isEmailVerified: true },
+    "Email verified successfuully",
+  );
+});
 
 export const resendEmailVerification = apiResponseHandler(
   mongooseTransactions(async (req, res, session) => {
@@ -174,7 +184,7 @@ export const resendEmailVerification = apiResponseHandler(
     if (user.isEmailVerified)
       throw new CustomErrors(
         "Email has already been verified",
-        StatusCodes.CONFLICT
+        StatusCodes.CONFLICT,
       );
 
     const { unHashedToken, hashedToken, tokenExpiry } =
@@ -185,11 +195,11 @@ export const resendEmailVerification = apiResponseHandler(
     await user.save({ validateBeforeSave: false });
 
     const verifyLink = `${req.protocol}//:${req.get(
-      "host"
+      "host",
     )}/api/v1/users/verify-email/${unHashedToken}`;
     // await sendMail(user.email, 'Password reset', { verifyLink, username: user.username }, 'verify-email');
 
     await user.save({ validateBeforeSave: false, session });
     return { message: "email verification link sent to your email" };
-  })
+  }),
 );
