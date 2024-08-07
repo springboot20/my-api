@@ -10,6 +10,7 @@ import { validateToken } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
 import { generateTokens } from "../login/login.controller.js";
 import bcrypt from "bcrypt";
+import { sendMail } from "../../../service/email.service.js";
 
 export const resetPassword = apiResponseHandler(
   mongooseTransactions(async (req, res) => {
@@ -179,30 +180,39 @@ export const verifyEmail = apiResponseHandler(async (req, res) => {
   );
 });
 
-export const resendEmailVerification = apiResponseHandler(
-  mongooseTransactions(async (req, res, session) => {
-    const user = await UserModel.findById(req.user?._id);
+export const resendEmailVerification = apiResponseHandler(async (req, res) => {
+  const user = await UserModel.findById(req.user?._id);
 
-    if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
-    if (user.isEmailVerified)
-      throw new CustomErrors(
-        "Email has already been verified",
-        StatusCodes.CONFLICT,
-      );
+  if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
-    const { unHashedToken, hashedToken, tokenExpiry } =
-      await generateTemporaryTokens();
+  if (user.isEmailVerified) {
+    throw new CustomErrors(
+      "Email has already been verified",
+      StatusCodes.CONFLICT,
+    );
+  }
 
-    user.emailVerificationToken = hashedToken;
-    user.emailVerificationTokenExpiry = new Date(tokenExpiry);
-    await user.save({ validateBeforeSave: false });
+  const { unHashedToken, hashedToken, tokenExpiry } =
+    await user.generateTemporaryTokens();
 
-    const verifyLink = `${req.protocol}//:${req.get(
-      "host",
-    )}/api/v1/users/verify-email/${unHashedToken}`;
-    // await sendMail(user.email, 'Password reset', { verifyLink, username: user.username }, 'verify-email');
+  user.emailVerificationToken = hashedToken;
+  user.emailVerificationTokenExpiry = tokenExpiry;
+  await user.save({ validateBeforeSave: false });
 
-    await user.save({ validateBeforeSave: false, session });
-    return { message: "email verification link sent to your email" };
-  }),
-);
+  const verificationLink = `${req.protocol}//:${req.get(
+    "host",
+  )}/api/v1/users/verify-email/${unHashedToken}`;
+
+  await sendMail(
+    user.email,
+    "Password reset",
+    { verificationLink, username: user.username },
+    "email",
+  );
+
+  return ApiResponse(
+    StatusCodes.OK,
+    {},
+    "email verification link sent to your email",
+  );
+});
