@@ -199,9 +199,9 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
   user.emailVerificationTokenExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
-  const verificationLink = `${req.protocol}//:${req.get(
-    "host",
-  )}/api/v1/users/verify-email/${unHashedToken}`;
+  const verificationLink = `${req.protocol}//:${req.get("host")}/api/v1/users/${
+    user._id
+  }/verify-email/${unHashedToken}`;
 
   await sendMail(
     user.email,
