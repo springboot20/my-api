@@ -45,10 +45,10 @@ export const register = apiResponseHandler(
 
     console.log(unHashedToken)
 
-    // const verificationLink = `${process.env.BASE_URL}/verify-email/${user?._id}/${unHashedToken}`;
-    const verificationLink = `${req.protocol}://${req.get(
-      "host",
-    )}/api/v1/users/${user._id}/verify-email/${unHashedToken}`;
+    const verificationLink = `${process.env.BASE_URL}/verify-email/${user?._id}/${unHashedToken}`;
+    // const verificationLink = `${req.protocol}://${req.get(
+    //   "host",
+    // )}/api/v1/users/${user._id}/verify-email/${unHashedToken}`;
 
     await sendMail(
       user.email,
