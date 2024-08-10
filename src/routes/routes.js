@@ -18,14 +18,12 @@ import {
   userLoginValidation,
   userResetPasswordValidation,
   userRegisterValidation,
-  userForgotPasswordValidation,
+  userValidation,
 } from "../validation/app/auth/user.validators.js";
 import { mongoPathVariableValidation } from "../validation/mongo/mongoId.validators.js";
 import { validate } from "../validation/validate.middleware.js";
-import {
-  uploadAvatar,
-  upload,
-} from "../controllers/auth/upload/uploads.controller.js";
+import { uploadAvatar, upload } from "../controllers/auth/upload/uploads.controller.js";
+import { sendEmailVerifification } from "../controllers/auth/verification/verification.controller.js";
 
 const router = Router();
 
@@ -101,9 +99,7 @@ router.get("/healthcheck", (req, res) => res.sendStatus(200));
  *            description: user with username or email alredy exists
  */
 
-router
-  .route("/users/register")
-  .post(userRegisterValidation(), validate, register);
+router.route("/users/register").post(userRegisterValidation(), validate, register);
 
 /**
  * @swagger
@@ -163,20 +159,22 @@ router.route("/users/login").post(userLoginValidation(), validate, login);
 
 router.route("/users/upload").patch(verifyJWT, upload, uploadAvatar);
 
-router
-  .route("/users/forgot-password")
-  .post(userForgotPasswordValidation(), validate, forgotPassword);
+router.route("/users/forgot-password").post(userValidation(), validate, forgotPassword);
 
 router.route("/users/refresh-token").post(refreshToken);
 
-router.route("/users/verify-email/:userId/:verificationToken").get(verifyEmail);
-
-// secured routes
-router.route("/users/logout").post(verifyJWT, logout);
+router.route("/users/send-email").post(userValidation(), validate, sendEmailVerifification);
 
 router
-  .route("/users/resend-email-verification/")
-  .post(verifyJWT, resendEmailVerification);
+  .route("/users/verify-email/:id/:token")
+  .get(mongoPathVariableValidation("id"), validate, verifyEmail);
+
+
+
+  // secured routes
+router.route("/users/logout").post(verifyJWT, logout);
+
+router.route("/users/resend-email-verification/").post(verifyJWT, resendEmailVerification);
 
 router
   .route("/users/reset-password/:resetToken")

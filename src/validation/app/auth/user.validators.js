@@ -38,7 +38,7 @@ const userLoginValidation = () => {
   ];
 };
 
-const userForgotPasswordValidation = () => {
+const userValidation = () => {
   return [body("email").isEmail().withMessage("Email is invalid")];
 };
 
@@ -99,7 +99,7 @@ const userProfileUpdateValidation = () => {
 export {
   userRegisterValidation,
   userLoginValidation,
-  userForgotPasswordValidation,
+  userValidation,
   userResetPasswordValidation,
   userAssignRoleValidation,
   userChangeCurrentPasswordValidation,

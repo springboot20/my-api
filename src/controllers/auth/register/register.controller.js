@@ -17,10 +17,7 @@ export const register = apiResponseHandler(
     });
 
     if (existingUser)
-      throw new CustomErrors(
-        "user with username or email already exists",
-        StatusCodes.CONFLICT,
-      );
+      throw new CustomErrors("user with username or email already exists", StatusCodes.CONFLICT);
 
     const user = await UserModel.create({
       username,
@@ -30,34 +27,9 @@ export const register = apiResponseHandler(
       isEmailVerified: false,
     });
 
-    const { unHashedToken, hashedToken, tokenExpiry } =
-      await user.generateTemporaryTokens();
-
-    console.log({ unHashedToken, hashedToken, tokenExpiry });
-
-    user.emailVerificationToken = hashedToken;
-    user.emailVerificationTokenExpiry = tokenExpiry;
     await user.save({ validateBeforeSave: false });
 
-    const createdUser = await UserModel.findById(user._id).select(
-      "-password -refreshToken",
-    );
-
-    console.log(unHashedToken);
-
-    console.log(`${req.protocol}://${req.get("host")}`);
-
-    const verificationLink = `${process.env.BASE_URL}/verify-email/${user?._id}/${unHashedToken}`;
-    // const verificationLink = `${req.protocol}://${req.get(
-    //   "host",
-    // )}/api/v1/users/${user._id}/verify-email/${unHashedToken}`;
-
-    await sendMail(
-      user.email,
-      "Email verification",
-      { verificationLink, username: user.username },
-      "email",
-    );
+    const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
 
     return new ApiResponse(
       StatusCodes.CREATED,

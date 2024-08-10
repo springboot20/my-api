@@ -14,30 +14,19 @@ export const resetPassword = apiResponseHandler(async (req, res) => {
   const { resetToken } = req.params;
   const { password } = req.body;
 
-  if (!resetToken)
-    throw new CustomErrors(
-      "Reset password token is missing",
-      StatusCodes.NOT_FOUND,
-    );
+  if (!resetToken) throw new CustomErrors("Reset password token is missing", StatusCodes.NOT_FOUND);
 
   const user = await UserModel.findOne({
     _id: req.user.id,
     forgotPasswordTokenExpiry: { $gte: Date.now() },
   });
 
-  if (!user)
-    throw new CustomErrors(
-      "Token is invalid or expired",
-      StatusCodes.UNAUTHORIZED,
-    );
+  if (!user) throw new CustomErrors("Token is invalid or expired", StatusCodes.UNAUTHORIZED);
 
   const validToken = await bcrypt.compare(resetToken, user.forgotPasswordToken);
 
   if (!validToken)
-    throw new CustomErrors(
-      "Invalid reset password token provided",
-      StatusCodes.UNAUTHORIZED,
-    );
+    throw new CustomErrors("Invalid reset password token provided", StatusCodes.UNAUTHORIZED);
 
   user.forgotPasswordToken = undefined;
   user.forgotPasswordTokenExpiry = undefined;
@@ -69,8 +58,7 @@ export const forgotPassword = apiResponseHandler(async (req, res) => {
 
   if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
-  const { unHashedToken, hashedToken, tokenExpiry } =
-    await user.generateTemporaryTokens();
+  const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
 
   user.forgotPasswordToken = hashedToken;
   user.forgotPasswordTokenExpiry = tokenExpiry;
@@ -81,12 +69,7 @@ export const forgotPassword = apiResponseHandler(async (req, res) => {
     "host",
   )}/api/v1/users/reset-password/${unHashedToken}`;
 
-  await sendMail(
-    user.email,
-    "Password reset",
-    { resetLink, username: user.username },
-    "reset",
-  );
+  await sendMail(user.email, "Password reset", { resetLink, username: user.username }, "reset");
 
   return new ApiResponse(
     StatusCodes.OK,
@@ -100,10 +83,7 @@ export const refreshToken = apiResponseHandler(async (req, res) => {
     body: { inComingRefreshToken },
   } = req;
 
-  const decodedRefreshToken = validateToken(
-    inComingRefreshToken,
-    process.env.REFRESH_TOKEN_SECRET,
-  );
+  const decodedRefreshToken = validateToken(inComingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
   let user = await UserModel.findByIdAndUpdate(decodedRefreshToken?._id);
 
@@ -112,10 +92,7 @@ export const refreshToken = apiResponseHandler(async (req, res) => {
   }
 
   if (inComingRefreshToken !== user?.refreshToken) {
-    throw new CustomErrors(
-      "Token has expired or has already been used",
-      StatusCodes.UNAUTHORIZED,
-    );
+    throw new CustomErrors("Token has expired or has already been used", StatusCodes.UNAUTHORIZED);
   }
 
   const { accessToken, refreshToken } = await generateTokens(user?._id);
@@ -132,51 +109,65 @@ export const refreshToken = apiResponseHandler(async (req, res) => {
   );
 });
 
-export const verifyEmail = apiResponseHandler(async (req, res) => {
-  const { verificationToken, userId } = req.params;
+export const sendEmailVerifification = apiResponseHandler(async (req, res) => {
+  const { email } = req.body;
 
-  if (!verificationToken) {
-    throw new CustomErrors(
-      "Email verification token is missing",
-      StatusCodes.BAD_REQUEST,
-    );
+  const user = await UserModel.findOne({ email });
+
+  if (!user) throw new CustomErrors("user with email not exist", StatusCodes.NOT_FOUND);
+
+  console.log(`${req.protocol}://${req.get("host")}`);
+
+  const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
+
+  console.log({ unHashedToken, hashedToken, tokenExpiry });
+
+  user.emailVerificationToken = hashedToken;
+  user.emailVerificationTokenExpiry = tokenExpiry;
+  await user.save({ validateBeforeSave: false });
+
+  const verificationLink = `${process.env.BASE_URL}/verify-email/${unHashedToken}`;
+
+  await sendMail(
+    user.email,
+    "Email verification",
+    { verificationLink, username: user.username },
+    "email",
+  );
+
+  return new ApiResponse(StatusCodes.OK, {}, "email verification link sent to your email");
+
+});
+
+export const verifyEmail = apiResponseHandler(async (req, res) => {
+  const { token, id } = req.params;
+
+  if (!token) {
+    throw new CustomErrors("Email verification token is missing", StatusCodes.BAD_REQUEST);
   }
 
   const user = await UserModel.findOne({
-    _id: userId,
+    _id: id,
     emailVerificationTokenExpiry: { $gt: Date.now() },
   });
 
   if (!user) {
-    throw new CustomErrors(
-      "Token is invalid or expired",
-      StatusCodes.UNAUTHORIZED,
-    );
+    throw new CustomErrors("Token is invalid or expired", StatusCodes.UNAUTHORIZED);
   }
 
-  const validToken = await bcrypt.compare(
-    verificationToken,
-    user.emailVerificationToken,
-  );
-
-  console.log(validToken);
+  const validToken = await bcrypt.compare(token, user.emailVerificationToken);
 
   if (!validToken)
-    throw new CustomErrors(
-      "Invalid email verification token provided",
-      StatusCodes.UNAUTHORIZED,
-    );
+    throw new CustomErrors("Invalid email verification token provided", StatusCodes.UNAUTHORIZED);
 
   user.emailVerificationToken = undefined;
   user.emailVerificationTokenExpiry = undefined;
+
   user.isEmailVerified = true;
+
   await user.save({ validateBeforeSave: false });
 
-  return new ApiResponse(
-    StatusCodes.OK,
-    { isEmailVerified: true },
-    "Email verified successfully",
-  );
+  return new ApiResponse(StatusCodes.OK, { isEmailVerified: true }, "Email verified successfully");
 });
 
 export const resendEmailVerification = apiResponseHandler(async (req, res) => {
@@ -185,23 +176,19 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
   if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
   if (user.isEmailVerified) {
-    throw new CustomErrors(
-      "Email has already been verified",
-      StatusCodes.CONFLICT,
-    );
+    throw new CustomErrors("Email has already been verified", StatusCodes.CONFLICT);
   }
 
-  const { unHashedToken, hashedToken, tokenExpiry } =
-    await user.generateTemporaryTokens();
+  const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
 
   user.emailVerificationToken = hashedToken;
   user.emailVerificationTokenExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
   // const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
-  const verificationLink = `${req.protocol}//:${req.get(
-    "host",
-  )}/api/v1/users/verify-email/${user._id}/${unHashedToken}`;
+  const verificationLink = `${req.protocol}//:${req.get("host")}/api/v1/users/verify-email/${
+    user._id
+  }/${unHashedToken}`;
 
   await sendMail(
     user.email,
@@ -210,9 +197,5 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
     "email",
   );
 
-  return new ApiResponse(
-    StatusCodes.OK,
-    {},
-    "email verification link sent to your email",
-  );
+  return new ApiResponse(StatusCodes.OK, {}, "email verification link sent to your email");
 });
