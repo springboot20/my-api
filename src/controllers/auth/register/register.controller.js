@@ -33,7 +33,7 @@ export const register = apiResponseHandler(
     const { unHashedToken, hashedToken, tokenExpiry } =
       await user.generateTemporaryTokens();
 
-      console.log({ unHashedToken, hashedToken, tokenExpiry } )
+    console.log({ unHashedToken, hashedToken, tokenExpiry });
 
     user.emailVerificationToken = hashedToken;
     user.emailVerificationTokenExpiry = tokenExpiry;
@@ -43,7 +43,9 @@ export const register = apiResponseHandler(
       "-password -refreshToken",
     );
 
-    console.log(unHashedToken)
+    console.log(unHashedToken);
+
+    console.log(`${req.protocol}://${req.get("host")}`);
 
     const verificationLink = `${process.env.BASE_URL}/verify-email/${user?._id}/${unHashedToken}`;
     // const verificationLink = `${req.protocol}://${req.get(

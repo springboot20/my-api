@@ -6,15 +6,9 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
 import { router } from "./routes/routes.js";
-import {
-  notFoundError,
-  handleError,
-} from "./middleware/error/error.middleware.js";
+import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
 import { specs } from "./documentation/swagger.js";
-import { create } from "express-handlebars";
-import path from "path";
-import { __dirname } from "./utils/index.js";
 
 dotenv.config({ path: ".env" });
 
@@ -26,14 +20,6 @@ let port = process.env.PORT ?? 8080;
 mongoose.connection.on("connected", () => {
   console.log("Mongodb connected ....");
 });
-
-const hsb = create({
-  extname: ".hbs",
-});
-
-app.engine("hsb", hsb.engine);
-app.set("view engine", "hsb");
-app.set("views", path.resolve(`${__dirname}/views`));
 
 process.on("SIGINT", () => {
   mongoose.connection.once("disconnect", () => {
@@ -53,13 +39,6 @@ app.use(
     },
   }),
 );
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "*");
-  next();
-});
 
 app.use(express.json({ limit: "16kb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
@@ -89,9 +68,7 @@ httpServer.on("error", (error) => {
 
 const startServer = () => {
   httpServer.listen(port, () => {
-    console.info(
-      `📑 Visit the documentation at: http://localhost:${port}/api/v1/api-docs`,
-    );
+    console.info(`📑 Visit the documentation at: http://localhost:${port}/api/v1/api-docs`);
     console.log(`⚙️⚡ Server running at http://localhost:${port} 🌟🌟`);
   });
 };
