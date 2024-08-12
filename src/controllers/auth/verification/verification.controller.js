@@ -64,10 +64,7 @@ export const forgotPassword = apiResponseHandler(async (req, res) => {
   user.forgotPasswordTokenExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
-  // const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
-  const resetLink = `${req.protocol}//:${req.get(
-    "host",
-  )}/api/v1/users/reset-password/${unHashedToken}`;
+  const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
 
   await sendMail(user.email, "Password reset", { resetLink, username: user.username }, "reset");
 
@@ -126,7 +123,7 @@ export const sendEmailVerifification = apiResponseHandler(async (req, res) => {
   user.emailVerificationTokenExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
-  const verificationLink = `${process.env.BASE_URL}/verify-email/${unHashedToken}`;
+  const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
 
   await sendMail(
     user.email,
@@ -136,7 +133,6 @@ export const sendEmailVerifification = apiResponseHandler(async (req, res) => {
   );
 
   return new ApiResponse(StatusCodes.OK, {}, "email verification link sent to your email");
-
 });
 
 export const verifyEmail = apiResponseHandler(async (req, res) => {
@@ -185,10 +181,7 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
   user.emailVerificationTokenExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
-  // const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
-  const verificationLink = `${req.protocol}//:${req.get("host")}/api/v1/users/verify-email/${
-    user._id
-  }/${unHashedToken}`;
+  const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
 
   await sendMail(
     user.email,
