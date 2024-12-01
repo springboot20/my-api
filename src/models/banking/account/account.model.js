@@ -1,20 +1,31 @@
 import { Schema, model } from "mongoose";
 import {
+  AvailableAccountEnums,
   AvailableAccountStatus,
   AvailableAccountStatusEnums,
-} from "../../constants.js";
+  AvailableAccountTypes,
+} from "../../../constants.js";
 
-const WalletSchema = new Schema(
+const AccountSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    accountNumber: {
+      type: String,
+    },
+    type: {
+      type: String,
+      enum: AvailableAccountEnums,
+      default: AvailableAccountTypes.SAVINGS,
+    },
+
     balance: {
       type: Number,
       default: 0,
     },
-    currency: {
+    status: {
       type: String,
       enum: AvailableAccountStatusEnums,
       default: AvailableAccountStatus.INACTIVE,
@@ -23,6 +34,4 @@ const WalletSchema = new Schema(
   { timestamps: true },
 );
 
-const WalletModel = model("Wallet", WalletSchema);
-
-export { WalletModel };
+export const AccountModel = model("Account", AccountSchema);

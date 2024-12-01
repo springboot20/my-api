@@ -9,6 +9,10 @@ const userSchema = new Schema(
         public_id: String,
         url: String,
       },
+      default: {
+        public_id: null,
+        url: `https://via.placeholder.com/200x200.png`,
+      },
     },
     username: {
       type: String,

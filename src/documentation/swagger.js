@@ -25,16 +25,27 @@ const options = {
         email: "opeyemiakanbi328@email.com",
       },
     },
+    components: {
+      securitySchemas: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
     servers: [
       {
         url: "http://localhost:5010/api/v1",
       },
     ],
   },
-  apis: [
-    join(__dirname, "../routes/routes.js"),
-    join(__dirname, "../validation/**/*.js"),
-  ],
+  apis: [join(__dirname, "../routes/**/*.js"), join(__dirname, "../validation/**/*.js")],
 };
 
 export const specs = swaggerJsdoc(options);

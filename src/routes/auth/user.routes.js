@@ -1,4 +1,3 @@
-import { Router } from "express";
 import {
   register,
   login,
@@ -11,35 +10,23 @@ import {
   changeCurrentPassword,
   getUsers,
   getCurrentUser,
-} from "../controllers/auth/index.js";
-import { verifyJWT } from "../middleware/auth/auth.middleware.js";
-// import { checkPermissions } from "../utils/permissions.js";
+} from "../../controllers/auth/index.js";
+import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
+import { checkPermissions } from "../../utils/permissions.js";
 import {
   userLoginValidation,
   userResetPasswordValidation,
   userRegisterValidation,
   userValidation,
-} from "../validation/app/auth/user.validators.js";
-import { mongoPathVariableValidation } from "../validation/mongo/mongoId.validators.js";
-import { validate } from "../validation/validate.middleware.js";
-import { uploadAvatar, upload } from "../controllers/auth/upload/uploads.controller.js";
-import { sendEmailVerifification } from "../controllers/auth/verification/verification.controller.js";
+} from "../../validation/app/auth/user.validators.js";
+import { mongoPathVariableValidation } from "../../validation/mongo/mongoId.validators.js";
+import { validate } from "../../middleware/validate.middleware.js";
+import { uploadAvatar, upload } from "../../controllers/auth/upload/uploads.controller.js";
+import { RoleEnums } from "../../constants.js";
+
+import { Router } from "express";
 
 const router = Router();
-
-/**
- * @swagger
- * /healthcheck:
- *    get:
- *       summary: Check if the application is up an running
- *       description: Response if the app is up and running
- *       responses:
- *         200:
- *           description: Check if is running well
- *         400:
- *           description: Server could not understand the request due to invalid syntax
- */
-router.get("/healthcheck", (req, res) => res.sendStatus(200));
 
 /**
  * @swagger
@@ -96,10 +83,27 @@ router.get("/healthcheck", (req, res) => res.sendStatus(200));
  *                          type: boolean
  *                          example: true
  *         '409':
- *            description: user with username or email alredy exists
+ *            description: send response to that tells a user exists
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: user with username or email alredy exists
+ *                        statusCode:
+ *                          type: number
+ *                          example: 409
+ *                        success:
+ *                          type: boolean
+ *                          example: false
  */
 
-router.route("/users/register").post(userRegisterValidation(), validate, register);
+router.route("/register").post(userRegisterValidation(), validate, register);
 
 /**
  * @swagger
@@ -151,39 +155,53 @@ router.route("/users/register").post(userRegisterValidation(), validate, registe
  *                        success:
  *                          type: boolean
  *                          example: true
- *         '409':
- *            description: user with username or email alredy exists
+ *         '404':
+ *            description: User not found
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: user does not exists
+ *                        statusCode:
+ *                          type: number
+ *                          example: 404
+ *                        success:
+ *                          type: boolean
+ *                          example: false
+ *
  */
 
-router.route("/users/login").post(userLoginValidation(), validate, login);
+router.route("/login").post(userLoginValidation(), validate, login);
 
-router.route("/users/upload").patch(verifyJWT, upload, uploadAvatar);
+router.route("/upload").patch(verifyJWT, upload, uploadAvatar);
 
-router.route("/users/forgot-password").post(userValidation(), validate, forgotPassword);
+router.route("/forgot-password").post(userValidation(), validate, forgotPassword);
 
-router.route("/users/refresh-token").post(refreshToken);
-
-router.route("/users/send-email").post(userValidation(), validate, sendEmailVerifification);
+router.route("/refresh-token").post(verifyJWT, refreshToken);
 
 router
-  .route("/users/verify-email/:id/:token")
+  .route("/verify-email/:id/:token")
   .get(mongoPathVariableValidation("id"), validate, verifyEmail);
 
+// secured routes
+router.route("/logout").post(verifyJWT, logout);
 
-
-  // secured routes
-router.route("/users/logout").post(verifyJWT, logout);
-
-router.route("/users/resend-email-verification/").post(verifyJWT, resendEmailVerification);
+router.route("/resend-email-verification/").post(verifyJWT, resendEmailVerification);
 
 router
-  .route("/users/reset-password/:resetToken")
+  .route("/reset-password/:resetToken")
   .post(verifyJWT, userResetPasswordValidation(), validate, resetPassword);
 
-router.route("/users/change-password").patch(verifyJWT, changeCurrentPassword);
+router.route("/change-password").patch(verifyJWT, changeCurrentPassword);
 
-router.route("/users/").get(verifyJWT, getUsers);
+router.route("/").get(verifyJWT, checkPermissions(RoleEnums.ADMIN), getUsers);
 
-router.route("/users/current-user").get(verifyJWT, getCurrentUser);
+router.route("/current-user").get(verifyJWT, getCurrentUser);
 
-export { router };
+export default router;

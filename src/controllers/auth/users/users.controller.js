@@ -7,7 +7,6 @@ import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.tran
 import { UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose";
 
 export const getCurrentUser = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
@@ -33,36 +32,35 @@ export const getUsers = apiResponseHandler(
   }),
 );
 
-export const updateCurrentUserProfile = apiResponseHandler(
-  mongooseTransactions(async (req, res, session) => {
-    const { password, ...rest } = req.body;
-    const { userId } = req.params;
+export const updateCurrentUserProfile = apiResponseHandler(async (req, res, session) => {
+  const { password, ...rest } = req.body;
 
-    const salt = await bcrypt.genSalt(20);
-    const hashedPassword = await bcrypt.hash(password, salt);
+  const salt = await bcrypt.genSalt(20);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      new mongoose.Schema.ObjectId(userId),
-      { $set: { ...rest, password: hashedPassword } },
-      { new: true },
-    ).select(
-      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken",
-    );
-
-    await updatedUser.save({ session });
-
-    if (!updatedUser)
-      throw new CustomErrors(
-        "unable to updated user profile",
-        StatusCodes.BAD_REQUEST,
-      );
-
-    return new ApiResponse(
-      StatusCodes.OK,
-      {
-        user: updatedUser,
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        ...rest,
+        password: hashedPassword,
       },
-      "user updated successfully",
-    );
-  }),
-);
+    },
+    { new: true },
+  ).select(
+    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken",
+  );
+
+  await updatedUser.save({ session });
+
+  if (!updatedUser)
+    throw new CustomErrors("unable to updated user profile", StatusCodes.BAD_REQUEST);
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      user: updatedUser,
+    },
+    "user updated successfully",
+  );
+});

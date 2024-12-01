@@ -5,7 +5,7 @@ import http from "http";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
-import { router } from "./routes/routes.js";
+import { healthcheck, authRoutes } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
 import { specs } from "./documentation/swagger.js";
@@ -46,7 +46,12 @@ app.use(bodyParser.json());
 
 app.use(express.static("public"));
 
-app.use(cors());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
@@ -55,7 +60,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/v1", router);
+app.use("/api/v1/healthcheck", healthcheck.default);
+app.use("/api/v1/users", authRoutes.default);
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {

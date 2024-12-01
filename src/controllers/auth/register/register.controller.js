@@ -27,7 +27,22 @@ export const register = apiResponseHandler(
       isEmailVerified: false,
     });
 
+    const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
+
+    console.log({ unHashedToken, hashedToken, tokenExpiry });
+
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationTokenExpiry = tokenExpiry;
     await user.save({ validateBeforeSave: false });
+
+    const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
+
+    await sendMail(
+      user.email,
+      "Email verification",
+      { verificationLink, username: user.username },
+      "email",
+    );
 
     const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
 
@@ -36,7 +51,7 @@ export const register = apiResponseHandler(
       {
         user: createdUser,
       },
-      "user successfully created",
+      "User registration successfull and verification email has been sent to you email",
     );
   }),
 );

@@ -7,9 +7,8 @@ import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.tran
 import { UserModel } from "../../../models/index.js";
 
 export const logout = apiResponseHandler(
-  mongooseTransactions(async (req, res) => {
-
-    console.log(req.user._id)
+  mongooseTransactions(async (req, res, session) => {
+    console.log(req.user._id);
     await UserModel.findOneAndUpdate(
       { _id: req.user._id },
       {
@@ -18,12 +17,8 @@ export const logout = apiResponseHandler(
         },
       },
       { new: true },
-    );
+    ).session(session);
 
-    return new ApiResponse(
-      StatusCodes.OK,
-      {},
-      "you have successfully logged out",
-    );
+    return new ApiResponse(StatusCodes.OK, {}, "you have successfully logged out");
   }),
 );

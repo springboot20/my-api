@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator'
-import { CustomErrors } from '../middleware/custom/custom.errors.js'; 
+import { CustomErrors } from './custom/custom.errors.js'; 
 import { StatusCodes } from 'http-status-codes'
 
 /**

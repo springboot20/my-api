@@ -51,29 +51,35 @@ export const changeCurrentPassword = apiResponseHandler(async (req, res) => {
   return new ApiResponse(StatusCodes.OK, {}, "Password changed successfully");
 });
 
-export const forgotPassword = apiResponseHandler(async (req, res) => {
-  const { email } = req.body;
+export const forgotPassword = apiResponseHandler(
+  /**
+   * @param {import("express").Request} req
+   * @param {import("express").Response} res
+   */
+  async (req, res) => {
+    const { email } = req.body;
 
-  const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ email });
 
-  if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
+    if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
-  const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
+    const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
 
-  user.forgotPasswordToken = hashedToken;
-  user.forgotPasswordTokenExpiry = tokenExpiry;
-  await user.save({ validateBeforeSave: false });
+    user.forgotPasswordToken = hashedToken;
+    user.forgotPasswordTokenExpiry = tokenExpiry;
+    await user.save({ validateBeforeSave: false });
 
-  const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
+    const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
 
-  await sendMail(user.email, "Password reset", { resetLink, username: user.username }, "reset");
+    await sendMail(user.email, "Password reset", { resetLink, username: user.username }, "reset");
 
-  return new ApiResponse(
-    StatusCodes.OK,
-    { unHashedToken },
-    "Password reset link sent to your email",
-  );
-});
+    return new ApiResponse(
+      StatusCodes.OK,
+      { unHashedToken },
+      "Password reset link sent to your email",
+    );
+  },
+);
 
 export const refreshToken = apiResponseHandler(async (req, res) => {
   const {
@@ -106,40 +112,11 @@ export const refreshToken = apiResponseHandler(async (req, res) => {
   );
 });
 
-export const sendEmailVerifification = apiResponseHandler(async (req, res) => {
-  const { email } = req.body;
-
-  const user = await UserModel.findOne({ email });
-
-  if (!user) throw new CustomErrors("user with email not exist", StatusCodes.NOT_FOUND);
-
-  console.log(`${req.protocol}://${req.get("host")}`);
-
-  const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
-
-  console.log({ unHashedToken, hashedToken, tokenExpiry });
-
-  user.emailVerificationToken = hashedToken;
-  user.emailVerificationTokenExpiry = tokenExpiry;
-  await user.save({ validateBeforeSave: false });
-
-  const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
-
-  await sendMail(
-    user.email,
-    "Email verification",
-    { verificationLink, username: user.username },
-    "email",
-  );
-
-  return new ApiResponse(StatusCodes.OK, {}, "email verification link sent to your email");
-});
-
 export const verifyEmail = apiResponseHandler(async (req, res) => {
   const { token, id } = req.params;
 
   if (!token) {
-    throw new CustomErrors("Email verification token is missing", StatusCodes.BAD_REQUEST);
+    throw new CustomErrors("Email verification token is missing", StatusCodes.UNAUTHORIZED);
   }
 
   const user = await UserModel.findOne({

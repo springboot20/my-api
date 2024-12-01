@@ -5,10 +5,7 @@ import {
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
 import { UserModel } from "../../../models/index.js";
-import {
-  generateAccessToken,
-  generateRefreshToken
-} from "../../../utils/jwt.js";
+import { generateAccessToken, generateRefreshToken } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
 
 export const generateTokens = async (userId) => {
@@ -17,11 +14,7 @@ export const generateTokens = async (userId) => {
     const user = await UserModel.findById(userId);
 
     // check if the user is not found in the database
-    if (!user)
-      throw new CustomErrors(
-        "user does not exist in the database",
-        StatusCodes.NOT_FOUND
-      );
+    if (!user) throw new CustomErrors("user does not exist in the database", StatusCodes.NOT_FOUND);
 
     let accessPayload = {
       _id: user._id,
@@ -46,7 +39,7 @@ export const generateTokens = async (userId) => {
     if (error instanceof Error) {
       throw new CustomErrors(
         error.message ?? "something went wrong",
-        StatusCodes.INTERNAL_SERVER_ERROR
+        StatusCodes.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -58,25 +51,18 @@ export const login = apiResponseHandler(
 
     const user = await UserModel.findOne({ $or: [{ email }, { username }] });
 
-    if (!user)
-      throw new CustomErrors("user does not exists", StatusCodes.NOT_FOUND);
-    
+    if (!user) throw new CustomErrors("user does not exists", StatusCodes.NOT_FOUND);
+
     if (!(email && password))
-      throw new CustomErrors(
-        "please provide an email and a password",
-        StatusCodes.BAD_REQUEST
-      );
+      throw new CustomErrors("please provide an email and a password", StatusCodes.BAD_REQUEST);
 
     if (!(await user.matchPasswords(password)))
-      throw new CustomErrors(
-        "invalid password entered",
-        StatusCodes.UNAUTHORIZED
-      );
+      throw new CustomErrors("invalid password entered", StatusCodes.UNAUTHORIZED);
 
     const { accessToken, refreshToken } = await generateTokens(user?._id);
 
     const loggedInUser = await UserModel.findById(user._id).select(
-      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
+      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry",
     );
 
     return new ApiResponse(
@@ -85,7 +71,7 @@ export const login = apiResponseHandler(
         user: loggedInUser,
         tokens: { accessToken, refreshToken },
       },
-      "user logged in successfully"
+      "user logged in successfully",
     );
-  })
+  }),
 );

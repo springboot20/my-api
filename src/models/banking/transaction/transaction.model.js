@@ -4,19 +4,29 @@ import {
   AvailableCurrencyTypesEnum,
   AvailableTransactionTypes,
   AvailableTransactionTypesEnum,
-} from "../../constants.js";
+  PaymentMethods,
+  AvailablePaymentStatusEnums,
+} from "../../../constants.js";
 
 const TransactionSchema = new Schema(
   {
-    wallet: {
-      type: Schema.Types.ObjectId,
-      ref: "Wallet",
-      required: true,
-    },
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    account: {
+      type: Schema.Types.ObjectId,
+      ref: "Account",
+      required: true,
+    },
+    reference: {
+      type: String,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     type: {
       type: String,
@@ -31,6 +41,23 @@ const TransactionSchema = new Schema(
     description: {
       type: String,
       maxLenght: 150,
+    },
+    detail: {
+      type: {
+        gateway: {
+          type: String,
+          enum: AvailablePaymentStatusEnums,
+          default: PaymentMethods.PAYSTACK,
+        },
+        recieverAccountNumber: {
+          type: Schema.Types.ObjectId,
+          ref: "Account",
+          required: true,
+        },
+      },
+    },
+    status: {
+      type: String,
     },
   },
   { timestamps: true },

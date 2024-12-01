@@ -74,7 +74,20 @@ const AvailableCurrencyTypes = {
 
 const AvailableCurrencyTypesEnum = Object.values(AvailableCurrencyTypes);
 
+/**
+ * Avaliable account type
+ */
+
+const AvailableAccountTypes = {
+  SAVINGS: "SAVINGS",
+  CURRENT: "CURRENT",
+};
+
+const AvailableAccountEnums = Object.values(AvailableAccountTypes);
+
 export {
+  AvailableAccountTypes,
+  AvailableAccountEnums,
   AvailableCurrencyTypesEnum,
   AvailableCurrencyTypes,
   AvailableAccountStatusEnums,
