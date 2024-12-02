@@ -45,16 +45,17 @@ export default class PaymentService {
 
   static async verifyHelper(reference) {
     try {
-      const headers = {
+      let response = await axios.get(`${paystack_urls.verify}/${reference}`, {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
           "Content-Type": "application/json",
         },
-      };
+      });
 
-      let response = (await fetch(`${paystack_urls.verify}/${reference}`, { headers })).json();
-
-      return response;
+      const { data } = response;
+      console.log(data);
+      
+      return data;
     } catch (error) {
       throw new CustomErrors("something went wrong", StatusCodes.INTERNAL_SERVER_ERROR);
     }
