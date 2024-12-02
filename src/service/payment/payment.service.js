@@ -1,8 +1,7 @@
 import { StatusCodes } from "http-status-codes";
-import { paystack_urls } from "../../constants";
-import { CustomErrors } from "../../middleware/custom/custom.errors";
-import { TransactionModel } from "../../models";
-import { convertToKobo } from "../../utils";
+import { paystack_urls } from "../../constants.js";
+import { CustomErrors } from "../../middleware/custom/custom.errors.js";
+import { convertToKobo } from "../../utils/index.js";
 
 export default class PaymentService {
   static generatePaystackRefernce = () => {

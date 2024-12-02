@@ -1,4 +1,4 @@
-import { AccountModel } from "../../models";
+import { AccountModel } from "../../models/index.js";
 
 export default class AccountService {
   static generateAccountNumber = () => {

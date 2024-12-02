@@ -8,6 +8,7 @@ import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
 import { PaymentStatuses, paystackStatus } from "../../../../constants.js";
 import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export const verifyPaystackDepositTransaction = apiResponseHandler(
   mongooseTransactions(
@@ -49,4 +50,52 @@ export const verifyPaystackDepositTransaction = apiResponseHandler(
       return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
     },
   ),
+);
+
+export const verifyPaystackWebhook = apiResponseHandler(
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async (req, res) => {
+    if (!req.body) {
+      return false;
+    }
+
+    let isValidPaystackEvent = false;
+    let signature = req.headers[process.env.PAYSTACK_HEADERS_SIGNATURE];
+
+    try {
+      const hash = createHmac(process.env.PAYSTACK_HASH_ALGO, process.env.CLOUDINARY_API_SECRET)
+        .update(JSON.stringify(req.body))
+        .digest("hex");
+
+      isValidPaystackEvent =
+        hash && signature && timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+    } catch (error) {
+      throw error;
+    }
+
+    if (!isValidPaystackEvent) {
+      return false;
+    }
+
+    const transaction = await TransactionModel.findOne({ reference: req.body.reference });
+
+    const transactionStatus = req.body?.status;
+    const paymentConfirmed = transactionStatus === paystackStatus.success;
+
+    if (paymentConfirmed) {
+      transaction.status = PaymentStatuses.COMPLETED;
+    } else {
+      transaction.status = PaymentStatuses.FAILED;
+    }
+
+    transaction.transactionStatus = transactionStatus;
+
+    await transaction.save({ session });
+
+    return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
+  },
 );
