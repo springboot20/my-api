@@ -19,7 +19,7 @@ export const verifyPaystackDepositTransaction = apiResponseHandler(
      * @param {import('mongoose').ClientSession} session
      */
     async (req, res, session) => {
-      const { reference } = req.params;
+      const { reference } = req.query;
       const transaction = await TransactionModel.findOne({ reference });
 
       if (!transaction) {
