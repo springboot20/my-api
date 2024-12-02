@@ -6,7 +6,7 @@ import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { TransactionModel, AccountModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
-import { PaymentStatuses, paystackStatus } from "../../../../constants.js";
+import { AvailableAccountStatus, PaymentStatuses, paystackStatus } from "../../../../constants.js";
 import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
 import { createHmac, timingSafeEqual } from "crypto";
 
