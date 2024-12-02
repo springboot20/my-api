@@ -12,7 +12,7 @@ const AccountSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    accountNumber: {
+    account_number: {
       type: String,
     },
     type: {

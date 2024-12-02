@@ -5,7 +5,12 @@ import http from "http";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
-import { healthcheck, authRoutes } from "./routes/index.routes.js";
+import {
+  healthcheck,
+  authRoutes,
+  accountRoutes,
+  transactionRoutes,
+} from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
 import { specs } from "./documentation/swagger.js";
@@ -62,6 +67,8 @@ app.use((req, res, next) => {
 
 app.use("/api/v1/healthcheck", healthcheck.default);
 app.use("/api/v1/users", authRoutes.default);
+app.use("/api/v1/accounts", accountRoutes.default);
+app.use("/api/v1/transactions", transactionRoutes.default);
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {

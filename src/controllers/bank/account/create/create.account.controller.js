@@ -6,6 +6,7 @@ import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
 import { AccountModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
+import AccountService from "../../../../service/account/account.service.js";
 
 export const createAccount = apiResponseHandler(
   mongooseTransactions(
@@ -29,6 +30,7 @@ export const createAccount = apiResponseHandler(
       const newAccount = await AccountModel.create({
         user: req.user?._id,
         type,
+        account_number: await AccountService.createAccountNumber(),
       });
 
       if (!newAccount) {

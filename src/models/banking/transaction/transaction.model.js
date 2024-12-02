@@ -42,22 +42,22 @@ const TransactionSchema = new Schema(
       type: String,
       maxLenght: 150,
     },
+    transactionStatus: String,
     detail: {
       type: {
         gateway: {
           type: String,
           enum: AvailablePaymentStatusEnums,
-          default: PaymentMethods.PAYSTACK,
+          default: PaymentMethods.UNKNOWN,
         },
         recieverAccountNumber: {
-          type: Schema.Types.ObjectId,
-          ref: "Account",
-          required: true,
+          type: String,
         },
       },
     },
     status: {
       type: String,
+      enum: AvailablePaymentStatusEnums,
     },
   },
   { timestamps: true },

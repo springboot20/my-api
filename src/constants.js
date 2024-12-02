@@ -2,9 +2,13 @@
  * Available payment status
  */
 const PaymentStatuses = {
-  PENDING: "PENDING",
+  IN_PROGRESS: "IN_PROGRESS",
   COMPLETED: "COMPLETED",
   FAILED: "FAILED",
+};
+
+const paystackStatus = {
+  success: "success",
 };
 
 const AvailablePaymentStatusEnums = Object.values(PaymentStatuses);
@@ -85,7 +89,14 @@ const AvailableAccountTypes = {
 
 const AvailableAccountEnums = Object.values(AvailableAccountTypes);
 
+const paystack_urls = {
+  initiate: "https://api.paystack.co/transaction/initialize",
+  verify: "https://api.paystack.co/transaction/verify",
+};
+
 export {
+  paystack_urls,
+  paystackStatus,
   AvailableAccountTypes,
   AvailableAccountEnums,
   AvailableCurrencyTypesEnum,
