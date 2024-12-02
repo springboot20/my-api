@@ -7,7 +7,6 @@ import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.t
 import { AccountModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import AccountService from "../../../../service/account/account.service.js";
-import { AvailableAccountStatus } from "../../../../constants.js";
 
 export const createAccount = apiResponseHandler(
   mongooseTransactions(
@@ -32,7 +31,6 @@ export const createAccount = apiResponseHandler(
         user: req.user?._id,
         type,
         account_number: await AccountService.createAccountNumber(),
-        status: AvailableAccountStatus.ACTIVE,
       });
 
       if (!newAccount) {

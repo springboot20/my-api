@@ -3,7 +3,7 @@ import {
   ApiResponse,
 } from "../../../../middleware/api/api.response.middleware.js";
 import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
-import { TransactionModel } from "../../../../models/index.js";
+import { TransactionModel, AccountModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
 import { PaymentStatuses, paystackStatus } from "../../../../constants.js";
@@ -26,6 +26,10 @@ export const verifyPaystackDepositTransaction = apiResponseHandler(
         throw new CustomErrors("no transaction found", StatusCodes.NOT_FOUND);
       }
 
+      if (transaction.status === PaymentStatuses.COMPLETED) {
+        return new ApiResponse(StatusCodes.OK, { transaction }, "transaction already verified");
+      }
+
       const transactionReference = transaction.reference;
 
       let response = await PaymentService.verifyHelper(transactionReference);
@@ -39,6 +43,14 @@ export const verifyPaystackDepositTransaction = apiResponseHandler(
 
       if (paymentConfirmed) {
         transaction.status = PaymentStatuses.COMPLETED;
+
+        const account = await AccountModel.findOne({ user: transaction?.user });
+
+        if (account) {
+          account.balance += transaction.amount;
+          account.status = AvailableAccountStatus.ACTIVE;
+          await account.save({ session });
+        }
       } else {
         transaction.status = PaymentStatuses.FAILED;
       }
