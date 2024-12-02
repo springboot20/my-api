@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { paystack_urls } from "../../constants.js";
 import { CustomErrors } from "../../middleware/custom/custom.errors.js";
 import { convertToKobo } from "../../utils/index.js";
+import axios from "axios";
 
 export default class PaymentService {
   static generatePaystackRefernce = () => {
@@ -21,21 +22,18 @@ export default class PaymentService {
         callback_url: `${process.env.PAYSTACK_CALLBACK_URL}`,
       };
 
-      const headers = {
+      const payload = JSON.stringify(paymentConfig);
+
+      console.log(payload);
+
+      const response = await axios.post(paystack_urls.initiate, payload, {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
           "Content-Type": "application/json",
         },
-      };
-
-      const payload = JSON.stringify(paymentConfig);
-
-      const response = await fetch(paystack_urls.initiate, {
-        body: payload,
-        headers,
       });
 
-      const data = await response.json();
+      const { data } = response;
       if (data && data.status) {
         return data;
       }

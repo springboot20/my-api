@@ -6,6 +6,7 @@ import {
   AvailableTransactionTypesEnum,
   PaymentMethods,
   AvailablePaymentStatusEnums,
+  AvailablePaymentMethods
 } from "../../../constants.js";
 
 const TransactionSchema = new Schema(
@@ -47,7 +48,7 @@ const TransactionSchema = new Schema(
       type: {
         gateway: {
           type: String,
-          enum: AvailablePaymentStatusEnums,
+          enum: AvailablePaymentMethods,
           default: PaymentMethods.UNKNOWN,
         },
         recieverAccountNumber: {

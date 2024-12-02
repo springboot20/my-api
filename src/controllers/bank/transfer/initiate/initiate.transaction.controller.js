@@ -32,6 +32,7 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
       currency,
     });
 
+    console.log(depositInfo);
     let transaction = undefined;
 
     if (depositInfo.status === true) {
