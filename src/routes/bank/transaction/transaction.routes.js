@@ -10,6 +10,10 @@ router
 
 router
   .route("/paystack/verify-callback")
-  .post(verifyJWT, transactionController.verifyPaystackDepositTransaction);
+  .get(verifyJWT, transactionController.verifyPaystackDepositTransaction);
+
+router
+  .route("/paystack/webhook")
+  .post(verifyJWT, transactionController.verifyPaystackWebhook);
 
 export default router;
