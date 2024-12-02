@@ -20,7 +20,6 @@ const AccountSchema = new Schema(
       enum: AvailableAccountEnums,
       default: AvailableAccountTypes.SAVINGS,
     },
-
     balance: {
       type: Number,
       default: 0,

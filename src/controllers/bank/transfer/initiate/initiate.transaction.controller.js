@@ -3,7 +3,7 @@ import {
   ApiResponse,
 } from "../../../../middleware/api/api.response.middleware.js";
 import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
-import { TransactionModel, UserModel } from "../../../../models/index.js";
+import { AccountModel, TransactionModel, UserModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
 import {

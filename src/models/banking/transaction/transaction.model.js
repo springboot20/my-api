@@ -19,7 +19,6 @@ const TransactionSchema = new Schema(
     account: {
       type: Schema.Types.ObjectId,
       ref: "Account",
-      required: true,
     },
     reference: {
       type: String,
