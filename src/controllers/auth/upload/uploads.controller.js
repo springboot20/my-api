@@ -13,44 +13,52 @@ import { multerUploads } from "../../../middleware/upload/upload.middleware.js";
 
 export const upload = multerUploads.single("avatar");
 
-export const uploadAvatar = apiResponseHandler(async (req, res) => {
-  const user = await UserModel.findById(req.user?._id);
+export const uploadAvatar = apiResponseHandler(
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
 
-  if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
+  async (req, res) => {
+    const user = await UserModel.findById(req.user?._id);
 
-  if (!req.file) {
-    throw new CustomErrors("avatar image is required", StatusCodes.NOT_FOUND);
-  }
+    if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
 
-  let uploadImage;
-
-  if (req.file) {
-    if (user?.avatar?.public_id !== null) {
-      await deleteFileFromCloudinary(user?.avatar?.public_id);
+    if (!req.file) {
+      throw new CustomErrors("avatar image is required", StatusCodes.NOT_FOUND);
     }
 
-    uploadImage = await uploadFileToCloudinary(
-      req.file.buffer,
-      `${process.env.CLOUDINARY_BASE_FOLDER}/users-image`,
-    );
-  }
+    let uploadImage;
 
-  const updatedUserAvatar = await UserModel.findByIdAndUpdate(
-    req.user._id,
-    {
-      $set: {
-        avatar: {
-          url: uploadImage.secure_url,
-          public_id: uploadImage.public_id,
+    if (req.file) {
+      if (user?.avatar?.public_id !== null) {
+        await deleteFileFromCloudinary(user?.avatar?.public_id);
+      }
+
+      uploadImage = await uploadFileToCloudinary(
+        req.file.buffer,
+        `${process.env.CLOUDINARY_BASE_FOLDER}/users-image`,
+      );
+    }
+
+    const updatedUserAvatar = await UserModel.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          avatar: {
+            url: uploadImage?.secure_url,
+            public_id: uploadImage?.public_id,
+          },
         },
       },
-    },
-    { new: true, runvalidators: true },
-  ).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry");
+      { new: true, runvalidators: true },
+    ).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry");
 
-  console.log({ updatedUserAvatar });
+    console.log({ updatedUserAvatar });
 
-  return new ApiResponse(StatusCodes.OK, "avatar updated successfully", {
-    user: updatedUserAvatar,
-  });
-});
+    return new ApiResponse(StatusCodes.OK, "avatar updated successfully", {
+      user: updatedUserAvatar,
+    });
+  },
+);
