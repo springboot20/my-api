@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { AvailableRoles, RoleEnums } from "../../constants.js";
 
 const userSchema = new Schema(
   {
@@ -33,8 +34,8 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: AvailableRoles,
+      default: RoleEnums.USER,
     },
     isEmailVerified: {
       type: Boolean,
