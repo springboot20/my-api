@@ -9,6 +9,7 @@ import {
   healthcheck,
   authRoutes,
   accountRoutes,
+  statisticRoutes,
   transactionRoutes,
 } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
@@ -69,6 +70,7 @@ app.use("/api/v1/healthcheck", healthcheck.default);
 app.use("/api/v1/users", authRoutes.default);
 app.use("/api/v1/accounts", accountRoutes.default);
 app.use("/api/v1/transactions", transactionRoutes.default);
+app.use("/api/v1/statistics", statisticRoutes.default);
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {
