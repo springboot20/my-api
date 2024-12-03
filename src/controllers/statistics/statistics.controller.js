@@ -1,10 +1,10 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from "../../../../middleware/api/api.response.middleware.js";
-import { TransactionModel } from "../../../../models/index.js";
+} from "../../middleware/api/api.response.middleware.js";
+import { TransactionModel } from "../../models/index.js";
 import { StatusCodes } from "http-status-codes";
-import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
+import { mongooseTransactions } from "../../middleware/mongoose/mongoose.transactions.js";
 
 let matchStage = (id) => ({
   $match: {
