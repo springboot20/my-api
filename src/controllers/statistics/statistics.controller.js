@@ -1,7 +1,4 @@
-import {
-  apiResponseHandler,
-  ApiResponse,
-} from "../../middleware/api/api.response.middleware.js";
+import { apiResponseHandler, ApiResponse } from "../../middleware/api/api.response.middleware.js";
 import { TransactionModel } from "../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import { mongooseTransactions } from "../../middleware/mongoose/mongoose.transactions.js";
@@ -12,85 +9,79 @@ let matchStage = (id) => ({
   },
 });
 
-let weeklyTransaction = {
-  weekly: [
-    {
-      $group: {
-        _id: {
-          week: {
-            $week: "$createdAt",
-          },
-          year: {
-            $year: "$createdAt",
-          },
-          transaction_type: "$type",
+let weeklyTransaction = [
+  {
+    $group: {
+      _id: {
+        week: {
+          $week: "$createdAt",
         },
-        totalAmount: {
-          $sum: "$amount",
+        year: {
+          $year: "$createdAt",
         },
-        count: { $sum: 1 },
+        transaction_type: "$type",
       },
-    },
-    {
-      $sort: {
-        "_id.year": -1,
-        "_id.week": -1,
+      totalAmount: {
+        $sum: "$amount",
       },
+      count: { $sum: 1 },
     },
-  ],
-};
+  },
+  {
+    $sort: {
+      "_id.year": -1,
+      "_id.week": -1,
+    },
+  },
+];
 
-let monthlyTransaction = {
-  monthly: [
-    {
-      $group: {
-        _id: {
-          month: {
-            $month: "$createdAt",
-          },
-          year: {
-            $year: "$createdAt",
-          },
-          transaction_type: "$type",
+let monthlyTransaction = [
+  {
+    $group: {
+      _id: {
+        month: {
+          $month: "$createdAt",
         },
-        totalAmount: {
-          $sum: "$amount",
+        year: {
+          $year: "$createdAt",
         },
-        count: { $sum: 1 },
+        transaction_type: "$type",
       },
-    },
-    {
-      $sort: {
-        "_id.year": -1,
-        "_id.month": -1,
+      totalAmount: {
+        $sum: "$amount",
       },
+      count: { $sum: 1 },
     },
-  ],
-};
+  },
+  {
+    $sort: {
+      "_id.year": -1,
+      "_id.month": -1,
+    },
+  },
+];
 
-let yearlyTransaction = {
-  weekly: [
-    {
-      $group: {
-        _id: {
-          year: {
-            $year: "$createdAt",
-          },
-          transaction_type: "$type",
+let yearlyTransaction = [
+  {
+    $group: {
+      _id: {
+        year: {
+          $year: "$createdAt",
         },
-        totalAmount: {
-          $sum: "$amount",
-        },
-        count: { $sum: 1 },
+        transaction_type: "$type",
       },
-    },
-    {
-      $sort: {
-        "_id.year": -1,
+      totalAmount: {
+        $sum: "$amount",
       },
+      count: { $sum: 1 },
     },
-  ],
-};
+  },
+  {
+    $sort: {
+      "_id.year": -1,
+    },
+  },
+];
 
 export const userTransactionsOverview = apiResponseHandler(
   mongooseTransactions(
@@ -105,9 +96,9 @@ export const userTransactionsOverview = apiResponseHandler(
         ...matchStage(req.user?._id),
         {
           $facet: {
-            weeklyTransaction,
-            monthlyTransaction,
-            yearlyTransaction,
+            weekly: weeklyTransaction,
+            monthly: monthlyTransaction,
+            yearly: yearlyTransaction,
           },
         },
       ]).session(session);
@@ -132,9 +123,9 @@ export const adminTransactionOverview = apiResponseHandler(
         },
         {
           $facet: {
-            weeklyTransaction,
-            monthlyTransaction,
-            yearlyTransaction,
+            weekly: weeklyTransaction,
+            monthly: monthlyTransaction,
+            yearly: yearlyTransaction,
           },
         },
       ]).session(session);
