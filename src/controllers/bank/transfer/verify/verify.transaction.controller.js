@@ -79,7 +79,7 @@ export const verifyPaystackWebhook = apiResponseHandler(
     let signature = req.headers[process.env.PAYSTACK_HEADERS_SIGNATURE];
 
     try {
-      const hash = createHmac(process.env.PAYSTACK_HASH_ALGO, process.env.CLOUDINARY_API_SECRET)
+      const hash = createHmac(process.env.PAYSTACK_HASH_ALGO, process.env.PAYSTACK_SECRET)
         .update(JSON.stringify(req.body))
         .digest("hex");
 
