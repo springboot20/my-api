@@ -93,7 +93,7 @@ export const userTransactionsOverview = apiResponseHandler(
      */
     async (req, res, session) => {
       const statistics = await TransactionModel.aggregate([
-        ...matchStage(req.user?._id),
+        matchStage(req.user?._id),
         {
           $facet: {
             weekly: weeklyTransaction,
