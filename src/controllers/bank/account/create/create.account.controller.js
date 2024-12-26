@@ -14,14 +14,12 @@ export const createAccount = apiResponseHandler(
      *
      * @param {import('express').Request} req
      * @param {import('express').Response} res
-     * @param {import('mongoose').ClientSession} session
+     *
      */
-    async (req, res, session) => {
+    async (req, res) => {
       const { type } = req.body;
 
-      const existingAccount = await AccountModel.findOne({ user: req.user?._id, type }).session(
-        session,
-      );
+      const existingAccount = await AccountModel.findOne({ user: req.user?._id, type });
 
       if (existingAccount) {
         throw new CustomErrors(`account type already exists ${type}`, StatusCodes.CONFLICT);
@@ -40,8 +38,8 @@ export const createAccount = apiResponseHandler(
       return new ApiResponse(
         StatusCodes.CREATED,
         { account: newAccount },
-        "you have successfull created an account",
+        "you have successfull created an account"
       );
-    },
-  ),
+    }
+  )
 );

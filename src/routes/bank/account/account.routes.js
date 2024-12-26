@@ -10,4 +10,6 @@ router
   .route("/create")
   .post(verifyJWT, createAccountSchema(), validate, accountController.createAccount);
 
+router.route("/user-accounts").get(verifyJWT, accountController.getUserAccounts);
+
 export default router;

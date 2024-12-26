@@ -13,10 +13,9 @@ export const getUserAccounts = apiResponseHandler(
      *
      * @param {import('express').Request} req
      * @param {import('express').Response} res
-     * @param {import('mongoose').ClientSession} session
      */
-    async (req, res, session) => {
-      const accounts = await AccountModel.find({ user: req.user?._id }).session(session);
+    async (req, res) => {
+      const accounts = await AccountModel.find({ user: req.user?._id });
 
       if (!accounts) {
         throw new CustomErrors("no accounts exist for the user", StatusCodes.NOT_FOUND);
@@ -25,8 +24,8 @@ export const getUserAccounts = apiResponseHandler(
       return new ApiResponse(
         StatusCodes.CREATED,
         { accounts },
-        "all users account fetched successfull",
+        "all users account fetched successfull"
       );
-    },
-  ),
+    }
+  )
 );
