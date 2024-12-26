@@ -13,18 +13,18 @@ export const getUserAccount = apiResponseHandler(
      *
      * @param {import('express').Request} req
      * @param {import('express').Response} res
-     * @param {import('mongoose').ClientSession} session
+     *
      */
-    async (req, res, session) => {
+    async (req, res) => {
       const { accountId } = req.params;
 
-      const account = await AccountModel.findById(accountId).session(session);
+      const account = await AccountModel.findById(accountId);
 
       if (!account) {
         throw new CustomErrors("account does not exist", StatusCodes.NOT_FOUND);
       }
 
       return new ApiResponse(StatusCodes.CREATED, { account }, "user account fetched successfull");
-    },
-  ),
+    }
+  )
 );
