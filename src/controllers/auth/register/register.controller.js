@@ -7,6 +7,7 @@ import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
 import { UserModel } from "../../../models/index.js";
 import { sendMail } from "../../../service/email.service.js";
+import { RoleEnums } from "../../../constants.js";
 
 export const register = apiResponseHandler(
   mongooseTransactions(async (req, res, session) => {
@@ -23,7 +24,7 @@ export const register = apiResponseHandler(
       username,
       email,
       password,
-      role: role || "user",
+      role: role || RoleEnums.USER,
       isEmailVerified: false,
     });
 
@@ -41,7 +42,7 @@ export const register = apiResponseHandler(
       user.email,
       "Email verification",
       { verificationLink, username: user.username },
-      "email",
+      "email"
     );
 
     const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
@@ -51,7 +52,7 @@ export const register = apiResponseHandler(
       {
         user: createdUser,
       },
-      "User registration successfull and verification email has been sent to you email",
+      "User registration successfull and verification email has been sent to you email"
     );
-  }),
+  })
 );

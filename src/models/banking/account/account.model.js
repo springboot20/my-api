@@ -30,7 +30,7 @@ const AccountSchema = new Schema(
       default: AvailableAccountStatus.INACTIVE,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export const AccountModel = model("Account", AccountSchema);

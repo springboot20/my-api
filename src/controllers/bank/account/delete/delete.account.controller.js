@@ -18,13 +18,13 @@ export const deleteUserAccount = apiResponseHandler(
     async (req, res, session) => {
       const { accountId } = req.params;
 
-      const account = await AccountModel.findById(accountId);
+      const account = await AccountModel.findById(accountId).session(session);
 
       if (!account) throw new CustomErrors("account not found", StatusCodes.NOT_FOUND);
 
       await AccountModel.findByIdAndDelete(accountId).session(session);
 
       return new ApiResponse(StatusCodes.OK, {}, "user account deleted successfull");
-    },
-  ),
+    }
+  )
 );
