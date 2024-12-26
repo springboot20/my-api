@@ -39,7 +39,7 @@ export const generateTokens = async (userId) => {
     if (error instanceof Error) {
       throw new CustomErrors(
         error.message ?? "something went wrong",
-        StatusCodes.INTERNAL_SERVER_ERROR,
+        StatusCodes.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -62,8 +62,18 @@ export const login = apiResponseHandler(
     const { accessToken, refreshToken } = await generateTokens(user?._id);
 
     const loggedInUser = await UserModel.findById(user._id).select(
-      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry",
+      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
     );
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res
+      .status(StatusCodes.OK)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options);
 
     return new ApiResponse(
       StatusCodes.OK,
@@ -71,7 +81,7 @@ export const login = apiResponseHandler(
         user: loggedInUser,
         tokens: { accessToken, refreshToken },
       },
-      "user logged in successfully",
+      "user logged in successfully"
     );
-  }),
+  })
 );
