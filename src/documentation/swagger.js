@@ -25,6 +25,7 @@ const options = {
         email: "opeyemiakanbi328@email.com",
       },
     },
+    schemes: ["http", "https"],
     components: {
       securitySchemas: {
         bearerAuth: {
@@ -41,11 +42,11 @@ const options = {
     ],
     servers: [
       {
-        url: "http://localhost:5010/api/v1",
+        url: "http://localhost:5010/api/v1/banking",
       },
     ],
   },
-  apis: [join(__dirname, "../routes/**/*.js"), join(__dirname, "../validation/**/*.js")],
+  apis: [join(__dirname, "../routes/**/*.js"), join(__dirname, "../models/**/*.js")],
 };
 
 export const specs = swaggerJsdoc(options);

@@ -175,6 +175,46 @@ router.route("/register").post(userRegisterValidation(), validate, register);
  *                          type: boolean
  *                          example: false
  *
+ *         '400':
+ *            description: check for presence of login credentials
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: please provide an email and a password
+ *                        statusCode:
+ *                          type: number
+ *                          example: 400
+ *                        success:
+ *                          type: boolean
+ *                          example: false
+ *
+ *         '400':
+ *            description: check for corelation between the stored password in the database and the one the user is entering
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: invalid password entered
+ *                        statusCode:
+ *                          type: number
+ *                          example: 401
+ *                        success:
+ *                          type: boolean
+ *                          example: false
+ *
  */
 
 router.route("/login").post(userLoginValidation(), validate, login);
