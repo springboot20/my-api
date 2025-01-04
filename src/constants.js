@@ -85,6 +85,7 @@ const AvailableCurrencyTypesEnum = Object.values(AvailableCurrencyTypes);
 const AvailableAccountTypes = {
   SAVINGS: "SAVINGS",
   CURRENT: "CURRENT",
+  NONE: "NONE",
 };
 
 const AvailableAccountEnums = Object.values(AvailableAccountTypes);

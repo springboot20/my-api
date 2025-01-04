@@ -16,9 +16,12 @@ export const getUserAccount = apiResponseHandler(
      *
      */
     async (req, res) => {
-      const { accountId } = req.params;
+      const { type } = req.body;
 
-      const account = await AccountModel.findById(accountId);
+      const account = await AccountModel.findOne({
+        user: req?.user?._id,
+        type,
+      });
 
       if (!account) {
         throw new CustomErrors("account does not exist", StatusCodes.NOT_FOUND);

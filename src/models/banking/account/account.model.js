@@ -18,7 +18,7 @@ const AccountSchema = new Schema(
     type: {
       type: String,
       enum: AvailableAccountEnums,
-      default: AvailableAccountTypes.SAVINGS,
+      default: AvailableAccountTypes.NONE,
     },
     balance: {
       type: Number,

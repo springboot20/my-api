@@ -13,6 +13,7 @@ export const getUserAccounts = apiResponseHandler(
      *
      * @param {import('express').Request} req
      * @param {import('express').Response} res
+     * 
      */
     async (req, res) => {
       const accounts = await AccountModel.find({ user: req.user?._id });

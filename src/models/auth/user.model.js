@@ -2,6 +2,8 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { AvailableRoles, RoleEnums } from "../../constants.js";
+import { AccountModel } from "../banking/account/account.model.js";
+import { ProfileModel } from "./profile.model.js";
 
 const userSchema = new Schema(
   {
@@ -52,7 +54,7 @@ const userSchema = new Schema(
       default: "email_and_password",
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 userSchema.pre("save", async function (next) {
@@ -77,6 +79,36 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPasswords = async function (entered_password) {
   return await bcrypt.compare(entered_password, this.password);
 };
+
+userSchema.post("save", async function (user, next) {
+  try {
+    await AccountModel.findOneAndUpdate(
+      { user: user._id },
+      {
+        $setOnInsert: {
+          user: user._id,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    await ProfileModel.findOneAndUpdate(
+      {
+        user: user?._id,
+      },
+      {
+        $setOnInsert: {
+          user: user._id,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 userSchema.methods.generateTemporaryTokens = function () {
   const unHashedToken = crypto.randomBytes(20).toString("hex");

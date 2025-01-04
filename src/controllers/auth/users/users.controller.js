@@ -3,7 +3,6 @@ import {
   ApiResponse,
   apiResponseHandler,
 } from "../../../middleware/api/api.response.middleware.js";
-import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
 import { UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
@@ -14,25 +13,23 @@ export const getCurrentUser = apiResponseHandler(async (req, res) => {
     {
       currentUser: req.user,
     },
-    "Current user fetched successfully",
+    "Current user fetched successfully"
   );
 });
 
-export const getUsers = apiResponseHandler(
-  mongooseTransactions(async (req, res) => {
-    const users = await UserModel.find({});
+export const getUsers = apiResponseHandler(async (req, res) => {
+  const users = await UserModel.find({});
 
-    return new ApiResponse(
-      StatusCodes.OK,
-      {
-        users: users,
-      },
-      "users fetched successfully",
-    );
-  }),
-);
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      users: users,
+    },
+    "users fetched successfully"
+  );
+});
 
-export const updateCurrentUserProfile = apiResponseHandler(async (req, res, session) => {
+export const updateCurrentUserProfile = apiResponseHandler(async (req, res) => {
   const { password, ...rest } = req.body;
 
   const salt = await bcrypt.genSalt(20);
@@ -46,9 +43,9 @@ export const updateCurrentUserProfile = apiResponseHandler(async (req, res, sess
         password: hashedPassword,
       },
     },
-    { new: true },
+    { new: true }
   ).select(
-    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken",
+    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordExpiry -forgotPasswordExpiryToken"
   );
 
   await updatedUser.save({ session });
@@ -61,6 +58,6 @@ export const updateCurrentUserProfile = apiResponseHandler(async (req, res, sess
     {
       user: updatedUser,
     },
-    "user updated successfully",
+    "user updated successfully"
   );
 });

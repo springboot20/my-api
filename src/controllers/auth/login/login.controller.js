@@ -45,43 +45,41 @@ export const generateTokens = async (userId) => {
   }
 };
 
-export const login = apiResponseHandler(
-  mongooseTransactions(async (req, res) => {
-    const { username, email, password } = req.body;
+export const login = apiResponseHandler(async (req, res) => {
+  const { username, email, password } = req.body;
 
-    const user = await UserModel.findOne({ $or: [{ email }, { username }] });
+  const user = await UserModel.findOne({ $or: [{ email }, { username }] });
 
-    if (!user) throw new CustomErrors("user does not exists", StatusCodes.NOT_FOUND);
+  if (!user) throw new CustomErrors("user does not exists", StatusCodes.NOT_FOUND);
 
-    if (!(email && password))
-      throw new CustomErrors("please provide an email and a password", StatusCodes.BAD_REQUEST);
+  if (!(email && password))
+    throw new CustomErrors("please provide an email and a password", StatusCodes.BAD_REQUEST);
 
-    if (!(await user.matchPasswords(password)))
-      throw new CustomErrors("invalid password entered", StatusCodes.UNAUTHORIZED);
+  if (!(await user.matchPasswords(password)))
+    throw new CustomErrors("invalid password entered", StatusCodes.UNAUTHORIZED);
 
-    const { accessToken, refreshToken } = await generateTokens(user?._id);
+  const { accessToken, refreshToken } = await generateTokens(user?._id);
 
-    const loggedInUser = await UserModel.findById(user._id).select(
-      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
-    );
+  const loggedInUser = await UserModel.findById(user._id).select(
+    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
+  );
 
-    const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    };
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
 
-    res
-      .status(StatusCodes.OK)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options);
+  res
+    .status(StatusCodes.OK)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options);
 
-    return new ApiResponse(
-      StatusCodes.OK,
-      {
-        user: loggedInUser,
-        tokens: { accessToken, refreshToken },
-      },
-      "user logged in successfully"
-    );
-  })
-);
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      user: loggedInUser,
+      tokens: { accessToken, refreshToken },
+    },
+    "user logged in successfully"
+  );
+});
