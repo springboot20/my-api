@@ -11,6 +11,7 @@ import {
   accountRoutes,
   statisticRoutes,
   transactionRoutes,
+  profileRoutes,
 } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
@@ -43,7 +44,7 @@ app.use(
     swaggerOptions: {
       docExpansion: "none", // keep all the sections collapsed by default
     },
-  }),
+  })
 );
 
 app.use(express.json({ limit: "16kb" }));
@@ -56,7 +57,7 @@ app.use(
   cors({
     origin: true,
     credentials: true,
-  }),
+  })
 );
 
 app.use((req, res, next) => {
@@ -66,11 +67,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/v1/healthcheck", healthcheck.default);
-app.use("/api/v1/users", authRoutes.default);
-app.use("/api/v1/accounts", accountRoutes.default);
-app.use("/api/v1/transactions", transactionRoutes.default);
-app.use("/api/v1/statistics", statisticRoutes.default);
+app.use("/api/v1/banking/healthcheck", healthcheck.default);
+app.use("/api/v1/banking/users", authRoutes.default);
+app.use("/api/v1/banking/accounts", accountRoutes.default);
+app.use("/api/v1/banking/transactions", transactionRoutes.default);
+app.use("/api/v1/banking/statistics", statisticRoutes.default);
+app.use("/api/v1/banking/profile", profileRoutes.default);
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {

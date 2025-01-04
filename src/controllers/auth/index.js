@@ -10,6 +10,7 @@ import {
   changeCurrentPassword,
 } from "./verification/verification.controller.js";
 import { getUsers, getCurrentUser } from "./users/users.controller.js";
+import { createUserProfile, getUserProfile } from "./profile/profile.controller.js";
 
 export {
   login,
@@ -23,4 +24,6 @@ export {
   changeCurrentPassword,
   getUsers,
   getCurrentUser,
+  createUserProfile,
+  getUserProfile,
 };

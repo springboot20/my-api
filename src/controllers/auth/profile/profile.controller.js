@@ -5,9 +5,101 @@ import {
 } from "../../../middleware/api/api.response.middleware.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { ProfileModel } from "../../../models/index.js";
-import { sendMail } from "../../../service/email.service.js";
-import { RoleEnums } from "../../../constants.js";
 
-export const CreateUserProfile = apiResponseHandler(async (req, res) => {
-  const {} = req.body;
+const getProfile = () => {
+  return [
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              avatar: 1,
+              email: 1,
+              password: 1,
+              username: 1,
+              role: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        user: { $first: "$user" },
+      },
+    },
+    {
+      $lookup: {
+        from: "accounts",
+        localField: "user._id",
+        foreignField: "user",
+        as: "account",
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              type: 1,
+              balance: 1,
+              status: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        account: { $first: "$account" },
+      },
+    },
+  ];
+};
+
+export const createUserProfile = apiResponseHandler(async (req, res) => {
+  const { firstname, lastname, phoneNumber } = req.body;
+
+  const userProfile = await ProfileModel.findOneAndUpdate(
+    {
+      user: req?.user._id,
+    },
+    {
+      $set: {
+        firstname,
+        lastname,
+        phoneNumber,
+      },
+    },
+    { new: true }
+  );
+
+  if (!userProfile)
+    throw new CustomErrors(
+      "Error while trying to update user profile",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+
+  return new ApiResponse(StatusCodes.OK, userProfile, "User profile updated successfully");
+});
+
+export const getUserProfile = apiResponseHandler(async (req, res) => {
+  const profile = await ProfileModel.aggregate([
+    {
+      $match: {
+        user: req?.user?._id,
+      },
+    },
+    ...getProfile(),
+  ]);
+
+  const _profile = profile[0];
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    { profile: _profile },
+    "user profile fetched successfully"
+  );
 });
