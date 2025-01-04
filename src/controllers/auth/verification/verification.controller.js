@@ -43,7 +43,7 @@ export const changeCurrentPassword = apiResponseHandler(async (req, res) => {
   const user = await UserModel.findById(req.user?._id);
 
   if (!(await user.matchPasswords(oldPassword)))
-    throw new CustomErrors("Invalid old password", StatusCodes.BAD_REQUEST);
+    throw new CustomErrors("Invalid old password entered", StatusCodes.BAD_REQUEST);
 
   user.password = newPassword;
   user.save({ validateBeforeSave: false });

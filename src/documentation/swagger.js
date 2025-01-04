@@ -27,7 +27,7 @@ const options = {
     },
     schemes: ["http", "https"],
     components: {
-      securitySchemas: {
+      securitySchemes: {
         bearerAuth: {
           type: "http",
           scheme: "bearer",

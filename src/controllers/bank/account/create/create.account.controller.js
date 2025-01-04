@@ -25,16 +25,11 @@ export const createAccount = apiResponseHandler(
         throw new CustomErrors(`account type already exists ${type}`, StatusCodes.CONFLICT);
       }
 
-      const newAccount = await AccountModel.findOneAndUpdate(
-        { user: req?.user?._id },
-        {
-          $set: {
-            type,
-            account_number: await AccountService.createAccountNumber(),
-          },
-        },
-        { new: true }
-      );
+      const newAccount = await AccountModel.create({
+        user: req?.user?._id,
+        type,
+        account_number: await AccountService.createAccountNumber(),
+      });
 
       if (!newAccount) {
         throw new CustomErrors(`error while creating account`, StatusCodes.INTERNAL_SERVER_ERROR);

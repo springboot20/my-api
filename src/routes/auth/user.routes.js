@@ -176,7 +176,7 @@ router.route("/register").post(userRegisterValidation(), validate, register);
  *                          example: false
  *
  *         '400':
- *            description: check for presence of login credentials
+ *            description: check for the presence of login credentials
  *            content:
  *              application/json:
  *                schema:
@@ -195,7 +195,7 @@ router.route("/register").post(userRegisterValidation(), validate, register);
  *                          type: boolean
  *                          example: false
  *
- *         '400':
+ *         '401':
  *            description: check for corelation between the stored password in the database and the one the user is entering
  *            content:
  *              application/json:
@@ -230,6 +230,58 @@ router
   .get(mongoPathVariableValidation("id"), validate, verifyEmail);
 
 // secured routes
+
+/**
+ * @swagger
+ * /users/logout:
+ *    post:
+ *       tags:
+ *         - 🔐 Authentication
+ *       summary: Logout user
+ *       description: >-
+ *          Api endopint that allows users to logout of their register account
+ *       operationId: logoutUser
+ *       responses:
+ *         '200':
+ *            description: Logout registered user
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: you have successfully logged out
+ *                        statusCode:
+ *                          type: number
+ *                          example: 200
+ *                        success:
+ *                          type: boolean
+ *                          example: true
+ *         '401':
+ *            description: check if authorization credential is present on the request
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: verifyJWT Invalid
+ *                        statusCode:
+ *                          type: number
+ *                          example: 401
+ *                        success:
+ *                          type: boolean
+ *                          example: false
+ *
+ */
 router.route("/logout").post(verifyJWT, logout);
 
 router.route("/resend-email-verification/").post(verifyJWT, resendEmailVerification);
@@ -238,6 +290,74 @@ router
   .route("/reset-password/:resetToken")
   .post(verifyJWT, userResetPasswordValidation(), validate, resetPassword);
 
+/**
+ * @swagger
+ * /users/change-password:
+ *    post:
+ *       tags:
+ *         - 🔐 Authentication
+ *       summary: Change already logged in user password
+ *       description: >-
+ *          Api endopint that allows logged in users to change their register account password
+ *       operationId: changeUserPassword
+ *       requestBody:
+ *          required: true
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  oldPassword:
+ *                    type: string
+ *                    example: '@codesuite2004'
+ *                  newPassword:
+ *                    type: string
+ *                    example: codesuite@2004
+ *              example:
+ *                oldPassword: '@codesuite2004'
+ *                newPassword: 'codesuite@2004'
+ *       responses:
+ *         '200':
+ *            description: Change user current password
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: Password changed successfully
+ *                        statusCode:
+ *                          type: number
+ *                          example: 200
+ *                        success:
+ *                          type: boolean
+ *                          example: true
+ *
+ *         '400':
+ *            description: check for corelation between the old password in the database and the new password the user is entering
+ *            content:
+ *              application/json:
+ *                schema:
+ *                  type: object
+ *                  properties:
+ *                    data:
+ *                      types: object
+ *                      properties:
+ *                        message:
+ *                          type: string
+ *                          example: invalid old password entered
+ *                        statusCode:
+ *                          type: number
+ *                          example: 400
+ *                        success:
+ *                          type: boolean
+ *                          example: false
+ *
+ */
 router.route("/change-password").patch(verifyJWT, changeCurrentPassword);
 
 router.route("/").get(verifyJWT, checkPermissions(RoleEnums.ADMIN), getUsers);

@@ -82,16 +82,6 @@ userSchema.methods.matchPasswords = async function (entered_password) {
 
 userSchema.post("save", async function (user, next) {
   try {
-    await AccountModel.findOneAndUpdate(
-      { user: user._id },
-      {
-        $setOnInsert: {
-          user: user._id,
-        },
-      },
-      { upsert: true, new: true }
-    );
-
     await ProfileModel.findOneAndUpdate(
       {
         user: user?._id,

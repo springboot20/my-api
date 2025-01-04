@@ -23,7 +23,7 @@ router
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getUserAccounts);
 
 router
-  .route("/user-accounts/:accountId")
+  .route("/user-account")
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getUserAccount);
 
 export default router;
