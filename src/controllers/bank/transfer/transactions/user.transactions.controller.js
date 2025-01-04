@@ -18,6 +18,7 @@ const getPipelineData = () => {
         pipeline: [
           {
             $project: {
+              _id: 1,
               username: 1,
               email: 1,
               avatar: 1,
@@ -43,6 +44,14 @@ const getPipelineData = () => {
             },
           },
         ],
+      },
+    },
+
+    // add field for user and account looked up for
+    {
+      $addFields: {
+        user: { $first: "$user" },
+        account: { $first: "$account" },
       },
     },
   ];

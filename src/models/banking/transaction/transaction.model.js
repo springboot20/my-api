@@ -30,7 +30,7 @@ const TransactionSchema = new Schema(
     },
     type: {
       type: String,
-      emun: AvailableTransactionTypesEnum,
+      enum: AvailableTransactionTypesEnum,
       default: AvailableTransactionTypes.TRANSFER,
     },
     currency: {
