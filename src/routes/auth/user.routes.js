@@ -293,7 +293,7 @@ router
 /**
  * @swagger
  * /users/change-password:
- *    post:
+ *    patch:
  *       tags:
  *         - 🔐 Authentication
  *       summary: Change already logged in user password
