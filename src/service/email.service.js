@@ -102,7 +102,7 @@ const sendMail = async (email, subject, payload, template) => {
     const info = await transporter.sendMail(options);
     console.log("Message Id: %s", info.messageId);
   } catch (error) {
-    console.log(`Error sending email: ${error}`);
+    console.log(`Error sending email: ${error.message}`);
   }
 };
 

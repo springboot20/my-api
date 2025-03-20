@@ -16,6 +16,11 @@ import {
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
 import { specs } from "./documentation/swagger.js";
+import * as path from "path";
+import * as url from "url";
+
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: ".env" });
 
@@ -51,7 +56,7 @@ app.use(express.json({ limit: "16kb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 app.use(bodyParser.json());
 
-app.use(express.static("public"));
+app.use("/public", express.static(__dirname + "/public"));
 
 app.use(
   cors({
@@ -60,19 +65,29 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
 app.use("/api/v1/banking/users", authRoutes.default);
 app.use("/api/v1/banking/accounts", accountRoutes.default);
 app.use("/api/v1/banking/transactions", transactionRoutes.default);
 app.use("/api/v1/banking/statistics", statisticRoutes.default);
 app.use("/api/v1/banking/profile", profileRoutes.default);
+
+app.get("/3", (req, res) => {
+  console.log(res);
+  res.sendFile(__dirname, "/public/index.html");
+});
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${req.ip}`);
+  next();
+});
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {

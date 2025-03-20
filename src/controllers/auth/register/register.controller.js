@@ -32,9 +32,13 @@ export const register = apiResponseHandler(async (req, res) => {
 
   user.emailVerificationToken = hashedToken;
   user.emailVerificationTokenExpiry = tokenExpiry;
+
   await user.save({ validateBeforeSave: false });
 
-  const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
+  const link =
+    process.env.NODE_ENV === "production" ? process.env.BASE_URL_PROD : process.env.BASE_URL_DEV;
+
+  const verificationLink = `${link}/verify-email/${unHashedToken}`;
 
   await sendMail(
     user.email,
@@ -49,6 +53,7 @@ export const register = apiResponseHandler(async (req, res) => {
     StatusCodes.CREATED,
     {
       user: createdUser,
+      url: verificationLink,
     },
     "User registration successfull and verification email has been sent to you email"
   );
