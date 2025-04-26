@@ -72,11 +72,6 @@ app.use("/api/v1/banking/transactions", transactionRoutes.default);
 app.use("/api/v1/banking/statistics", statisticRoutes.default);
 app.use("/api/v1/banking/profile", profileRoutes.default);
 
-app.get("/3", (req, res) => {
-  console.log(res);
-  res.sendFile(__dirname, "/public/index.html");
-});
-
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - ${req.ip}`);
   next();
