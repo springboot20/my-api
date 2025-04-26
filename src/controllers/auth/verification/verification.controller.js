@@ -76,9 +76,9 @@ export const forgotPassword = apiResponseHandler(
     return new ApiResponse(
       StatusCodes.OK,
       { unHashedToken },
-      "Password reset link sent to your email",
+      "Password reset link sent to your email"
     );
-  },
+  }
 );
 
 export const refreshToken = apiResponseHandler(async (req, res) => {
@@ -108,20 +108,19 @@ export const refreshToken = apiResponseHandler(async (req, res) => {
     {
       tokens: { accessToken, refreshToken },
     },
-    "access token refreshed successfully",
+    "access token refreshed successfully"
   );
 });
 
 export const verifyEmail = apiResponseHandler(async (req, res) => {
-  const { token, id } = req.params;
+  const { token, userId } = req.query;
 
   if (!token) {
     throw new CustomErrors("Email verification token is missing", StatusCodes.UNAUTHORIZED);
   }
 
   const user = await UserModel.findOne({
-    _id: id,
-    emailVerificationTokenExpiry: { $gt: Date.now() },
+    _id: userId,
   });
 
   if (!user) {
@@ -164,7 +163,7 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
     user.email,
     "Password reset",
     { verificationLink, username: user.username },
-    "email",
+    "email"
   );
 
   return new ApiResponse(StatusCodes.OK, {}, "email verification link sent to your email");

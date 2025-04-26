@@ -38,7 +38,7 @@ export const register = apiResponseHandler(async (req, res) => {
   const link =
     process.env.NODE_ENV === "production" ? process.env.BASE_URL_PROD : process.env.BASE_URL_DEV;
 
-  const verificationLink = `${link}/verify-email/${unHashedToken}`;
+  const verificationLink = `${link}/verify-email?userId=${user?._id}&token=${unHashedToken}`;
 
   await sendMail(
     user.email,

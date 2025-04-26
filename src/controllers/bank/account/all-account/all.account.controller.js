@@ -57,22 +57,31 @@ export const getUserAccounts = apiResponseHandler(
      *
      */
     async (req, res) => {
-      const accounts = await AccountModel.aggregate([
-        {
-          $match: {
-            user: req.user?._id,
-          },
-        },
-        ...accountPipeline(),
-      ]);
+      const userId = req.user?._id;
+
+      const accounts = await AccountModel.find({ user: userId });
 
       if (!accounts) {
         throw new CustomErrors("no accounts exist for the user", StatusCodes.NOT_FOUND);
       }
 
+      const accountsWithWallets = await Promise.all(
+        accounts.map(async (account) => {
+          const wallet = await WalletModel.findOne({
+            account: account._id,
+            user: userId,
+          });
+
+          return {
+            account,
+            wallet,
+          };
+        })
+      );
+
       return new ApiResponse(
         StatusCodes.CREATED,
-        { accounts },
+        { accounts: accountsWithWallets },
         "all users account fetched successfull"
       );
     }

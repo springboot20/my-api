@@ -19,7 +19,8 @@ const AvailablePaymentStatusEnums = Object.values(PaymentStatuses);
 const AvailableAccountStatus = {
   ACTIVE: "ACTIVE",
   INACTIVE: "INACTIVE",
-  BLOCK: "BLOCK",
+  CLOSED: "CLOSED",
+  SUSPENDED: "SUSPENDED",
 };
 
 /**

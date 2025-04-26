@@ -6,8 +6,21 @@ import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { AccountModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 
-const accountPipeline = () => {
-  return [
+export const getAccountDetails = apiResponseHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { accountId } = req.params;
+
+  // Convert string ID to ObjectId if needed
+  const objectId = new mongoose.Types.ObjectId(accountId);
+
+  const accountDetails = await AccountModel.aggregate([
+    {
+      $match: {
+        _id: objectId,
+        user: userId,
+      },
+    },
+    // Get user details
     {
       $lookup: {
         from: "users",
@@ -31,59 +44,62 @@ const accountPipeline = () => {
         user: { $first: "$user" },
       },
     },
+    // Get wallet details
     {
       $lookup: {
-        from: "profiles",
-        localField: "user._id",
-        foreignField: "user",
-        as: "profile",
+        from: "wallets",
+        let: { accountId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ["$account", "$$accountId"] }, { $eq: ["$user", userId] }],
+              },
+            },
+          },
+        ],
+        as: "wallet",
       },
     },
     {
       $addFields: {
-        profile: { $first: "$profile" },
+        wallet: { $first: "$wallet" },
       },
     },
-  ];
-};
-
-export const getUserAccount = apiResponseHandler(
-  /**
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   *
-   */
-  async (req, res) => {
-    const { type } = req.body;
-
-    const account = await AccountModel.aggregate([
-      {
-        $match: {
-          user: req?.user?._id,
-        },
-      },
-      {
-        $match: type
-          ? {
-              type: {
-                $regex: type.trim(),
-                option: "i",
+    // Get card details
+    {
+      $lookup: {
+        from: "cards",
+        let: { accountId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $or: [
+                  { $eq: ["$primary_account", "$$accountId"] },
+                  { $in: ["$$accountId", "$linked_accounts"] },
+                ],
               },
-            }
-          : {},
+            },
+          },
+          {
+            $project: {
+              cvv: 0, // Exclude sensitive data
+            },
+          },
+        ],
+        as: "cards",
       },
-      ...accountPipeline(),
-    ]);
+    },
+  ]);
 
-    if (!account) {
-      throw new CustomErrors("account does not exist", StatusCodes.NOT_FOUND);
-    }
-
-    return new ApiResponse(
-      StatusCodes.CREATED,
-      { account: account[0] },
-      "user account fetched successfully"
-    );
+  if (!accountDetails || accountDetails.length === 0) {
+    throw new CustomErrors("Account not found or unauthorized", StatusCodes.NOT_FOUND);
   }
-);
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    accountDetails[0],
+    "Account details retrieved successfully"
+  );
+});

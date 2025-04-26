@@ -20,6 +20,26 @@ const ProfileSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    present_address: {
+      type: String,
+      default: "",
+    },
+    permanent_address: {
+      type: String,
+      default: "",
+    },
+    city: {
+      type: String,
+      default: "",
+    },
+    country: {
+      type: String,
+      default: "",
+    },
+    postal_code: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
