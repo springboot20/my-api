@@ -22,7 +22,17 @@ const AvailableAccountStatus = {
   BLOCK: "BLOCK",
 };
 
+/**
+ * Available wallet account status
+ */
+const AvailableCardStatus = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  BLOCK: "BLOCK",
+};
+
 const AvailableAccountStatusEnums = Object.values(AvailableAccountStatus);
+const AvailableCardStatusEnums = Object.values(AvailableCardStatus);
 
 /**
  * Available Transaction types
@@ -88,7 +98,19 @@ const AvailableAccountTypes = {
   NONE: "NONE",
 };
 
+/**
+ * Avaliable card type
+ */
+
+const AvailableCardTypes = {
+  MASTER_DEBIT: "MASTER DEBIT",
+  MASTER_CREDIT: "MASTER CREDIT",
+  VERVE_DEBIT: "VERVE DEBIT",
+  VERVE_CREDIT: "VERVE CREDIT",
+};
+
 const AvailableAccountEnums = Object.values(AvailableAccountTypes);
+const AvailableCardEnums = Object.values(AvailableCardTypes);
 
 const paystack_urls = {
   initiate: "https://api.paystack.co/transaction/initialize",
@@ -114,4 +136,8 @@ export {
   AvailableRoles,
   LoginType,
   AvailableLoginType,
+  AvailableCardTypes,
+  AvailableCardEnums,
+  AvailableCardStatus,
+  AvailableCardStatusEnums,
 };
