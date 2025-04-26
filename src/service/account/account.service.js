@@ -10,6 +10,26 @@ export default class AccountService {
   }
 
   /**
+   * Link a card to an account
+   * @param {String} accountId - Account ID
+   * @param {String} cardId - Card ID
+   * @returns {Promise<Object>} Updated account
+   */
+  async linkCardToAccount(accountId, cardId) {
+    const account = await AccountModel.findById(accountId);
+
+    if (!account) {
+      throw new CustomErrors("Account not found", StatusCodes.NOT_FOUND);
+    }
+
+    // Add card to account's cards array
+    account.cards.push(cardId);
+    await account.save();
+
+    return account;
+  }
+
+  /**
    * Check if an account number is valid and unique
    * @param {string} accountNumber - The account number to validate
    * @returns {Promise<boolean>} Whether the account number is valid and unique
