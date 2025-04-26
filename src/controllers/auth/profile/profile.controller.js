@@ -60,7 +60,16 @@ const getProfile = () => {
 };
 
 export const createUserProfile = apiResponseHandler(async (req, res) => {
-  const { firstname, lastname, phoneNumber } = req.body;
+  const {
+    firstname,
+    lastname,
+    phoneNumber,
+    present_address,
+    permanent_address,
+    city,
+    country,
+    postal_code,
+  } = req.body;
 
   const userProfile = await ProfileModel.findOneAndUpdate(
     {
@@ -71,6 +80,11 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
         firstname,
         lastname,
         phoneNumber,
+        present_address,
+        permanent_address,
+        city,
+        country,
+        postal_code,
       },
     },
     { new: true }
