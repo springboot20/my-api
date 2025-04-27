@@ -23,7 +23,7 @@ const AccountSchema = new Schema(
     status: {
       type: String,
       enum: AvailableAccountStatusEnums,
-      default: AvailableAccountStatus.INACTIVE,
+      default: AvailableAccountStatus.ACTIVE,
     },
     cards: [
       {

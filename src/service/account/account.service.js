@@ -1,4 +1,4 @@
-import { AccountModel, CardModel } from "../models/index.js";
+import { AccountModel, CardModel } from "../../models/index.js";
 
 export default class AccountService {
   /**
@@ -15,7 +15,7 @@ export default class AccountService {
    * @param {String} cardId - Card ID
    * @returns {Promise<Object>} Updated account
    */
-  async linkCardToAccount(accountId, cardId) {
+  static async linkCardToAccount(accountId, cardId) {
     const account = await AccountModel.findById(accountId);
 
     if (!account) {
@@ -87,7 +87,7 @@ export default class AccountService {
     let accountNumber = "";
 
     while (!isUnique) {
-      accountNumber = generateUniqueNumber(10);
+      accountNumber = this.generateUniqueNumber(10);
 
       // Check if this account number already exists
       const existingAccount = await AccountModel.findOne({ account_number: accountNumber });
@@ -111,7 +111,7 @@ export default class AccountService {
     while (!isUnique) {
       // Generate a 16-digit card number
       // You can customize the prefix based on card types (e.g., 4 for Visa)
-      cardNumber = generateUniqueNumber(16);
+      cardNumber = this.generateUniqueNumber(16);
 
       // Check if this card number already exists
       const existingCard = await CardModel.findOne({ card_number: cardNumber });
@@ -145,6 +145,6 @@ export default class AccountService {
    * @returns {string} A 3-digit CVV
    */
   static generateCVV = () => {
-    return generateUniqueNumber(3).toString().padStart(3, "0");
+    return this.generateUniqueNumber(3).toString().padStart(3, "0");
   };
 }

@@ -12,6 +12,7 @@ import {
   statisticRoutes,
   transactionRoutes,
   profileRoutes,
+  cardRoutes,
 } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
@@ -68,6 +69,7 @@ app.use(
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
 app.use("/api/v1/banking/users", authRoutes.default);
 app.use("/api/v1/banking/accounts", accountRoutes.default);
+app.use("/api/v1/banking/card", cardRoutes.default);
 app.use("/api/v1/banking/transactions", transactionRoutes.default);
 app.use("/api/v1/banking/statistics", statisticRoutes.default);
 app.use("/api/v1/banking/profile", profileRoutes.default);

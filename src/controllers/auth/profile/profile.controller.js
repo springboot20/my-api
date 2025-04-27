@@ -20,9 +20,7 @@ const getProfile = () => {
               _id: 1,
               avatar: 1,
               email: 1,
-              password: 1,
               username: 1,
-              role: 1,
             },
           },
         ],
@@ -31,29 +29,6 @@ const getProfile = () => {
     {
       $addFields: {
         user: { $first: "$user" },
-      },
-    },
-    {
-      $lookup: {
-        from: "accounts",
-        localField: "user._id",
-        foreignField: "user",
-        as: "account",
-        pipeline: [
-          {
-            $project: {
-              _id: 1,
-              type: 1,
-              balance: 1,
-              status: 1,
-            },
-          },
-        ],
-      },
-    },
-    {
-      $addFields: {
-        account: { $first: "$account" },
       },
     },
   ];

@@ -19,6 +19,7 @@ export const createAccount = apiResponseHandler(
     async (req, res) => {
       const { type, initialBalance, currency } = req.body;
 
+      const userId = req?.user?._id
       const existingAccount = await AccountModel.findOne({ user: req.user?._id, type });
 
       if (existingAccount) {
@@ -26,7 +27,7 @@ export const createAccount = apiResponseHandler(
       }
 
       const newAccount = await AccountModel.create({
-        user: req?.user?._id,
+        user: userId,
         type,
         account_number: await AccountService.createAccountNumber(),
       });

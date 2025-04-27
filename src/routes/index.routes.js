@@ -4,6 +4,7 @@ import * as accountRoutes from "./bank/account/account.routes.js";
 import * as transactionRoutes from "./bank/transaction/transaction.routes.js";
 import * as statisticRoutes from "./statistics/statistics.routes.js";
 import * as profileRoutes from "./auth/profile.routes.js";
+import * as cardRoutes from "./bank/card/card.routes.js";
 
 export {
   healthcheck,
@@ -12,4 +13,5 @@ export {
   transactionRoutes,
   statisticRoutes,
   profileRoutes,
+  cardRoutes
 };
