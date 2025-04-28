@@ -10,7 +10,7 @@ import AccountService from "../../../../service/account/account.service.js";
 export const createNewCard = apiResponseHandler(async (req, res) => {
   const userId = req?.user?._id;
 
-  const { card_name, valid_thru, type, status, card_number, primary_account } = req.body;
+  const { card_name, valid_thru, type, status, card_number, cvv, primary_account } = req.body;
 
   const existing_card = await CardModel.findOne({
     card_name,
@@ -20,8 +20,6 @@ export const createNewCard = apiResponseHandler(async (req, res) => {
   if (existing_card) {
     throw new CustomErrors(`Card with name "${card_name}" already exists`, StatusCodes.CONFLICT);
   }
-
-  const cvv = AccountService.generateCVV();
 
   const newCard = await CardModel.create({
     user: userId,
@@ -50,10 +48,12 @@ export const createNewCard = apiResponseHandler(async (req, res) => {
 
 export const generateCardNumber = apiResponseHandler(async (req) => {
   const card_number = await AccountService.generateUniqueCardNumber();
+  const valid_thru = AccountService.generateCardExpiryDate();
+  const cvv = AccountService.generateCVV();
 
   return new ApiResponse(
     StatusCodes.CREATED,
-    { card_number },
+    { card_number, valid_thru, cvv },
     "Card number generated successfully"
   );
 });

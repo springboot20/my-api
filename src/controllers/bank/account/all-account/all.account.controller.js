@@ -4,7 +4,7 @@ import {
 } from "../../../../middleware/api/api.response.middleware.js";
 import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
-import { AccountModel } from "../../../../models/index.js";
+import { AccountModel, WalletModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 
 const accountPipeline = () => {
@@ -59,7 +59,35 @@ export const getUserAccounts = apiResponseHandler(
     async (req, res) => {
       const userId = req.user?._id;
 
-      const accounts = await AccountModel.find({ user: userId });
+      const accounts = await AccountModel.aggregate([
+        {
+          $match: {
+            user: userId,
+          },
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            foreignField: "user",
+            localField: "user",
+            as: "user",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  firstname: 1,
+                  lastname: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            user: { $first: "$user" },
+          },
+        },
+      ]);
 
       if (!accounts) {
         throw new CustomErrors("no accounts exist for the user", StatusCodes.NOT_FOUND);
