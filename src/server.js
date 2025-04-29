@@ -28,26 +28,32 @@ dotenv.config({ path: ".env" });
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
-const corsOrigin = process.env.CORS_ORIGIN || "https://affiliate-dashboard-4sgw.vercel.app"
-console.log("CORS Origin:", corsOrigin);
+
+const allowedOrigins = [
+  'https://affiliate-dashboard-4sgw.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  // Add any other origins you need
+];
 
 // Configure CORS middleware first before any routes
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
     credentials: true,
     preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-);
-
-// Handle preflight OPTIONS requests
-app.options(
-  "*",
-  cors({
-    origin: corsOrigin,
     optionsSuccessStatus: 204,
   })
 );
