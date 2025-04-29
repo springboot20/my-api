@@ -29,7 +29,9 @@ const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 const corsOrigin = process.env.CORS_ORIGIN || "https://affiliate-dashboard-4sgw.vercel.app"
+console.log("CORS Origin:", corsOrigin);
 
+// Configure CORS middleware first before any routes
 app.use(
   cors({
     origin: corsOrigin,
