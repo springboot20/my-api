@@ -61,7 +61,7 @@ app.use("/public", express.static(__dirname + "/public"));
 
 app.use(
   cors({
-    origin: true,
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
   })
 );
