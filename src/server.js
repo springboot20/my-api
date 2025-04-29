@@ -28,7 +28,27 @@ dotenv.config({ path: ".env" });
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
-const corsOrigin = process.env.CORS_ORIGIN 
+const corsOrigin = process.env.CORS_ORIGIN || "https://affiliate-dashboard-4sgw.vercel.app"
+
+app.use(
+  cors({
+    origin: corsOrigin,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
+
+// Handle preflight OPTIONS requests
+app.options(
+  "*",
+  cors({
+    origin: corsOrigin,
+    optionsSuccessStatus: 204,
+  })
+);
 
 // Log MongoDB connection status
 mongoose.connection.on("connected", () => {
@@ -59,25 +79,6 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 app.use(bodyParser.json());
 
 app.use("/public", express.static(__dirname + "/public"));
-app.use(
-  cors({
-    origin: corsOrigin,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-);
-
-// Handle preflight OPTIONS requests
-app.options(
-  "*",
-  cors({
-    origin: corsOrigin,
-    optionsSuccessStatus: 204,
-  })
-);
 
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
 app.use("/api/v1/banking/users", authRoutes.default);
