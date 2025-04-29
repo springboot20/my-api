@@ -28,6 +28,7 @@ dotenv.config({ path: ".env" });
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
+const corsOrigin = process.env.CORS_ORIGIN 
 
 // Log MongoDB connection status
 mongoose.connection.on("connected", () => {
@@ -58,11 +59,23 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 app.use(bodyParser.json());
 
 app.use("/public", express.static(__dirname + "/public"));
-
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: corsOrigin,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
+
+// Handle preflight OPTIONS requests
+app.options(
+  "*",
+  cors({
+    origin: corsOrigin,
+    optionsSuccessStatus: 204,
   })
 );
 
@@ -80,9 +93,13 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Origin", corsOrigin);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
   next();
 });
 
