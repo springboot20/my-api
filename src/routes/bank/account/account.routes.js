@@ -26,4 +26,8 @@ router
   .route("/user-account/:accountId")
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getAccountDetails);
 
+router
+  .route("/user-account/generate-account-number")
+  .post(verifyJWT, checkPermissions(RoleEnums.USER), accountController.generateAccountNumber);
+
 export default router;

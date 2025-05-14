@@ -17,9 +17,9 @@ export const createAccount = apiResponseHandler(
      *
      */
     async (req, res) => {
-      const { type, initialBalance, currency } = req.body;
+      const { type, initialBalance, currency, account_number } = req.body;
 
-      const userId = req?.user?._id
+      const userId = req?.user?._id;
       const existingAccount = await AccountModel.findOne({ user: req.user?._id, type });
 
       if (existingAccount) {
@@ -29,7 +29,7 @@ export const createAccount = apiResponseHandler(
       const newAccount = await AccountModel.create({
         user: userId,
         type,
-        account_number: await AccountService.createAccountNumber(),
+        account_number,
       });
 
       if (!newAccount) {
@@ -57,6 +57,16 @@ export const createAccount = apiResponseHandler(
     }
   )
 );
+
+export const generateAccountNumber = apiResponseHandler(async () => {
+  const account_number = await AccountService.createAccountNumber();
+
+  return new ApiResponse(
+    StatusCodes.CREATED,
+    { account_number },
+    "cccount number generated successfully"
+  );
+});
 
 /**
  * Validate account number format and uniqueness
