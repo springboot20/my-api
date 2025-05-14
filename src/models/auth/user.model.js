@@ -5,6 +5,119 @@ import { AvailableRoles, RoleEnums } from "../../constants.js";
 import { AccountModel } from "../banking/account/account.model.js";
 import { ProfileModel } from "./profile.model.js";
 
+/**
+ * @swagger 
+ * components:
+ *   schemas:
+ *     CreateUser:
+ *       type: object
+ *       required:
+ *       - username
+ *       - email
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: Auto-generated MongoDB ID
+ *         username:
+ *           type: string
+ *           description: Unique username for the user
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *         phone_number:
+ *           type: string
+ *           description: User's phone number
+ *         role:
+ *           type: string
+ *           enum: [ USER, ADMIN ]
+ *           description: User role for authorization
+ *         avatar:
+ *           type: object
+ *           properties:
+ *             url:
+ *               type: string
+ *               description: URL of the user's avatar image
+ *             public_id:
+ *               type: string
+ *               description: Public ID for the avatar in Cloudinary
+ *         isEmailVerified:
+ *           type: boolean
+ *           description: Indicates if the user's email is verified
+ *       i  sAuthenticated:
+ *           type: boolean
+ *           description: Indicates if the user is currently authenticated
+ *       example:
+ *         username: john_doe
+ *         email: john@example.com
+ *         phone_number: "1234567890"
+ *         role: USER
+ *         avatar:
+ *           url: https://res.cloudinary.com/example/image/upload/v1234567890/avatar.jpg
+ *           public_id: ecommerce/users-image/avatar
+ *         isEmailVerified: true
+ *         isAuthenticated: true
+
+ *     ApiResponse:
+ *       type: object
+ *       properties:
+ *         statusCode:
+ *           type: integer
+ *           description: HTTP status code
+ *         message:
+ *           type: string
+ *           description: Response message
+ *         data:
+ *           type: object
+ *           description: Response data
+
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         statusCode:
+ *           type: integer
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             user:
+ *               $ref: '#/components/schemas/User'
+ *             tokens:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                 refresh_token:
+ *                   type: string
+
+ *     VerificationResponse:
+ *       type: object
+ *       properties:
+ *         statusCode:
+ *           type: integer
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             isEmailVerified:
+ *               type: boolean
+
+ *     Error:
+ *       type: object
+ *       properties:
+ *         statusCode:
+ *           type: integer
+ *         message:
+ *           type: string
+ *         errors:
+ *           type: array
+ *           items:
+ *             type: string
+ * 
+ */
+
 const userSchema = new Schema(
   {
     avatar: {
