@@ -1,19 +1,19 @@
-import { StatusCodes } from "http-status-codes";
+import { StatusCodes } from 'http-status-codes';
 import {
   apiResponseHandler,
   ApiResponse,
-} from "../../../middleware/api/api.response.middleware.js";
-import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
-import { ProfileModel } from "../../../models/index.js";
+} from '../../../middleware/api/api.response.middleware.js';
+import { CustomErrors } from '../../../middleware/custom/custom.errors.js';
+import { ProfileModel } from '../../../models/index.js';
 
 const getProfile = () => {
   return [
     {
       $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "user",
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user',
         pipeline: [
           {
             $project: {
@@ -28,7 +28,7 @@ const getProfile = () => {
     },
     {
       $addFields: {
-        user: { $first: "$user" },
+        user: { $first: '$user' },
       },
     },
   ];
@@ -44,6 +44,7 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
     city,
     country,
     postal_code,
+    preferred_view,
   } = req.body;
 
   const userProfile = await ProfileModel.findOneAndUpdate(
@@ -60,6 +61,7 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
         city,
         country,
         postal_code,
+        preferred_view,
       },
     },
     { new: true }
@@ -67,11 +69,11 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
 
   if (!userProfile)
     throw new CustomErrors(
-      "Error while trying to update user profile",
+      'Error while trying to update user profile',
       StatusCodes.INTERNAL_SERVER_ERROR
     );
 
-  return new ApiResponse(StatusCodes.OK, userProfile, "User profile updated successfully");
+  return new ApiResponse(StatusCodes.OK, userProfile, 'User profile updated successfully');
 });
 
 export const getUserProfile = apiResponseHandler(async (req, res) => {
@@ -89,6 +91,6 @@ export const getUserProfile = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
     StatusCodes.OK,
     { profile: _profile },
-    "user profile fetched successfully"
+    'user profile fetched successfully'
   );
 });

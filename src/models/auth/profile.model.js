@@ -39,6 +39,11 @@ const ProfileSchema = new Schema(
     postal_code: {
       type: String,
       default: "",
+    },// Add preferred view setting for app switching
+    preferred_view: {
+      type: String,
+      enum: ["app", "dashboard"],
+      default: "app", // Default to main banking app view
     },
   },
   {
