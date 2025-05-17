@@ -45,6 +45,8 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
     country,
     postal_code,
     preferred_view,
+    currency,
+    timezone
   } = req.body;
 
   const userProfile = await ProfileModel.findOneAndUpdate(
@@ -62,6 +64,8 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
         country,
         postal_code,
         preferred_view,
+        currency,
+        timezone
       },
     },
     { new: true }
