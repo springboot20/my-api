@@ -1,12 +1,12 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from "../../../../middleware/api/api.response.middleware.js";
-import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
-import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
-import { AccountModel, WalletModel } from "../../../../models/index.js";
-import { StatusCodes } from "http-status-codes";
-import AccountService from "../../../../service/account/account.service.js";
+} from '../../../../middleware/api/api.response.middleware.js';
+import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
+import { mongooseTransactions } from '../../../../middleware/mongoose/mongoose.transactions.js';
+import { AccountModel, WalletModel } from '../../../../models/index.js';
+import { StatusCodes } from 'http-status-codes';
+import AccountService from '../../../../service/account/account.service.js';
 
 export const createAccount = apiResponseHandler(
   mongooseTransactions(
@@ -17,7 +17,7 @@ export const createAccount = apiResponseHandler(
      *
      */
     async (req, res) => {
-      const { type, initialBalance, currency, account_number } = req.body;
+      const { type, initialBalance, currency, account_number, pin } = req.body;
 
       const userId = req?.user?._id;
       const existingAccount = await AccountModel.findOne({ user: req.user?._id, type });
@@ -30,6 +30,7 @@ export const createAccount = apiResponseHandler(
         user: userId,
         type,
         account_number,
+        pin,
       });
 
       if (!newAccount) {
@@ -40,7 +41,7 @@ export const createAccount = apiResponseHandler(
         user: userId,
         account: newAccount._id,
         balance: initialBalance || 0,
-        currency: currency || "USD",
+        currency: currency || 'USD',
       });
 
       if (!wallet) {
@@ -51,8 +52,8 @@ export const createAccount = apiResponseHandler(
 
       return new ApiResponse(
         StatusCodes.CREATED,
-        { account: newAccount, wallet },
-        "Account successfully created with wallet"
+        { ...newAccount,...wallet },
+        'Account successfully created with wallet'
       );
     }
   )
@@ -64,7 +65,7 @@ export const generateAccountNumber = apiResponseHandler(async () => {
   return new ApiResponse(
     StatusCodes.CREATED,
     { account_number },
-    "cccount number generated successfully"
+    'cccount number generated successfully'
   );
 });
 
@@ -80,6 +81,6 @@ export const validateAccountNumber = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
     StatusCodes.OK,
     { isValid, accountNumber },
-    isValid ? "Account number is valid and available" : "Invalid or already taken account number"
+    isValid ? 'Account number is valid and available' : 'Invalid or already taken account number'
   );
 });

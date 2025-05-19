@@ -58,7 +58,7 @@ const getPipelineData = () => {
 };
 
 export const getUserTransactionsByType = apiResponseHandler(async (req, res) => {
-  const { type, page = 1, limit = 10 } = req.body;
+  const { type, page = 1, limit = 10 } = req.query;
 
   const transactions = await TransactionModel.aggregate([
     {

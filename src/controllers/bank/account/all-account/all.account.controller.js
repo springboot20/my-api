@@ -1,20 +1,21 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from "../../../../middleware/api/api.response.middleware.js";
-import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
-import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
-import { AccountModel, WalletModel } from "../../../../models/index.js";
-import { StatusCodes } from "http-status-codes";
+} from '../../../../middleware/api/api.response.middleware.js';
+import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
+import { mongooseTransactions } from '../../../../middleware/mongoose/mongoose.transactions.js';
+import { AccountModel } from '../../../../models/index.js';
+import { StatusCodes } from 'http-status-codes';
+import { getMognogoosePagination } from '../../../../utils/index.js';
 
 const accountPipeline = () => {
   return [
     {
       $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "user",
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user',
         pipeline: [
           {
             $project: {
@@ -29,20 +30,20 @@ const accountPipeline = () => {
     },
     {
       $addFields: {
-        user: { $first: "$user" },
+        user: { $first: '$user' },
       },
     },
     {
       $lookup: {
-        from: "profiles",
-        localField: "user._id",
-        foreignField: "user",
-        as: "profile",
+        from: 'profiles',
+        localField: 'user._id',
+        foreignField: 'user',
+        as: 'profile',
       },
     },
     {
       $addFields: {
-        profile: { $first: "$profile" },
+        profile: { $first: '$profile' },
       },
     },
   ];
@@ -58,8 +59,9 @@ export const getUserAccounts = apiResponseHandler(
      */
     async (req, res) => {
       const userId = req.user?._id;
+      const { page = 1, limit = 10 } = req.query;
 
-      const accounts = await AccountModel.aggregate([
+      const accountsAggregation = AccountModel.aggregate([
         {
           $match: {
             user: userId,
@@ -67,10 +69,10 @@ export const getUserAccounts = apiResponseHandler(
         },
         {
           $lookup: {
-            from: "profiles",
-            foreignField: "user",
-            localField: "user",
-            as: "user",
+            from: 'profiles',
+            foreignField: 'user',
+            localField: 'user',
+            as: 'profile',
             pipeline: [
               {
                 $project: {
@@ -83,34 +85,41 @@ export const getUserAccounts = apiResponseHandler(
           },
         },
         {
+          $lookup: {
+            from: 'wallets',
+            foreignField: 'account',
+            localField: '_id',
+            as: 'wallet',
+          },
+        },
+        {
           $addFields: {
-            user: { $first: "$user" },
+            profile: { $first: '$profile' },
+            wallet: { $first: '$wallet' },
           },
         },
       ]);
 
-      if (!accounts) {
-        throw new CustomErrors("no accounts exist for the user", StatusCodes.NOT_FOUND);
+      if (!accountsAggregation) {
+        throw new CustomErrors('no accounts exist for the user', StatusCodes.NOT_FOUND);
       }
 
-      const accountsWithWallets = await Promise.all(
-        accounts.map(async (account) => {
-          const wallet = await WalletModel.findOne({
-            account: account._id,
-            user: userId,
-          });
-
-          return {
-            account,
-            wallet,
-          };
+      const paginated_accounts = await AccountModel.aggregatePaginate(
+        accountsAggregation,
+        getMognogoosePagination({
+          page,
+          limit,
+          customLabels: {
+            totalDocs: 'total_users',
+            // docs: 'accounts',
+          },
         })
       );
 
       return new ApiResponse(
         StatusCodes.CREATED,
-        { accounts: accountsWithWallets },
-        "all users account fetched successfull"
+        paginated_accounts,
+        'all users account fetched successfull'
       );
     }
   )

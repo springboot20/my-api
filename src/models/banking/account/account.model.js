@@ -1,16 +1,18 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 import {
   AvailableAccountEnums,
   AvailableAccountStatus,
   AvailableAccountStatusEnums,
   AvailableAccountTypes,
-} from "../../../constants.js";
+} from '../../../constants.js';
+import bcrypt from 'bcrypt';
+import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
 
 const AccountSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     account_number: {
       type: String,
@@ -28,9 +30,13 @@ const AccountSchema = new Schema(
     cards: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Card",
+        ref: 'Card',
       },
     ],
+    pin: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
@@ -38,4 +44,29 @@ const AccountSchema = new Schema(
 AccountSchema.index({ user: 1, account_number: 1 });
 AccountSchema.index({ account_number: 1 }, { unique: true });
 
-export const AccountModel = model("Account", AccountSchema);
+AccountSchema.plugin(mongooseAggregatePaginate);
+
+export const AccountModel = model('Account', AccountSchema);
+
+/**
+ *
+ * @param {string} entered_pin
+ * @param {string} dbPin
+ * @returns Promise<boolean>
+ */
+AccountSchema.methods.matchPasswords = async function (entered_pin) {
+  return await bcrypt.compare(entered_pin, this.pin);
+};
+
+AccountSchema.pre('save', async function (next) {
+  if (!this.isModified('pin')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10); // 10 is a reasonable salt rounds value
+
+    this.pin = await bcrypt.hash(this.pin, salt);
+
+    next();
+  } catch (error) {
+    next(error); // Pass error to next middleware
+  }
+});

@@ -19,7 +19,7 @@ import {
   userRegisterValidation,
   userValidation,
 } from "../../validation/app/auth/user.validators.js";
-import { mongoPathVariableValidation, mongoRequestBodyValidation } from "../../validation/mongo/mongoId.validators.js";
+// import { mongoPathVariableValidation, mongoRequestBodyValidation } from "../../validation/mongo/mongoId.validators.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { uploadAvatar, upload } from "../../controllers/auth/upload/uploads.controller.js";
 import { RoleEnums } from "../../constants.js";
@@ -223,7 +223,7 @@ router.route("/upload").patch(verifyJWT, upload, uploadAvatar);
 
 router.route("/forgot-password").post(userValidation(), validate, forgotPassword);
 
-router.route("/refresh-token").post(verifyJWT, refreshToken);
+router.route("/refresh-token").post( refreshToken);
 
 router.route("/verify-email").post(verifyEmail);
 

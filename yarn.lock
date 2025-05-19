@@ -1540,6 +1540,11 @@
     "bson" "^6.7.0"
     "mongodb-connection-string-url" "^3.0.0"
 
+"mongoose-aggregate-paginate-v2@^1.1.4":
+  "integrity" "sha512-CdQIar3wlS7g0H6JjSJIZzvzz05vFc+Xy9SosJmj46l3xIomgl3ZjDn/n4vDpEei9RBawgUk5zGTIP6fMKdMdA=="
+  "resolved" "https://registry.npmjs.org/mongoose-aggregate-paginate-v2/-/mongoose-aggregate-paginate-v2-1.1.4.tgz"
+  "version" "1.1.4"
+
 "mongoose@^8.5.1":
   "integrity" "sha512-OhVcwVl91A1G6+XpjDcpkGP7l7ikZkxa0DylX7NT/lcEqAjggzSdqDxb48A+xsDxqNAr0ntSJ1yiE3+KJTOd5Q=="
   "resolved" "https://registry.npmjs.org/mongoose/-/mongoose-8.5.1.tgz"
