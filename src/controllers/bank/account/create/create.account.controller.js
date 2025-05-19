@@ -17,13 +17,22 @@ export const createAccount = apiResponseHandler(
      *
      */
     async (req, res) => {
-      const { type, initialBalance, currency, account_number, pin } = req.body;
+      const { type, initialBalance, currency, pin } = req.body;
 
       const userId = req?.user?._id;
       const existingAccount = await AccountModel.findOne({ user: req.user?._id, type });
 
       if (existingAccount) {
         throw new CustomErrors(`account type already exists ${type}`, StatusCodes.CONFLICT);
+      }
+
+      let account_number;
+      const anyExistingAccount = await AccountModel.findOne({ user: userId });
+
+      if (anyExistingAccount) {
+        account_number = anyExistingAccount?.account_number;
+      } else {
+        account_number = await AccountService.createAccountNumber();
       }
 
       const newAccount = await AccountModel.create({
@@ -50,24 +59,16 @@ export const createAccount = apiResponseHandler(
         throw new CustomErrors(`Error while creating wallet`, StatusCodes.INTERNAL_SERVER_ERROR);
       }
 
+      console.log({ account: { newAccount, wallet } });
+
       return new ApiResponse(
         StatusCodes.CREATED,
-        { ...newAccount,...wallet },
+        { account: { newAccount, wallet } },
         'Account successfully created with wallet'
       );
     }
   )
 );
-
-export const generateAccountNumber = apiResponseHandler(async () => {
-  const account_number = await AccountService.createAccountNumber();
-
-  return new ApiResponse(
-    StatusCodes.CREATED,
-    { account_number },
-    'cccount number generated successfully'
-  );
-});
 
 /**
  * Validate account number format and uniqueness

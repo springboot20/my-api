@@ -13,9 +13,11 @@ const AccountSchema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+      required:true
     },
     account_number: {
       type: String,
+      required:true
     },
     type: {
       type: String,

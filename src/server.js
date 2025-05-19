@@ -1,10 +1,10 @@
-import cors from "cors";
-import express from "express";
-import bodyParser from "body-parser";
-import http from "http";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import swaggerUi from "swagger-ui-express";
+import cors from 'cors';
+import express from 'express';
+import bodyParser from 'body-parser';
+import http from 'http';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import swaggerUi from 'swagger-ui-express';
 import {
   healthcheck,
   authRoutes,
@@ -13,26 +13,27 @@ import {
   transactionRoutes,
   profileRoutes,
   cardRoutes,
-} from "./routes/index.routes.js";
-import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
-import mongoDbConnection from "./connection/mongodb.connection.js";
-import { specs } from "./documentation/swagger.js";
-import * as path from "path";
-import * as url from "url";
+} from './routes/index.routes.js';
+import { notFoundError, handleError } from './middleware/error/error.middleware.js';
+import mongoDbConnection from './connection/mongodb.connection.js';
+import { specs } from './documentation/swagger.js';
+import * as path from 'path';
+import * as url from 'url';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: ".env" });
+dotenv.config({ path: '.env' });
 
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
 const allowedOrigins = [
-  "https://affiliate-dashboard-4sgw.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:5173",
+  'https://affiliate-dashboard-4sgw.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
   // Add any other origins you need
 ];
 
@@ -46,12 +47,12 @@ app.use(
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        console.log("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
+        console.log('Blocked by CORS:', origin);
+        callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
     credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -59,45 +60,45 @@ app.use(
 );
 
 // Log MongoDB connection status
-mongoose.connection.on("connected", () => {
-  console.log("Mongodb connected ....");
+mongoose.connection.on('connected', () => {
+  console.log('Mongodb connected ....');
 });
 
-process.on("SIGINT", () => {
-  mongoose.connection.once("disconnect", () => {
-    console.log("Mongodb disconnected..... ");
+process.on('SIGINT', () => {
+  mongoose.connection.once('disconnect', () => {
+    console.log('Mongodb disconnected..... ');
     process.exit(0);
   });
 });
 
 // Serve Swagger UI
 app.use(
-  "/api/v1/api-docs",
+  '/api/v1/api-docs',
   swaggerUi.serve,
   swaggerUi.setup(specs, {
     explorer: true,
     swaggerOptions: {
-      docExpansion: "none", // keep all the sections collapsed by default
+      docExpansion: 'none', // keep all the sections collapsed by default
     },
   })
 );
 
-app.use(express.json({ limit: "16kb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.json({ limit: '16kb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '16kb' }));
 app.use(bodyParser.json());
 
-app.use("/public", express.static(__dirname + "/public"));
+app.use('/public', express.static(__dirname + '/public'));
 
-app.use("/api/v1/banking/healthcheck", healthcheck.default);
-app.use("/api/v1/banking/users", authRoutes.default);
-app.use("/api/v1/banking/accounts", accountRoutes.default);
-app.use("/api/v1/banking/card", cardRoutes.default);
-app.use("/api/v1/banking/transactions", transactionRoutes.default);
-app.use("/api/v1/banking/statistics", statisticRoutes.default);
-app.use("/api/v1/banking/profile", profileRoutes.default);
+app.use('/api/v1/banking/healthcheck', healthcheck.default);
+app.use('/api/v1/banking/users', authRoutes.default);
+app.use('/api/v1/banking/accounts', accountRoutes.default);
+app.use('/api/v1/banking/card', cardRoutes.default);
+app.use('/api/v1/banking/transactions', transactionRoutes.default);
+app.use('/api/v1/banking/statistics', statisticRoutes.default);
+app.use('/api/v1/banking/profile', profileRoutes.default);
 
-app.get("/", (_, res) => {
-  res.redirect("api/v1/api-docs");
+app.get('/', (_, res) => {
+  res.redirect('api/v1/api-docs');
 });
 
 app.use((req, res, next) => {
@@ -116,9 +117,9 @@ app.use((req, res, next) => {
 //   next();
 // });
 
-httpServer.on("error", (error) => {
+httpServer.on('error', (error) => {
   if (error instanceof Error) {
-    if (error.name === "EADDRINUSE") {
+    if (error.name === 'EADDRINUSE') {
       console.log(`Port ${port} already in use`);
     } else {
       console.log(`Server error : ${error}`);

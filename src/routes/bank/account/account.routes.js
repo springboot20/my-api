@@ -1,15 +1,15 @@
-import { Router } from "express";
-import accountController from "../../../controllers/bank/account/index.js";
-import { verifyJWT } from "../../../middleware/auth/auth.middleware.js";
-import { createAccountSchema } from "../../../validation/app/bank/account.schema.js";
-import { validate } from "../../../middleware/validate.middleware.js";
-import { checkPermissions } from "../../../utils/permissions.js";
-import { RoleEnums } from "../../../constants.js";
+import { Router } from 'express';
+import accountController from '../../../controllers/bank/account/index.js';
+import { verifyJWT } from '../../../middleware/auth/auth.middleware.js';
+import { createAccountSchema } from '../../../validation/app/bank/account.schema.js';
+import { validate } from '../../../middleware/validate.middleware.js';
+import { checkPermissions } from '../../../utils/permissions.js';
+import { RoleEnums } from '../../../constants.js';
 
 const router = Router();
 
 router
-  .route("/create")
+  .route('/create')
   .post(
     verifyJWT,
     createAccountSchema(),
@@ -19,15 +19,11 @@ router
   );
 
 router
-  .route("/user-accounts")
+  .route('/user-accounts')
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getUserAccounts);
 
 router
-  .route("/user-account/:accountId")
+  .route('/user-account/:accountId')
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getAccountDetails);
-
-router
-  .route("/user-account/generate-account-number")
-  .post(verifyJWT, checkPermissions(RoleEnums.USER), accountController.generateAccountNumber);
 
 export default router;
