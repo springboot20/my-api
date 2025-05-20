@@ -7,6 +7,7 @@ import { mongooseTransactions } from '../../../../middleware/mongoose/mongoose.t
 import { AccountModel, WalletModel } from '../../../../models/index.js';
 import { StatusCodes } from 'http-status-codes';
 import AccountService from '../../../../service/account/account.service.js';
+import bcrypt from 'bcrypt';
 
 export const createAccount = apiResponseHandler(
   mongooseTransactions(
@@ -26,20 +27,15 @@ export const createAccount = apiResponseHandler(
         throw new CustomErrors(`account type already exists ${type}`, StatusCodes.CONFLICT);
       }
 
-      let account_number;
-      const anyExistingAccount = await AccountModel.findOne({ user: userId });
+      let account_number = await AccountService.createAccountNumber();
 
-      if (anyExistingAccount) {
-        account_number = anyExistingAccount?.account_number;
-      } else {
-        account_number = await AccountService.createAccountNumber();
-      }
+      const salt = await bcrypt.genSalt(10); // 10 is a reasonable salt rounds value
 
       const newAccount = await AccountModel.create({
         user: userId,
         type,
         account_number,
-        pin,
+        pin: await bcrypt.hash(pin, salt),
       });
 
       if (!newAccount) {
@@ -58,8 +54,6 @@ export const createAccount = apiResponseHandler(
         await AccountModel.findByIdAndDelete(newAccount._id);
         throw new CustomErrors(`Error while creating wallet`, StatusCodes.INTERNAL_SERVER_ERROR);
       }
-
-      console.log({ account: { newAccount, wallet } });
 
       return new ApiResponse(
         StatusCodes.CREATED,
