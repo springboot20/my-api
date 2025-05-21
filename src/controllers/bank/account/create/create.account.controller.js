@@ -23,9 +23,11 @@ export const createAccount = apiResponseHandler(
       const userId = req?.user?._id;
       const existingAccount = await AccountModel.findOne({ user: req.user?._id, type });
 
-      if (existingAccount) {
+      if (existingAccount && existingAccount.status !== 'CLOSED') {
         throw new CustomErrors(`account type already exists ${type}`, StatusCodes.CONFLICT);
       }
+
+      if (existingAccount && existingAccount.status === 'CLOSED') return;
 
       let account_number = await AccountService.createAccountNumber();
 

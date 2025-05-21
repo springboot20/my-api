@@ -25,6 +25,7 @@ router
 router
   .route('/user-account/:accountId')
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getAccountDetails)
+  .patch(verifyJWT, checkPermissions(RoleEnums.USER), accountController.updateAccountStatus)
   .delete(verifyJWT, checkPermissions(RoleEnums.USER), accountController.deleteUserAccount);
 
 export default router;
