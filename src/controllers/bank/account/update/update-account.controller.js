@@ -85,6 +85,7 @@ export const updateAccountStatus = apiResponseHandler(async (req, res) => {
   const userId = req.user?._id;
   const { accountId } = req.params;
   const { status, type } = req.body;
+  const updates = { status, type };
 
   const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, false);
 
@@ -98,9 +99,10 @@ export const adminUpdateAccountStatus = apiResponseHandler(async (req, res) => {
   const userId = req.user?._id;
   const { accountId } = req.params;
   const { status, type } = req.body;
+  const updates = { status, type };
 
   // Skip balance check for admin operations
-  const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, true);
+  const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updateds, true);
 
   return new ApiResponse(StatusCodes.OK, updatedAccount, `Account status updated to ${status}`);
 });
