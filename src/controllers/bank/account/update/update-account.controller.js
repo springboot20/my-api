@@ -7,27 +7,25 @@ import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
 import { AccountModel, WalletModel } from '../../../../models/index.js';
 import { StatusCodes } from 'http-status-codes';
 
-
 /**
-* Helper function to update wallet status based on requested account status
-* @param {Object} wallet - Wallet document
-* @param {String} status - Requested account status
-* @returns {Boolean} - Whether wallet was updated and needs saving
-*/
+ * Helper function to update wallet status based on requested account status
+ * @param {Object} wallet - Wallet document
+ * @param {String} status - Requested account status
+ * @returns {Boolean} - Whether wallet was updated and needs saving
+ */
 const updateWalletStatus = async (wallet, status) => {
- if (!wallet.isActive && status === 'ACTIVE') {
-   wallet.isActive = true;
-   return true;
- } 
- 
- if (wallet.isActive && (status === 'INACTIVE' || status === 'CLOSED')) {
-   wallet.isActive = false;
-   return true;
- }
+  if (!wallet.isActive && status === 'ACTIVE') {
+    wallet.isActive = true;
+    return true;
+  }
 
- return false;
+  if (wallet.isActive && (status === 'INACTIVE' || status === 'CLOSED')) {
+    wallet.isActive = false;
+    return true;
+  }
+
+  return false;
 };
-
 
 /**
  * Core function to handle account status updates
@@ -52,10 +50,12 @@ const handleAccountStatusUpdate = async (userId, accountId, updates, skipBalance
   }
 
   // Check balance for deactivation/closure if not skipped
-  if (!skipBalanceCheck && 
-      wallet.isActive && 
-      (status === 'INACTIVE' || status === 'CLOSED') && 
-      wallet.balance > 0) {
+  if (
+    !skipBalanceCheck &&
+    wallet.isActive &&
+    (status === 'INACTIVE' || status === 'CLOSED') &&
+    wallet.balance > 0
+  ) {
     throw new CustomErrors('Wallet balance still has funds', StatusCodes.BAD_REQUEST);
   }
 
@@ -86,13 +86,9 @@ export const updateAccountStatus = apiResponseHandler(async (req, res) => {
   const { accountId } = req.params;
   const { status, type } = req.body;
 
-   const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, false);
-  
-  return new ApiResponse(
-    StatusCodes.OK, 
-    updatedAccount, 
-    `Account status updated to ${status}`
-  );
+  const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, false);
+
+  return new ApiResponse(StatusCodes.OK, updatedAccount, `Account status updated to ${status}`);
 });
 
 /**
@@ -103,12 +99,8 @@ export const adminUpdateAccountStatus = apiResponseHandler(async (req, res) => {
   const { accountId } = req.params;
   const { status, type } = req.body;
 
-   // Skip balance check for admin operations
+  // Skip balance check for admin operations
   const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, true);
-  
-  return new ApiResponse(
-    StatusCodes.OK, 
-    updatedAccount, 
-    `Account status updated to ${updates.status}`
-  );
+
+  return new ApiResponse(StatusCodes.OK, updatedAccount, `Account status updated to ${status}`);
 });
