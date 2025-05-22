@@ -42,7 +42,7 @@ export default class AccountService {
 
     // Check uniqueness
     const existingAccount = await AccountModel.findOne({ account_number: accountNumber });
-    return !existingAccount;
+    return !!existingAccount;
   }
 
   /**

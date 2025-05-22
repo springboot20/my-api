@@ -27,10 +27,9 @@ const SALT_ROUNDS = 10;
  * @param {Object} options.userData - User data
  * @param {Object} options.accountData - Account data
  * @param {Object} options.walletData - Wallet data
- * @param {Object} session - Mongoose session for transaction
  * @returns {Object} Created account and wallet
  */
-const createAccountWithWallet = async ({ userData, accountData, walletData }, session) => {
+const createAccountWithWallet = async ({ userData, accountData, walletData }) => {
   // Generate account number and hash pin
   const account_number = await AccountService.createAccountNumber();
   const hashedPin = await bcrypt.hash(accountData.pin, await bcrypt.genSalt(SALT_ROUNDS));
@@ -45,7 +44,6 @@ const createAccountWithWallet = async ({ userData, accountData, walletData }, se
         pin: hashedPin,
       },
     ],
-    { session }
   );
 
   if (!newAccount?.[0]) {
@@ -62,7 +60,6 @@ const createAccountWithWallet = async ({ userData, accountData, walletData }, se
         currency: walletData.currency || 'USD',
       },
     ],
-    { session }
   );
 
   if (!wallet?.[0]) {
@@ -86,12 +83,11 @@ const findExistingAccount = async (userId, accountType) => {
 };
 
 export const createAccount = apiResponseHandler(
-  mongooseTransactions(
     /**
      * @param {import('express').Request} req
      * @param {import('express').Response} res
      */
-    async (req, res, session) => {
+    async (req, res) => {
       const { type, initialBalance, currency, pin } = req.body;
       const userId = req.user?._id;
 
@@ -114,7 +110,7 @@ export const createAccount = apiResponseHandler(
           accountData: { type, pin },
           walletData: { initialBalance, currency },
         },
-        session
+      
       );
 
       return new ApiResponse(
@@ -123,7 +119,6 @@ export const createAccount = apiResponseHandler(
         'Account successfully created with wallet'
       );
     }
-  )
 );
 
 /**
