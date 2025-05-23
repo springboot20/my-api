@@ -15,7 +15,6 @@ import { StatusCodes } from "http-status-codes";
  * @returns {Boolean} - Whether wallet was updated and needs saving
  */
 const updateWalletStatus = async (wallet, status, currency) => {
-  console.log(currency);
   if (currency) {
     wallet.currency = currency;
 

@@ -1,13 +1,12 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from '../../../../middleware/api/api.response.middleware.js';
-import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
-import { mongooseTransactions } from '../../../../middleware/mongoose/mongoose.transactions.js';
-import { AccountModel, WalletModel } from '../../../../models/index.js';
-import { StatusCodes } from 'http-status-codes';
-import AccountService from '../../../../service/account/account.service.js';
-import bcrypt from 'bcrypt';
+} from "../../../../middleware/api/api.response.middleware.js";
+import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
+import { AccountModel, WalletModel } from "../../../../models/index.js";
+import { StatusCodes } from "http-status-codes";
+import AccountService from "../../../../service/account/account.service.js";
+import bcrypt from "bcrypt";
 
 /**
  * Constants for error messages and salt rounds
@@ -15,8 +14,8 @@ import bcrypt from 'bcrypt';
 const ERRORS = {
   ACCOUNT_EXISTS: (type) => `Account type already exists: ${type}`,
   ACCOUNT_EXISTS_CLOSED: (status) => `Account type already exists but: ${status}`,
-  ACCOUNT_CREATION: 'Error while creating account',
-  WALLET_CREATION: 'Error while creating wallet',
+  ACCOUNT_CREATION: "Error while creating account",
+  WALLET_CREATION: "Error while creating wallet",
 };
 
 const SALT_ROUNDS = 10;
@@ -35,32 +34,28 @@ const createAccountWithWallet = async ({ userData, accountData, walletData }) =>
   const hashedPin = await bcrypt.hash(accountData.pin, await bcrypt.genSalt(SALT_ROUNDS));
 
   // Create account
-  const newAccount = await AccountModel.create(
-    [
-      {
-        user: userData.userId,
-        type: accountData.type,
-        account_number,
-        pin: hashedPin,
-      },
-    ],
-  );
+  const newAccount = await AccountModel.create([
+    {
+      user: userData.userId,
+      type: accountData.type,
+      account_number,
+      pin: hashedPin,
+    },
+  ]);
 
   if (!newAccount?.[0]) {
     throw new CustomErrors(ERRORS.ACCOUNT_CREATION, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 
   // Create wallet
-  const wallet = await WalletModel.create(
-    [
-      {
-        user: userData.userId,
-        account: newAccount[0]._id,
-        balance: walletData.initialBalance || 0,
-        currency: walletData.currency || 'USD',
-      },
-    ],
-  );
+  const wallet = await WalletModel.create([
+    {
+      user: userData.userId,
+      account: newAccount[0]._id,
+      balance: walletData.initialBalance || 0,
+      currency: walletData.currency || "USD",
+    },
+  ]);
 
   if (!wallet?.[0]) {
     throw new CustomErrors(ERRORS.WALLET_CREATION, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -83,42 +78,39 @@ const findExistingAccount = async (userId, accountType) => {
 };
 
 export const createAccount = apiResponseHandler(
-    /**
-     * @param {import('express').Request} req
-     * @param {import('express').Response} res
-     */
-    async (req, res) => {
-      const { type, initialBalance, currency, pin } = req.body;
-      const userId = req.user?._id;
+  /**
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async (req, res) => {
+    const { type, initialBalance, currency, pin } = req.body;
+    const userId = req.user?._id;
 
-      // Check for existing account
-      const existingAccount = await findExistingAccount(userId, type);
+    // Check for existing account
+    const existingAccount = await findExistingAccount(userId, type);
 
-      if (existingAccount) {
-        if (existingAccount.status === 'CLOSED')
-          throw new CustomErrors(
-            ERRORS.ACCOUNT_EXISTS_CLOSED(existingAccount.status),
-            StatusCodes.CONFLICT
-          );
-        throw new CustomErrors(ERRORS.ACCOUNT_EXISTS(type), StatusCodes.CONFLICT);
-      }
-
-      // Create account and wallet in a transaction
-      const result = await createAccountWithWallet(
-        {
-          userData: { userId },
-          accountData: { type, pin },
-          walletData: { initialBalance, currency },
-        },
-      
-      );
-
-      return new ApiResponse(
-        StatusCodes.CREATED,
-        { account: result },
-        'Account successfully created with wallet'
-      );
+    if (existingAccount) {
+      if (existingAccount.status === "CLOSED")
+        throw new CustomErrors(
+          ERRORS.ACCOUNT_EXISTS_CLOSED(existingAccount.status),
+          StatusCodes.CONFLICT
+        );
+      throw new CustomErrors(ERRORS.ACCOUNT_EXISTS(type), StatusCodes.CONFLICT);
     }
+
+    // Create account and wallet in a transaction
+    const result = await createAccountWithWallet({
+      userData: { userId },
+      accountData: { type, pin },
+      walletData: { initialBalance, currency },
+    });
+
+    return new ApiResponse(
+      StatusCodes.CREATED,
+      { account: result },
+      "Account successfully created with wallet"
+    );
+  }
 );
 
 /**
@@ -133,6 +125,6 @@ export const validateAccountNumber = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
     StatusCodes.OK,
     { isValid, accountNumber },
-    isValid ? 'Account number is valid and available' : 'Invalid or already taken account number'
+    isValid ? "Account number is valid and available." : "Account number invalid, doesn't exisits."
   );
 });
