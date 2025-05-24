@@ -2,26 +2,25 @@ import {
   apiResponseHandler,
   ApiResponse,
 } from "../../../../middleware/api/api.response.middleware.js";
-import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { TransactionModel } from "../../../../models/index.js";
+import { getMognogoosePagination } from "../../../../utils/index.js";
 
 const getPipelineData = () => {
   return [
     // lookup for user related to a transaction
     {
       $lookup: {
-        from: "users",
-        foreignField: "_id",
+        from: "profiles",
+        foreignField: "user",
         localField: "user",
         as: "user",
         pipeline: [
           {
             $project: {
               _id: 1,
-              username: 1,
-              email: 1,
-              avatar: 1,
+              fisrtname: 1,
+              lastname: 1,
             },
           },
         ],
@@ -58,9 +57,9 @@ const getPipelineData = () => {
 };
 
 export const getUserTransactionsByType = apiResponseHandler(async (req, res) => {
-  const { type, page = 1, limit = 10 } = req.query;
+  const { type, search, page = 1, limit = 10 } = req.query;
 
-  const transactions = await TransactionModel.aggregate([
+  const transactionsAggregate = TransactionModel.aggregate([
     {
       $match: {
         user: req.user?._id,
@@ -76,11 +75,33 @@ export const getUserTransactionsByType = apiResponseHandler(async (req, res) => 
           }
         : {},
     },
+    {
+      $match: search
+        ? {
+            description: {
+              $regex: search.trim(),
+              $options: "i",
+            },
+          }
+        : {},
+    },
     ...getPipelineData(),
   ]);
 
-  if (!transactions)
-    throw new CustomErrors("failed to fetch transactions", StatusCodes.INTERNAL_SERVER_ERROR);
+  const paginatedTransactionsAggregate = await TransactionModel.aggregatePaginate(
+    transactionsAggregate,
+    getMognogoosePagination({
+      limit,
+      page,
+      customLabels: {
+        totalDocs: "transactions",
+      },
+    })
+  );
 
-  return new ApiResponse(StatusCodes.OK, transactions, "transactions fetched successfully");
+  return new ApiResponse(
+    StatusCodes.OK,
+    paginatedTransactionsAggregate,
+    "transactions fetched successfully"
+  );
 });

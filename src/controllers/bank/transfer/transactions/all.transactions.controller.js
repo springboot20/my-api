@@ -5,8 +5,6 @@ import {
 import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
 import { StatusCodes } from 'http-status-codes';
 import { TransactionModel } from '../../../../models/index.js';
-import { checkPermissions } from '../../../../utils/permissions.js';
-import { RoleEnums } from '../../../../constants.js';
 import { getMognogoosePagination } from '../../../../utils/index.js';
 
 const getPipelineData = () => {
@@ -62,8 +60,6 @@ const getPipelineData = () => {
 };
 
 export const getAllTransactions = apiResponseHandler(async (req, res) => {
-  checkPermissions(RoleEnums.ADMIN);
-
   const { type } = req.body;
   const { page = 1, limit = 10, search } = req.query;
 
