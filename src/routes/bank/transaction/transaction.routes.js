@@ -10,6 +10,8 @@ router
 
 router.route("/paystack/send-transaction").post(verifyJWT, transactionController.sendTransaction);
 
+router.route("/paystack/validate-pin").post(verifyJWT, transactionController.validateTransactionPin);
+
 router
   .route("/paystack/verify-callback")
   .get(verifyJWT, transactionController.verifyPaystackDepositTransaction);

@@ -69,6 +69,21 @@ const existingAccount = async (account, account_number) => {
   return await AccountModel.findOne({ $or: [{ _id: account }, { account_number }] });
 };
 
+export const validateTransactionPin = apiResponseHandler(async (req) => {
+  const { pin, accountId } = req.body;
+  const account = await AccountModel.findOne({ _id: accountId });
+
+  if (!account) {
+    throw new CustomErrors("Account doesn't exists", StatusCodes.NOT_FOUND);
+  }
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    { isValid: await account.matchPasswords(pin) },
+    (await account.matchPasswords(pin)) ? "correct transaction pin" : "incorrect transaction pin"
+  );
+});
+
 export const sendTransaction = apiResponseHandler(async (req, res) => {
   const { amount, description, from_account, to_account } = req.body;
 
