@@ -7,6 +7,7 @@ import { StatusCodes } from 'http-status-codes';
 import { TransactionModel } from '../../../../models/index.js';
 import { checkPermissions } from '../../../../utils/permissions.js';
 import { RoleEnums } from '../../../../constants.js';
+import { getMognogoosePagination } from '../../../../utils/index.js';
 
 const getPipelineData = () => {
   return [
