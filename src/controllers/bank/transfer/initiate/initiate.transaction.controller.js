@@ -16,7 +16,7 @@ import {
   PaymentMethods,
   PaymentStatuses,
 } from "../../../../constants.js";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
 
 export const initiatePaystackDepositTransaction = apiResponseHandler(
   /**
@@ -78,12 +78,12 @@ export const validateTransactionPin = apiResponseHandler(async (req) => {
     throw new CustomErrors("Account doesn't exists", StatusCodes.NOT_FOUND);
   }
 
-  const matchPins = await bcrypt.compare(pin, account?.pin)
+  const matchPins = await bcrypt.compare(pin, account?.pin);
 
   return new ApiResponse(
     StatusCodes.OK,
-    { isValid: await account.matchPasswords(pin) },
-    (await account.matchPasswords(pin)) ? "correct transaction pin" : "incorrect transaction pin"
+    { isValid: matchPins },
+    matchPins ? "correct transaction pin" : "incorrect transaction pin"
   );
 });
 

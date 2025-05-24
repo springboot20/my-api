@@ -5,7 +5,6 @@ import {
   AvailableAccountStatusEnums,
   AvailableAccountTypes,
 } from '../../../constants.js';
-import bcrypt from 'bcrypt';
 import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
 
 const AccountSchema = new Schema(
@@ -48,13 +47,3 @@ const AccountSchema = new Schema(
 AccountSchema.plugin(mongooseAggregatePaginate);
 
 export const AccountModel = model('Account', AccountSchema);
-
-/**
- *
- * @param {string} entered_pin
- * @param {string} dbPin
- * @returns Promise<boolean>
- */
-AccountSchema.methods.matchPasswords = async function (entered_pin) {
-  return await bcrypt.compare(entered_pin, this.pin);
-};
