@@ -26,6 +26,10 @@ router
   .route("/")
   .get(verifyJWT, checkPermissions(RoleEnums.ADMIN), transactionController.getAllTransactions);
 
+router
+  .route("/details")
+  .get(verifyJWT, checkPermissions(RoleEnums.USER), transactionController.getTransactionById);
+
 router.route("/user").get(verifyJWT, transactionController.getUserTransactionsByType);
 
 export default router;
