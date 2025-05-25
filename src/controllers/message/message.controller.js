@@ -61,3 +61,32 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
     "message sent successful"
   );
 });
+
+export const getUserPendingRequestMessages = apiResponseHandler(async (req) => {
+  const userId = req.user?._id;
+
+  const userPendingRequests = await RequestMessageModel.countDocuments({
+    userId,
+    status: "PENDING",
+  });
+
+  const userRecentRequests = await RequestMessageModel.find({
+    userId,
+  })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .select("action status createdAt reviewedAt adminNotes");
+
+  if (!userPendingRequests || !userRecentRequests) {
+    throw new CustomErrors("internal server error.", StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      pendingRequests: userPendingRequests,
+      recentRequests: userRecentRequests,
+    },
+    "pending requests fetched successfully."
+  );
+});

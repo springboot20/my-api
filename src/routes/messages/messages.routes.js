@@ -15,4 +15,12 @@ router
     messageRequestController.accountMessageRequest
   );
 
+router
+  .route("/admin-requests-message/user-pending")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER),
+    messageRequestController.getUserPendingRequestMessages
+  );
+
 export default router;
