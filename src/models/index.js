@@ -4,5 +4,14 @@ import { TransactionModel } from "./banking/transaction/transaction.model.js";
 import { CardModel } from "./banking/card/card.model.js";
 import { ProfileModel } from "./auth/profile.model.js";
 import { WalletModel } from "./banking/wallet/wallet.model.js";
+import { RequestMessageModel } from "./messages/request.model.js";
 
-export { UserModel, ProfileModel, TransactionModel, AccountModel, CardModel, WalletModel };
+export {
+  UserModel,
+  ProfileModel,
+  TransactionModel,
+  AccountModel,
+  CardModel,
+  WalletModel,
+  RequestMessageModel,
+};

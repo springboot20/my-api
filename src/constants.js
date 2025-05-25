@@ -52,6 +52,7 @@ const AvailableTransactionTypesEnum = Object.values(AvailableTransactionTypes);
 const RoleEnums = {
   USER: "USER",
   ADMIN: "ADMIN",
+  MODERATOR: "MODERATOR",
 };
 
 const AvailableRoles = Object.values(RoleEnums);
