@@ -17,6 +17,7 @@ import {
   transactionRoutes,
   profileRoutes,
   cardRoutes,
+  messageRoutes
 } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
@@ -111,6 +112,7 @@ app.use("/api/v1/banking/card", cardRoutes.default);
 app.use("/api/v1/banking/transactions", transactionRoutes.default);
 app.use("/api/v1/banking/statistics", statisticRoutes.default);
 app.use("/api/v1/banking/profile", profileRoutes.default);
+app.use("/api/v1/banking/messagings", messageRoutes.default);
 
 app.get("/", (_, res) => {
   res.redirect("api/v1/api-docs");
