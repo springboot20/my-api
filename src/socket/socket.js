@@ -8,7 +8,7 @@ const intializeSocketIo = (io) => {
   try {
     io.on("connection", async (socket) => {
       const authorization = socket?.handshake?.auth ?? {};
-
+      
       if (!authorization.tokens) {
         throw new CustomErrors(
           "Un-authentication failed, Token is invalid",
@@ -18,7 +18,7 @@ const intializeSocketIo = (io) => {
       }
 
       let authDecodedToken = validateToken(
-        authorization.tokens.access_token,
+        authorization.tokens.accessToken,
         process.env.ACCESS_TOKEN_SECRET
       );
 
