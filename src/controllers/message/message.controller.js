@@ -99,7 +99,16 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
   }
 
-  const message = await RequestMessageModel.findOne({ _id: requestId, status });
+  console.log(req.body);
+  console.log(status);
+
+  const message = await RequestMessageModel.findOne({ _id: requestId });
+
+  console.log(message.status);
+
+  if (!message) {
+    throw new CustomErrors("request message not found or already processed", StatusCodes.NOT_FOUND);
+  }
 
   if (message.status === status) {
     return new ApiResponse(

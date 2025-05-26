@@ -7,10 +7,7 @@ const validateToken = (token, key) => {
     const decodedToken = jwt.verify(token, key);
     return decodedToken;
   } catch (error) {
-    throw new CustomErrors(
-      "Token verification failed",
-      StatusCodes.BAD_REQUEST,
-    );
+    throw new CustomErrors("Token verification failed", StatusCodes.UNAUTHORIZED);
   }
 };
 
