@@ -18,17 +18,31 @@ router
 
 router
   .route("/paystack/verify-callback")
-  .get(verifyJWT, transactionController.verifyPaystackDepositTransaction);
+  .get(verifyJWT,checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN), transactionController.verifyPaystackDepositTransaction);
 
-router.route("/paystack/webhook").post(verifyJWT, transactionController.verifyPaystackWebhook);
+router
+  .route("/paystack/webhook")
+  .post(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    transactionController.verifyPaystackWebhook
+  );
 
 router
   .route("/")
-  .get(verifyJWT, checkPermissions(RoleEnums.ADMIN), transactionController.getAllTransactions);
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    transactionController.getAllTransactions
+  );
 
 router
   .route("/details")
-  .get(verifyJWT, checkPermissions(RoleEnums.USER), transactionController.getTransactionById);
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    transactionController.getTransactionById
+  );
 
 router.route("/user").get(verifyJWT, transactionController.getUserTransactionsByType);
 

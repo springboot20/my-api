@@ -14,17 +14,25 @@ router
     verifyJWT,
     createAccountSchema(),
     validate,
-    checkPermissions(RoleEnums.USER),
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
     accountController.createAccount
   );
 
 router
   .route("/validate-account")
-  .post(verifyJWT, checkPermissions(RoleEnums.USER), accountController.validateAccountNumber);
+  .post(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.validateAccountNumber
+  );
 
 router
   .route("/user-accounts")
-  .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getUserAccounts);
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.getUserAccounts
+  );
 
 router
   .route("/admin/update-account")
@@ -36,8 +44,20 @@ router
 
 router
   .route("/user-account/:accountId")
-  .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getAccountDetails)
-  .patch(verifyJWT, checkPermissions(RoleEnums.USER), accountController.updateAccountStatus)
-  .delete(verifyJWT, checkPermissions(RoleEnums.USER), accountController.deleteUserAccount);
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.getAccountDetails
+  )
+  .patch(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.updateAccountStatus
+  )
+  .delete(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.deleteUserAccount
+  );
 
 export default router;

@@ -105,12 +105,14 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
       $set: {
         status,
         adminNotes,
-        reviewedBy: req.user?._id,
+        reviewedBy: req.user._id,
         reviewedAt: new Date(),
       },
     },
     { new: true }
   ).populate("userId", "username email avatar");
+
+  console.log(updatedAdminRequestMessage)
 
   if (!updatedAdminRequestMessage) {
     throw new CustomErrors(

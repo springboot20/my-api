@@ -24,7 +24,7 @@ router
   );
 
 router
-  .route("/admin-requests-message/updata-status")
+  .route("/admin-requests-message/update-status")
   .patch(
     verifyJWT,
     checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
