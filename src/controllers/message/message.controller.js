@@ -99,8 +99,18 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
   }
 
+  const message = await RequestMessageModel.findOne({ _id: requestId, status });
+
+  if (message.status === status) {
+    return new ApiResponse(
+      StatusCodes.OK,
+      await message.populate("userId", "_id email username avatar"),
+      "request message retrieved successfully"
+    );
+  }
+
   const updatedAdminRequestMessage = await RequestMessageModel.findByIdAndUpdate(
-    requestId,
+    message?._id,
     {
       $set: {
         status,
@@ -112,8 +122,6 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     { new: true }
   ).populate("userId", "username email avatar");
 
-  console.log(updatedAdminRequestMessage)
-
   if (!updatedAdminRequestMessage) {
     throw new CustomErrors(
       "error while updating request message",
@@ -121,5 +129,9 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     );
   }
 
-  return new ApiResponse(StatusCodes.OK, {}, "message status updated successfully");
+  return new ApiResponse(
+    StatusCodes.OK,
+    updatedAdminRequestMessage,
+    "message status updated successfully"
+  );
 });
