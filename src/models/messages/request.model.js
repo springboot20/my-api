@@ -1,5 +1,12 @@
 import { Schema, model } from "mongoose";
-import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+// import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import {
+  AvailableRequestActionsEnums,
+  AvailableRequestPriorities,
+  AvailableRequestPrioritiesEnums,
+  AvailableRequestStatus,
+  AvailableRequestStatusEnums,
+} from "../../constants.js";
 
 const RequestMessageSchema = new Schema(
   {
@@ -18,8 +25,8 @@ const RequestMessageSchema = new Schema(
     },
     action: {
       type: String,
-      enum: [],
-      default: "NONE",
+      enum: AvailableRequestActionsEnums,
+      require: true,
     },
     message: {
       type: String,
@@ -28,6 +35,8 @@ const RequestMessageSchema = new Schema(
     },
     status: {
       type: String,
+      enum: AvailableRequestStatusEnums,
+      default: AvailableRequestStatus.PENDING,
     },
     reviewedBy: {
       type: Schema.Types.ObjectId,
@@ -43,7 +52,8 @@ const RequestMessageSchema = new Schema(
     },
     priority: {
       type: String,
-      enum: [],
+      enum: AvailableRequestPrioritiesEnums,
+      default: AvailableRequestPriorities.MEDIUM,
     },
   },
   { timestamps: true }

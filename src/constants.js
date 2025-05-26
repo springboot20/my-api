@@ -119,6 +119,31 @@ const paystack_urls = {
   verify: "https://api.paystack.co/transaction/verify",
 };
 
+const AvailableRequestPriorities = {
+  LOW: "LOW",
+  MEDIUM: "MEDIUM",
+  HIGH: "HIGH",
+  URGENT: "URGENT",
+};
+
+const AvailableRequestActions = {
+  CLOSE: "CLOSE_ACCOUNT",
+  SUSPEND: "SUSPEND_ACCOUNT",
+  UNSUSPEND: "UNSUSPEND_ACCOUNT",
+  UNCLOSE: "UNCLOSE_ACCOUNT",
+};
+
+const AvailableRequestStatus = {
+  PENDING: "PENDING",
+  IN_REVIEW: "IN_REVIEW",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+};
+
+const AvailableRequestStatusEnums = Object.values(AvailableRequestStatus);
+const AvailableRequestActionsEnums = Object.values(AvailableRequestActions);
+const AvailableRequestPrioritiesEnums = Object.values(AvailableRequestPriorities);
+
 export {
   paystack_urls,
   paystackStatus,
@@ -142,4 +167,10 @@ export {
   AvailableCardEnums,
   AvailableCardStatus,
   AvailableCardStatusEnums,
+  AvailableRequestStatus,
+  AvailableRequestStatusEnums,
+  AvailableRequestActions,
+  AvailableRequestActionsEnums,
+  AvailableRequestPriorities,
+  AvailableRequestPrioritiesEnums,
 };

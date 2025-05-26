@@ -27,6 +27,14 @@ router
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getUserAccounts);
 
 router
+  .route("/admin/update-account")
+  .patch(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.adminUpdateAccountStatus
+  );
+
+router
   .route("/user-account/:accountId")
   .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getAccountDetails)
   .patch(verifyJWT, checkPermissions(RoleEnums.USER), accountController.updateAccountStatus)

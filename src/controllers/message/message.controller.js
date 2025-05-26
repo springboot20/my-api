@@ -2,6 +2,7 @@ import { apiResponseHandler, ApiResponse } from "../../middleware/api/api.respon
 import { CustomErrors } from "../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { UserModel, RequestMessageModel } from "../../models/index.js";
+import { AvailableRequestStatusEnums } from "../../constants.js";
 
 export const accountMessageRequest = apiResponseHandler(async (req) => {
   const { action, message } = req.body;
@@ -89,4 +90,34 @@ export const getUserPendingRequestMessages = apiResponseHandler(async (req) => {
     },
     "pending requests fetched successfully."
   );
+});
+
+export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) => {
+  const { status, adminNotes, requestId } = req.body;
+
+  if (!AvailableRequestStatusEnums.includes(status)) {
+    throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
+  }
+
+  const updatedAdminRequestMessage = await RequestMessageModel.findByIdAndUpdate(
+    requestId,
+    {
+      $set: {
+        status,
+        adminNotes,
+        reviewedBy: req.user?._id,
+        reviewedAt: new Date(),
+      },
+    },
+    { new: true }
+  ).populate("userId", "username email avatar");
+
+  if (!updatedAdminRequestMessage) {
+    throw new CustomErrors(
+      "error while updating request message",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+
+  return new ApiResponse(StatusCodes.OK, {}, "message status updated successfully");
 });

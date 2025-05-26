@@ -1,4 +1,4 @@
-import { AvailableAccountStatusEnums } from "../../../../constants.js";
+import { AvailableAccountStatusEnums, AvailableRequestStatusEnums } from "../../../../constants.js";
 import {
   apiResponseHandler,
   ApiResponse,
@@ -62,7 +62,8 @@ const handleAccountStatusUpdate = async (userId, accountId, updates, skipBalance
   if (
     !skipBalanceCheck &&
     wallet.isActive &&
-    (status === "INACTIVE" || status === "CLOSED") &&
+    AvailableAccountStatusEnums.includes(status) &&
+    status !== "ACTIVE" &&
     wallet.balance > 0
   ) {
     throw new CustomErrors("Wallet balance still has funds", StatusCodes.BAD_REQUEST);
@@ -109,6 +110,10 @@ export const adminUpdateAccountStatus = apiResponseHandler(async (req, res) => {
   const { accountId } = req.params;
   const { status, type } = req.body;
   const updates = { status, type };
+
+  if (!AvailableRequestStatusEnums) {
+    throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
+  }
 
   // Skip balance check for admin operations
   const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, true);

@@ -23,4 +23,12 @@ router
     messageRequestController.getUserPendingRequestMessages
   );
 
+router
+  .route("/admin-requests-message/updata-status")
+  .patch(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    messageRequestController.adminUpdateRequestMessageStatus
+  );
+
 export default router;
