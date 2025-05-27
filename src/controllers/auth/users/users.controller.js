@@ -61,18 +61,20 @@ export const getUserById = apiResponseHandler(async (req, res) => {
 });
 
 export const getUsers = apiResponseHandler(async (req, res) => {
-  const { limit = 10, page = 1, search } = req.query;
-console.log(req.query)
+  const { limit = 10, page = 1, search, role = "USER" } = req.query;
+  console.log(req.query);
   const usersAggregate = UserModel.aggregate([
     {
-      $match: search
+      $match: role
         ? {
             role: {
-              $regex: search.trim(),
+              $regex: role.trim(),
               $options: "i",
             },
           }
-        : {},
+        : {
+            role: { $ne: "ADMIN" }, // Exclude admin users
+          },
     },
     {
       $match: search
@@ -84,8 +86,17 @@ console.log(req.query)
           }
         : {},
     },
+    {
+      $match: search
+        ? {
+            email: {
+              $regex: search.trim(),
+              $options: "i",
+            },
+          }
+        : {},
+    },
   ]);
-
 
   const users = await UserModel.aggregatePaginate(
     usersAggregate,
