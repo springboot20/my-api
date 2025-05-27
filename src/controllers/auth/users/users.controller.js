@@ -6,6 +6,8 @@ import {
 import { UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
+import { getMognogoosePagination } from "../../../utils/index.js";
+import mongoose from "mongoose";
 
 export const getCurrentUser = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
@@ -17,16 +19,85 @@ export const getCurrentUser = apiResponseHandler(async (req, res) => {
   );
 });
 
-export const getUsers = apiResponseHandler(async (req, res) => {
-  const users = await UserModel.find({});
+export const getUserById = apiResponseHandler(async (req, res) => {
+  const { userId } = req.query;
 
-  return new ApiResponse(
-    StatusCodes.OK,
+  const userAggregate = await UserModel.aggregate([
     {
-      users: users,
+      $match: {
+        _id: new mongoose.Types.ObjectId.createFromTime(userId),
+      },
     },
-    "users fetched successfully"
+    {
+      $lookup: {
+        from: "profiles",
+        foreignField: "user",
+        localField: "_id",
+        as: "profile",
+        pipeline: [
+          {
+            $project: {
+              firstname: 1,
+              lastname: 1,
+              present_address: 1,
+              country: 1,
+              city: 1,
+              phoneNumber: 1,
+              postal_code: 1,
+              timezone: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        profile: { $first: "$profile" },
+      },
+    },
+  ]);
+
+  return new ApiResponse(StatusCodes.OK, userAggregate[0], "user details fetched");
+});
+
+export const getUsers = apiResponseHandler(async (req, res) => {
+  const { limit = 10, page = 1, search = "" } = req.query;
+
+  const usersAggregate = UserModel.aggregate([
+    {
+      $match: search
+        ? {
+            role: {
+              $regex: search.trim(),
+              $option: "i",
+            },
+          }
+        : {},
+    },
+    {
+      $match: search
+        ? {
+            username: {
+              $regex: search.trim(),
+              $option: "i",
+            },
+          }
+        : {},
+    },
+  ]);
+
+  const users = await UserModel.aggregatePaginate(
+    usersAggregate,
+    getMognogoosePagination({
+      limit,
+      page,
+      customLabels: {
+        totalDocs: "users",
+      },
+    })
   );
+
+  return new ApiResponse(StatusCodes.OK, users, "users fetched successfully");
 });
 
 export const updateCurrentUserProfile = apiResponseHandler(async (req, res) => {

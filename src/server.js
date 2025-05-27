@@ -17,7 +17,7 @@ import {
   transactionRoutes,
   profileRoutes,
   cardRoutes,
-  messageRoutes
+  messageRoutes,
 } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
@@ -106,7 +106,7 @@ app.use(bodyParser.json());
 app.use("/public", express.static(__dirname + "/public"));
 
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
-app.use("/api/v1/banking/users", authRoutes.default);
+app.use("/api/v1/banking/auth", authRoutes.default);
 app.use("/api/v1/banking/accounts", accountRoutes.default);
 app.use("/api/v1/banking/card", cardRoutes.default);
 app.use("/api/v1/banking/transactions", transactionRoutes.default);

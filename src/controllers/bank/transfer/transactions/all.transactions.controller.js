@@ -1,20 +1,19 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from '../../../../middleware/api/api.response.middleware.js';
-import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
-import { StatusCodes } from 'http-status-codes';
-import { TransactionModel } from '../../../../models/index.js';
-import { getMognogoosePagination } from '../../../../utils/index.js';
+} from "../../../../middleware/api/api.response.middleware.js";
+import { StatusCodes } from "http-status-codes";
+import { TransactionModel } from "../../../../models/index.js";
+import { getMognogoosePagination } from "../../../../utils/index.js";
 
 const getPipelineData = () => {
   return [
     {
       $lookup: {
-        from: 'profiles',
-        localField: 'user',
-        foreignField: 'user',
-        as: 'profile',
+        from: "profiles",
+        localField: "user",
+        foreignField: "user",
+        as: "profile",
         pipeline: [
           {
             $project: {
@@ -30,10 +29,10 @@ const getPipelineData = () => {
     // lookup for account related to transaction
     {
       $lookup: {
-        from: 'accounts',
-        foreignField: '_id',
-        localField: 'account',
-        as: 'account',
+        from: "accounts",
+        foreignField: "_id",
+        localField: "account",
+        as: "account",
         pipeline: [
           {
             $project: {
@@ -49,37 +48,28 @@ const getPipelineData = () => {
     // add field for user and account looked up for
     {
       $addFields: {
-        user_profile: { $first: '$profile' },
-        account: { $first: '$account' },
+        user_profile: { $first: "$profile" },
+        account: { $first: "$account" },
       },
     },
     {
-      $unset: 'profile',
+      $unset: "profile",
     },
   ];
 };
 
 export const getAllTransactions = apiResponseHandler(async (req, res) => {
-  const { type } = req.body;
   const { page = 1, limit = 10, search } = req.query;
+
+  console.log(req.query);
 
   const transactions = TransactionModel.aggregate([
     {
-      $match: type
-        ? {
-            type: {
-              $regex: type.trim(),
-              $options: 'i',
-            },
-          }
-        : {},
-    },
-    {
       $match: search
         ? {
-          description: {
+            description: {
               $regex: search.trim(),
-              $options: 'i',
+              $options: "i",
             },
           }
         : {},
@@ -93,17 +83,14 @@ export const getAllTransactions = apiResponseHandler(async (req, res) => {
       limit,
       page,
       customLabels: {
-        totalDocs: 'total_transactions',
+        totalDocs: "total_transactions",
       },
     })
   );
 
-  if (!transactions)
-    throw new CustomErrors('failed to fetch transactions', StatusCodes.INTERNAL_SERVER_ERROR);
-
   return new ApiResponse(
     StatusCodes.OK,
     paginatedTransactions,
-    'transactions fetched successfully'
+    "transactions fetched successfully"
   );
 });

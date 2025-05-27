@@ -10,6 +10,7 @@ import {
   changeCurrentPassword,
   getUsers,
   getCurrentUser,
+  getUserById,
 } from "../../controllers/auth/index.js";
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
@@ -223,7 +224,7 @@ router.route("/upload").patch(verifyJWT, upload, uploadAvatar);
 
 router.route("/forgot-password").post(userValidation(), validate, forgotPassword);
 
-router.route("/refresh-token").post( refreshToken);
+router.route("/refresh-token").post(refreshToken);
 
 router.route("/verify-email").post(verifyEmail);
 
@@ -358,8 +359,18 @@ router
  */
 router.route("/change-password").patch(verifyJWT, changeCurrentPassword);
 
-router.route("/").get(verifyJWT, checkPermissions(RoleEnums.ADMIN), getUsers);
+router
+  .route("/users")
+  .get(verifyJWT, checkPermissions(RoleEnums.ADMIN, RoleEnums.MODERATOR), getUsers);
 
-router.route("/current-user").get(verifyJWT, getCurrentUser);
+router
+  .route("/users/detail")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.ADMIN, RoleEnums.MODERATOR, RoleEnums.USER),
+    getUserById
+  );
+
+router.route("/users/current-user").get(verifyJWT, getCurrentUser);
 
 export default router;

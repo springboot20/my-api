@@ -9,7 +9,12 @@ import {
   resetPassword,
   changeCurrentPassword,
 } from "./verification/verification.controller.js";
-import { getUsers, getCurrentUser } from "./users/users.controller.js";
+import {
+  getUsers,
+  getCurrentUser,
+  getUserById,
+  updateCurrentUserProfile,
+} from "./users/users.controller.js";
 import { createUserProfile, getUserProfile } from "./profile/profile.controller.js";
 
 export {
@@ -26,4 +31,6 @@ export {
   getCurrentUser,
   createUserProfile,
   getUserProfile,
+  getUserById,
+  updateCurrentUserProfile,
 };
