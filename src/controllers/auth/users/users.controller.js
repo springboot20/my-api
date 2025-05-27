@@ -61,15 +61,15 @@ export const getUserById = apiResponseHandler(async (req, res) => {
 });
 
 export const getUsers = apiResponseHandler(async (req, res) => {
-  const { limit = 10, page = 1, search = "" } = req.query;
-
+  const { limit = 10, page = 1, search } = req.query;
+console.log(req.query)
   const usersAggregate = UserModel.aggregate([
     {
       $match: search
         ? {
             role: {
               $regex: search.trim(),
-              $option: "i",
+              $options: "i",
             },
           }
         : {},
@@ -79,12 +79,13 @@ export const getUsers = apiResponseHandler(async (req, res) => {
         ? {
             username: {
               $regex: search.trim(),
-              $option: "i",
+              $options: "i",
             },
           }
         : {},
     },
   ]);
+
 
   const users = await UserModel.aggregatePaginate(
     usersAggregate,
