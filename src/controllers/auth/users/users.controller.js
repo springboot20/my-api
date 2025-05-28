@@ -69,38 +69,32 @@ export const getUsers = apiResponseHandler(async (req, res) => {
         ? {
             $or: [
               {
-                "user.username": {
+                username: {
                   $regex: search.trim(),
                   $options: "i",
                 },
               },
               {
-                "user.role": {
+                role: {
                   $regex: search.trim(),
                   $options: "i",
                 },
               },
               {
-                "user.email": {
+                email: {
                   $regex: search.trim(),
                   $options: "i",
                 },
               },
-              {
-            role: {
-              $regex: role.trim(),
-              $options: "i",
-            },
-          }
             ],
           }
         : {},
     },
-    {
-      $match:  {
-            role: { $ne: "ADMIN" }, // Exclude admin users
-          },
-    },
+    // {
+    //   $match: {
+    //     role: { $ne: "ADMIN" }, // Exclude admin users
+    //   },
+    // },
   ]);
 
   const users = await UserModel.aggregatePaginate(
