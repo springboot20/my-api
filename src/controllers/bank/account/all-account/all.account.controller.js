@@ -1,21 +1,21 @@
 import {
   apiResponseHandler,
   ApiResponse,
-} from '../../../../middleware/api/api.response.middleware.js';
-import { CustomErrors } from '../../../../middleware/custom/custom.errors.js';
-import { mongooseTransactions } from '../../../../middleware/mongoose/mongoose.transactions.js';
-import { AccountModel } from '../../../../models/index.js';
-import { StatusCodes } from 'http-status-codes';
-import { getMognogoosePagination } from '../../../../utils/index.js';
+} from "../../../../middleware/api/api.response.middleware.js";
+import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
+import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
+import { AccountModel } from "../../../../models/index.js";
+import { StatusCodes } from "http-status-codes";
+import { getMognogoosePagination } from "../../../../utils/index.js";
 
 const accountPipeline = () => {
   return [
     {
       $lookup: {
-        from: 'users',
-        localField: 'user',
-        foreignField: '_id',
-        as: 'user',
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
         pipeline: [
           {
             $project: {
@@ -30,20 +30,20 @@ const accountPipeline = () => {
     },
     {
       $addFields: {
-        user: { $first: '$user' },
+        user: { $first: "$user" },
       },
     },
     {
       $lookup: {
-        from: 'profiles',
-        localField: 'user._id',
-        foreignField: 'user',
-        as: 'profile',
+        from: "profiles",
+        localField: "user._id",
+        foreignField: "user",
+        as: "profile",
       },
     },
     {
       $addFields: {
-        profile: { $first: '$profile' },
+        profile: { $first: "$profile" },
       },
     },
   ];
@@ -69,10 +69,10 @@ export const getUserAccounts = apiResponseHandler(
         },
         {
           $lookup: {
-            from: 'profiles',
-            foreignField: 'user',
-            localField: 'user',
-            as: 'profile',
+            from: "profiles",
+            foreignField: "user",
+            localField: "user",
+            as: "profile",
             pipeline: [
               {
                 $project: {
@@ -86,22 +86,22 @@ export const getUserAccounts = apiResponseHandler(
         },
         {
           $lookup: {
-            from: 'wallets',
-            foreignField: 'account',
-            localField: '_id',
-            as: 'wallet',
+            from: "wallets",
+            foreignField: "account",
+            localField: "_id",
+            as: "wallet",
           },
         },
         {
           $addFields: {
-            profile: { $first: '$profile' },
-            wallet: { $first: '$wallet' },
+            profile: { $first: "$profile" },
+            wallet: { $first: "$wallet" },
           },
         },
       ]);
 
       if (!accountsAggregation) {
-        throw new CustomErrors('no accounts exist for the user', StatusCodes.NOT_FOUND);
+        throw new CustomErrors("no accounts exist for the user", StatusCodes.NOT_FOUND);
       }
 
       const paginated_accounts = await AccountModel.aggregatePaginate(
@@ -110,7 +110,7 @@ export const getUserAccounts = apiResponseHandler(
           page,
           limit,
           customLabels: {
-            totalDocs: 'total_users',
+            totalDocs: "total_users",
             // docs: 'accounts',
           },
         })
@@ -119,7 +119,87 @@ export const getUserAccounts = apiResponseHandler(
       return new ApiResponse(
         StatusCodes.CREATED,
         paginated_accounts,
-        'all users account fetched successfull'
+        "all users account fetched successfull"
+      );
+    }
+  )
+);
+
+export const getUsersAccounts = apiResponseHandler(
+  mongooseTransactions(
+    /**
+     *
+     * @param {import('express').Request} req
+     * @param {import('express').Response} res
+     *
+     */
+    async (req, res) => {
+      const { page = 1, limit = 10, search } = req.query;
+
+      const accountsAggregation = AccountModel.aggregate([
+        {
+          $match: search
+            ? {
+                $or: [
+                  { "user.username": { $regex: search, $options: "i" } },
+                  { "user.email": { $regex: search, $options: "i" } },
+                ],
+              }
+            : {},
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            foreignField: "user",
+            localField: "user",
+            as: "profile",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  firstname: 1,
+                  lastname: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "wallets",
+            foreignField: "account",
+            localField: "_id",
+            as: "wallet",
+          },
+        },
+        {
+          $addFields: {
+            profile: { $first: "$profile" },
+            wallet: { $first: "$wallet" },
+          },
+        },
+      ]);
+
+      if (!accountsAggregation) {
+        throw new CustomErrors("no accounts exist for the user", StatusCodes.NOT_FOUND);
+      }
+
+      const paginated_accounts = await AccountModel.aggregatePaginate(
+        accountsAggregation,
+        getMognogoosePagination({
+          page,
+          limit,
+          customLabels: {
+            totalDocs: "accounts_count",
+            // docs: 'accounts',
+          },
+        })
+      );
+
+      return new ApiResponse(
+        StatusCodes.CREATED,
+        paginated_accounts,
+        "all users account fetched successfull"
       );
     }
   )

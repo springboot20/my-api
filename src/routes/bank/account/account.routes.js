@@ -19,6 +19,14 @@ router
   );
 
 router
+  .route("/")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.getUsersAccounts
+  );
+
+router
   .route("/validate-account")
   .post(
     verifyJWT,

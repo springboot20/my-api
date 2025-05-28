@@ -62,7 +62,7 @@ export const getUserById = apiResponseHandler(async (req, res) => {
 
 export const getUsers = apiResponseHandler(async (req, res) => {
   const { limit = 10, page = 1, search, role = "USER" } = req.query;
-  
+
   const usersAggregate = UserModel.aggregate([
     {
       $match: role
@@ -79,10 +79,26 @@ export const getUsers = apiResponseHandler(async (req, res) => {
     {
       $match: search
         ? {
-            username: {
-              $regex: search.trim(),
-              $options: "i",
-            },
+            $or: [
+              {
+                "user.username": {
+                  $regex: search.trim(),
+                  $options: "i",
+                },
+              },
+              {
+                "user.role": {
+                  $regex: search.trim(),
+                  $options: "i",
+                },
+              },
+              {
+                "user.email": {
+                  $regex: search.trim(),
+                  $options: "i",
+                },
+              },
+            ],
           }
         : {},
     },
