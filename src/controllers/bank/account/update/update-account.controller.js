@@ -77,7 +77,7 @@ const handleAccountStatusUpdate = async (userId, accountId, updates, skipBalance
   // Find and update the account
   const updatedAccount = await AccountModel.findOneAndUpdate(
     { _id: accountId, user: userId },
-    { status, type },
+    { status, type, currency },
     { new: true }
   );
 
@@ -106,9 +106,8 @@ export const updateAccountStatus = apiResponseHandler(async (req, res) => {
  * Update account status
  */
 export const adminUpdateAccountStatus = apiResponseHandler(async (req, res) => {
-  const userId = req.user?._id;
   const { accountId } = req.params;
-  const { status, type } = req.body;
+  const { status, type, userId } = req.body;
   const updates = { status, type };
 
   if (!AvailableRequestStatusEnums) {

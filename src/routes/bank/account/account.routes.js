@@ -51,7 +51,7 @@ router
   );
 
 router
-  .route("/user-account/:accountId")
+  .route("/user-accounts/:accountId")
   .get(
     verifyJWT,
     checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
