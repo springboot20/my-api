@@ -65,18 +65,6 @@ export const getUsers = apiResponseHandler(async (req, res) => {
 
   const usersAggregate = UserModel.aggregate([
     {
-      $match: role
-        ? {
-            role: {
-              $regex: role.trim(),
-              $options: "i",
-            },
-          }
-        : {
-            role: { $ne: "ADMIN" }, // Exclude admin users
-          },
-    },
-    {
       $match: search
         ? {
             $or: [
@@ -98,19 +86,20 @@ export const getUsers = apiResponseHandler(async (req, res) => {
                   $options: "i",
                 },
               },
+              {
+            role: {
+              $regex: role.trim(),
+              $options: "i",
+            },
+          }
             ],
           }
         : {},
     },
     {
-      $match: search
-        ? {
-            email: {
-              $regex: search.trim(),
-              $options: "i",
-            },
-          }
-        : {},
+      $match:  {
+            role: { $ne: "ADMIN" }, // Exclude admin users
+          },
     },
   ]);
 
