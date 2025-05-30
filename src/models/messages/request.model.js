@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-// import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import {
   AvailableRequestActionsEnums,
   AvailableRequestPriorities,
@@ -58,5 +58,7 @@ const RequestMessageSchema = new Schema(
   },
   { timestamps: true }
 );
+
+RequestMessageSchema.plugin(mongooseAggregatePaginate);
 
 export const RequestMessageModel = model("RequestMessage", RequestMessageSchema);

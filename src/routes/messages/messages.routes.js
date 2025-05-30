@@ -16,6 +16,30 @@ router
   );
 
 router
+  .route("/admin-requests-message/all")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    messageRequestController.getAllRequestMessages
+  );
+
+router
+  .route("/admin-requests-message/user-requests")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    messageRequestController.getUserRequestMessages
+  );
+
+router
+  .route("/:requestId")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    messageRequestController.getRequestMessageById
+  );
+
+router
   .route("/admin-requests-message/user-pending")
   .get(
     verifyJWT,
