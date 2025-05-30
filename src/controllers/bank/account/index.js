@@ -1,6 +1,6 @@
 import { getUserAccounts, getUsersAccounts } from "./all-account/all.account.controller.js";
 import { createAccount, validateAccountNumber } from "./create/create.account.controller.js";
-import { deleteUserAccount } from "./delete/delete.account.controller.js";
+import { adminDeleteUserAccount,closeAccount } from "./delete/delete.account.controller.js";
 import {
   getAccountDetails,
   adminGetAccountDetails,
@@ -13,13 +13,14 @@ import {
 const accountController = {
   getAccountDetails,
   createAccount,
-  deleteUserAccount,
+  adminDeleteUserAccount,
   getUserAccounts,
   updateAccountStatus,
   validateAccountNumber,
   adminUpdateAccountStatus,
   getUsersAccounts,
   adminGetAccountDetails,
+  closeAccount
 };
 
 export default accountController;

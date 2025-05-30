@@ -61,11 +61,22 @@ router
     verifyJWT,
     checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
     accountController.updateAccountStatus
-  )
-  .delete(
+  );
+
+router
+  .route("/user-accounts/close/:accountId")
+  .patch(
     verifyJWT,
     checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
-    accountController.deleteUserAccount
+    accountController.closeAccount
+  );
+
+router
+  .route("/admin/user-accounts/delete/:accountId")
+  .delete(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.adminDeleteUserAccount
   );
 
 router
