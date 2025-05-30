@@ -107,7 +107,7 @@ const handleAccountStatusUpdate = async (userId, accountId, updates, skipBalance
 
   // Find and update the account
   const updatedAccount = await AccountModel.findOneAndUpdate(
-    { _id: accountObjectId, user: userObjectId },
+    { _id: accountId, user: userId },
     {
       status: accountStatus,
       type,
