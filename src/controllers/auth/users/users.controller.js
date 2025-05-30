@@ -3,7 +3,7 @@ import {
   ApiResponse,
   apiResponseHandler,
 } from "../../../middleware/api/api.response.middleware.js";
-import { UserModel } from "../../../models/index.js";
+import { TransactionModel, UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { getMognogoosePagination } from "../../../utils/index.js";
@@ -25,7 +25,7 @@ export const getUserById = apiResponseHandler(async (req, res) => {
   const userAggregate = await UserModel.aggregate([
     {
       $match: {
-        _id: new mongoose.Types.ObjectId.createFromTime(userId),
+        _id: mongoose.Types.ObjectId.createFromTime(userId),
       },
     },
     {
@@ -134,6 +134,26 @@ export const updateCurrentUserProfile = apiResponseHandler(async (req, res) => {
 
   if (!updatedUser)
     throw new CustomErrors("unable to updated user profile", StatusCodes.BAD_REQUEST);
+
+  return new ApiResponse(
+    StatusCodes.OK,
+    {
+      user: updatedUser,
+    },
+    "user updated successfully"
+  );
+});
+
+export const adminDeleteUser = apiResponseHandler(async (req, res) => {
+  const { userId } = req.body;
+
+  const user = await UserModel.findById(mongoose.Types.ObjectId(userId));
+
+  if (!user) {
+    throw new CustomErrors("user notfound", StatusCodes.NOT_FOUND);
+  }
+
+  // await TransactionModel.up
 
   return new ApiResponse(
     StatusCodes.OK,

@@ -1,4 +1,5 @@
-import { AvailableAccountStatusEnums, AvailableRequestStatusEnums } from "../../../../constants.js";
+import mongoose from "mongoose";
+import { AvailableAccountStatusEnums } from "../../../../constants.js";
 import {
   apiResponseHandler,
   ApiResponse,
@@ -32,8 +33,6 @@ const updateWalletStatus = async (wallet, status, currency) => {
     wallet.isActive = false;
     return true;
   }
-
-  return false;
 };
 
 /**
@@ -69,9 +68,14 @@ const handleAccountStatusUpdate = async (userId, accountId, updates, skipBalance
     throw new CustomErrors("Wallet balance still has funds", StatusCodes.BAD_REQUEST);
   }
 
-  // Update wallet if needed
-  if (updateWalletStatus(wallet, status, currency)) {
-    await wallet.save();
+  if (!wallet.isActive && status === "ACTIVE") {
+    wallet.isActive = true;
+    return true;
+  }
+
+  if (wallet.isActive && (status === "INACTIVE" || status === "CLOSED")) {
+    wallet.isActive = false;
+    return true;
   }
 
   // Find and update the account
@@ -97,6 +101,10 @@ export const updateAccountStatus = apiResponseHandler(async (req, res) => {
   const { status, type, currency } = req.body;
   const updates = { status, type, currency };
 
+  if (!AvailableAccountStatusEnums.includes(status)) {
+    throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
+  }
+
   const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, false);
 
   return new ApiResponse(StatusCodes.OK, updatedAccount, `Account status updated to ${status}`);
@@ -106,16 +114,61 @@ export const updateAccountStatus = apiResponseHandler(async (req, res) => {
  * Update account status
  */
 export const adminUpdateAccountStatus = apiResponseHandler(async (req, res) => {
-  const { accountId } = req.params;
-  const { status, type, userId } = req.body;
-  const updates = { status, type };
+  const { userId, accountId } = req.params;
+  const { status, type, currency } = req.body;
 
-  if (!AvailableRequestStatusEnums) {
-    throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
+  // Validate status value
+  if (!AvailableAccountStatusEnums.includes(status)) {
+    throw new CustomErrors("Invalid status value", StatusCodes.BAD_REQUEST);
   }
 
-  // Skip balance check for admin operations
-  const updatedAccount = await handleAccountStatusUpdate(userId, accountId, updates, true);
+  const accountObjectId = new mongoose.Types.ObjectId(accountId);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+  console.log({ accountObjectId, userObjectId, status, type, currency });
+
+  // Find the wallet
+  const wallet = await WalletModel.findOne({ account: accountObjectId, user: userObjectId });
+
+  console.log(wallet);
+
+  if (!wallet) {
+    throw new CustomErrors("Wallet not found", StatusCodes.NOT_FOUND);
+  }
+
+  // Check balance for deactivation/closure if not skipped
+  if (
+    wallet.isActive &&
+    AvailableAccountStatusEnums.includes(status) &&
+    status !== "ACTIVE" &&
+    wallet.balance > 0
+  ) {
+    throw new CustomErrors("Wallet balance still has funds", StatusCodes.BAD_REQUEST);
+  }
+
+  if (currency) {
+    wallet.currency = currency;
+
+    if (wallet.balance) {
+      wallet.balance = currency === "USD" ? wallet.balance * 0.0006214 : wallet.balance * 1609.4;
+    }
+  }
+
+  // Update wallet if needed
+  if (updateWalletStatus(wallet, status, currency)) {
+    await wallet.save();
+  }
+
+  // Find and update the account
+  const updatedAccount = await AccountModel.findOneAndUpdate(
+    { _id: accountId, user: userId },
+    { status, type, currency },
+    { new: true }
+  );
+
+  if (!updatedAccount) {
+    throw new CustomErrors("Account not found or unauthorized", StatusCodes.NOT_FOUND);
+  }
 
   return new ApiResponse(StatusCodes.OK, updatedAccount, `Account status updated to ${status}`);
 });

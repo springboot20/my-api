@@ -43,7 +43,7 @@ router
   );
 
 router
-  .route("/admin/update-account")
+  .route("/admin/update-account/:userId/:accountId")
   .patch(
     verifyJWT,
     checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
@@ -66,6 +66,14 @@ router
     verifyJWT,
     checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
     accountController.deleteUserAccount
+  );
+
+router
+  .route("/admin/user-accounts/details/:userId/:accountId")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    accountController.adminGetAccountDetails
   );
 
 export default router;
