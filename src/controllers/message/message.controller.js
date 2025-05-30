@@ -3,6 +3,8 @@ import { CustomErrors } from "../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { UserModel, RequestMessageModel } from "../../models/index.js";
 import { AvailableRequestStatusEnums } from "../../constants.js";
+import { emitSocketEventToUser } from "../../socket/socket.js";
+import socketEvents from "../../enums/socket-events.js";
 
 export const accountMessageRequest = apiResponseHandler(async (req) => {
   const { action, message } = req.body;
@@ -48,6 +50,22 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
 
   await request.populate("userId", "name email avatar");
   await request.save();
+
+  emitSocketEventToAdmin(req, socketEvents.NEW_ADMIN_REQUEST, "admin-room", {
+    id: request._id,
+    action: request.action,
+    message: request.message,
+    user: {
+      id: request.userId,
+      name: request.username,
+      email: request.email,
+    },
+    createdAt: request.createdAt,
+    status: request.status,
+  });
+
+  const pendingCount = await RequestMessageModel.countDocuments({ status: "PENDING" });
+  emitSocketEventToAdmin(req, socketEvents.ADMIN_NOTIFICATION_COUNT, "admin-room", pendingCount);
 
   if (!request) {
     throw new CustomErrors("error creating admin request.", StatusCodes.INTERNAL_SERVER_ERROR);
@@ -99,9 +117,6 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
   }
 
-  console.log(req.body);
-  console.log(status);
-
   const message = await RequestMessageModel.findOne({ _id: requestId });
 
   console.log(message.status);
@@ -118,7 +133,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     );
   }
 
-  const updatedAdminRequestMessage = await RequestMessageModel.findByIdAndUpdate(
+  const updatedrequestMessage = await RequestMessageModel.findByIdAndUpdate(
     message?._id,
     {
       $set: {
@@ -131,7 +146,27 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     { new: true }
   ).populate("userId", "username email avatar");
 
-  if (!updatedAdminRequestMessage) {
+  emitSocketEventToUser(
+    req,
+    socketEvents.REQUEST_STATUS_UPADATE,
+    `user-${updatedrequestMessage?.userId}`,
+    {
+      requestId: updatedrequestMessage?._id,
+      status: updatedrequestMessage?.status,
+      adminNotes: updatedrequestMessage?.adminNotes,
+      reviewedAt: updatedrequestMessage?.reviewedAt,
+    }
+  );
+
+  emitSocketEventToAdmin(req, socketEvents.REQUEST_UPADATED, "admin-room", {
+    requestId: updatedrequestMessage?._id,
+    status: updatedrequestMessage?.status,
+  });
+
+  const pendingCount = await RequestMessageModel.countDocuments({ status: "PENDING" });
+  emitSocketEventToAdmin(req, socketEvents.ADMIN_NOTIFICATION_COUNT, "admin-room", pendingCount);
+
+  if (!updatedrequestMessage) {
     throw new CustomErrors(
       "error while updating request message",
       StatusCodes.INTERNAL_SERVER_ERROR
@@ -140,7 +175,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
 
   return new ApiResponse(
     StatusCodes.OK,
-    updatedAdminRequestMessage,
+    updatedrequestMessage,
     "message status updated successfully"
   );
 });
