@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { AvailableAccountStatus, AvailableCardStatus } from "../../../../constants.js";
 import {
   apiResponseHandler,
@@ -17,10 +18,12 @@ export const deleteUserAccount = apiResponseHandler(
     const userId = req.user?._id;
     const { accountId } = req.params;
 
+    const accountObjectId = new mongoose.Types.ObjectId(accountId);
+
     // Get wallet balance
     const wallet = await WalletModel.findOne({
-      account: accountId,
-      user: userId,
+      account: accountObjectId,
+      user: new mongoose.Types.ObjectId(userId),
     });
 
     if (!wallet) {

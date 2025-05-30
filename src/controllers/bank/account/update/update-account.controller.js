@@ -103,7 +103,12 @@ const handleAccountStatusUpdate = async (userId, accountId, updates, skipBalance
   }
 
   // Map CLOSE to CLOSED for account status
-  const accountStatus = status === "CLOSE" ? "CLOSED" : status === "UNSUSPEND" ? "ACTIVE" : status;
+  const accountStatus =
+    status === "CLOSE"
+      ? "CLOSED"
+      : status === "UNSUSPEND" || status === "UNCLOSE"
+      ? "ACTIVE"
+      : status;
 
   // Find and update the account
   const updatedAccount = await AccountModel.findOneAndUpdate(
