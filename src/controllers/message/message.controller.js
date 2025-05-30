@@ -3,7 +3,7 @@ import { CustomErrors } from "../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { UserModel, RequestMessageModel } from "../../models/index.js";
 import { AvailableRequestStatusEnums } from "../../constants.js";
-import { emitSocketEventToUser } from "../../socket/socket.js";
+import { emitSocketEventToUser, emitSocketEventToAdmin } from "../../socket/socket.js";
 import socketEvents from "../../enums/socket-events.js";
 
 export const accountMessageRequest = apiResponseHandler(async (req) => {

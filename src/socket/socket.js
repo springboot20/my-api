@@ -10,11 +10,9 @@ const intializeSocketIo = (io) => {
       const authorization = socket?.handshake?.auth ?? {};
 
       if (!authorization.tokens) {
-        throw new CustomErrors(
-          "Un-authentication failed, Token is invalid",
-          StatusCodes.UNAUTHORIZED,
-          []
-        );
+        socket.emit(SOCKET_EVENTS.SOCKET_ERROR_EVENT, "Authentication failed, Token is missing");
+        socket.disconnect();
+        return;
       }
 
       let authDecodedToken = validateToken(
@@ -29,20 +27,21 @@ const intializeSocketIo = (io) => {
       );
 
       if (!user) {
-        throw new CustomErrors(
-          "Un-authorized handshake, Token is invalid",
-          StatusCodes.UNAUTHORIZED,
-          []
-        );
+        socket.emit(SOCKET_EVENTS.SOCKET_ERROR_EVENT, "Unauthorized handshake, Token is invalid");
+        socket.disconnect();
+        return;
       }
 
       socket.user = user;
+      socket.join(user?._id?.toString());
       socket.emit(SOCKET_EVENTS.CONNECTED_EVENT);
 
       // Send current pending count
       const pendingCount = await RequestMessageModel.countDocuments({ status: "PENDING" });
 
       socket.on(SOCKET_EVENTS.JOIN_ADMIN_ROOM, () => {
+        console.log(user.role);
+
         // **Assign User to Role-Based Rooms**
         if (["ADMIN", "MODERATOR"].includes(user.role)) {
           console.log(`Admin ${user?._id} joined admin room`);
@@ -68,10 +67,14 @@ const intializeSocketIo = (io) => {
 
       socket.on(SOCKET_EVENTS.DISCONNECTED_EVENT, () => {
         if (socket?.user?._id) {
-          socket.leave(socket?.user?._id);
+          socket.leave(socket?.user?._id.toString());
         }
 
-        socket.leave(["ADMIN", "MODERATOR"].includes(user.role) ? "admin" : "users");
+        socket.leave(
+          ["ADMIN", "MODERATOR"].includes(user.role) ? "admin-room" : `users-${user?._id}`
+        );
+
+        socket.emit(SOCKET_EVENTS.DISCONNECTED_EVENT);
       });
     });
   } catch (error) {
