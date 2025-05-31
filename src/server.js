@@ -33,18 +33,23 @@ const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
-const allowedOrigins = [
-  "https://affiliate-dashboard-4sgw.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  // Add any other origins you need
-];
+const origins = process.env.CORS_ORIGINs;
+const allowedOrigins = origins.split(",");
 
 // socket io connection setups
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log("Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   },
 });
