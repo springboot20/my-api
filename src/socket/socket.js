@@ -9,20 +9,37 @@ const intializeSocketIo = (io) => {
     io.on("connection", async (socket) => {
       const authorization = socket?.handshake?.auth ?? {};
 
-      if (!authorization.tokens) {
+      // Check for token in multiple possible locations
+      const token =
+        authorization.token || authorization.accessToken || authorization.tokens?.accessToken;
+
+      if (!token) {
         socket.emit(SOCKET_EVENTS.SOCKET_ERROR_EVENT, "Authentication failed, Token is missing");
-        socket.disconnect();
+        socket.disconnect(true);
         return;
       }
 
-      let authDecodedToken = validateToken(
-        authorization.tokens.accessToken,
-        process.env.ACCESS_TOKEN_SECRET
-      );
+      let decodedToken;
+      try {
+        decodedToken = validateToken(token, process.env.ACCESS_TOKEN_SECRET);
+      } catch (tokenError) {
+        console.error("❌ Token validation failed:", tokenError.message);
+        socket.emit(SOCKET_EVENTS.SOCKET_ERROR_EVENT, "Authentication failed: Invalid token");
+        socket.disconnect(true);
+        return;
+      }
 
-      let dToken = authDecodedToken;
+      if (!decodedToken || !decodedToken._id) {
+        console.error("❌ Invalid token payload");
+        socket.emit(
+          SOCKET_EVENTS.SOCKET_ERROR_EVENT,
+          "Authentication failed: Invalid token payload"
+        );
+        socket.disconnect(true);
+        return;
+      }
 
-      const user = await UserModel.findById(dToken?._id).select(
+      const user = await UserModel.findById(decodedToken?._id).select(
         "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
       );
 
@@ -33,6 +50,7 @@ const intializeSocketIo = (io) => {
       }
 
       socket.user = user;
+      socket.userId = user._id.toString();
       socket.join(user?._id?.toString());
       socket.emit(SOCKET_EVENTS.CONNECTED_EVENT);
 
@@ -55,15 +73,32 @@ const intializeSocketIo = (io) => {
 
       socket.on(SOCKET_EVENTS.JOIN_USER_ROOM, () => {
         if (user.role === "USER") {
-          console.log(`User ${user?._id} joined user room`);
-          socket.join(`user-${user?._id}`); // Regular users join the 'users' room
-          socket.userId = user?._id;
+          const userRoom = `user-${user._id}`;
+          console.log(`👤 User ${user.username} joined user room: ${userRoom}`);
+          socket.join(userRoom);
+          socket.userRoomId = userRoom;
         }
       });
 
-      // socket.on(SOCKET_EVENTS.UPDATE_REQUEST_STATUS, async (date) => {
-      //   if (!socket.adminId) return;
-      // });
+      // Handle disconnection
+      socket.on("disconnect", (reason) => {
+        console.log(`❌ User ${user.username} disconnected: ${reason}`);
+
+        try {
+          // Leave all rooms
+          socket.leave(socket.userId);
+
+          if (socket.adminId) {
+            socket.leave("admin-room");
+          }
+
+          if (socket.userRoomId) {
+            socket.leave(socket.userRoomId);
+          }
+        } catch (error) {
+          console.error("❌ Error during disconnect cleanup:", error);
+        }
+      });
 
       socket.on(SOCKET_EVENTS.DISCONNECTED_EVENT, () => {
         if (socket?.user?._id) {
