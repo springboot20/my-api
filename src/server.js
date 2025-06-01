@@ -1,8 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" });
 import cors from "cors";
 import express from "express";
 import bodyParser from "body-parser";
 import http from "http";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
 import { Server } from "socket.io";
@@ -28,8 +29,6 @@ import { intializeSocketIo } from "./socket/socket.js";
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: ".env" });
 
 const app = express();
 const httpServer = http.createServer(app);

@@ -43,7 +43,7 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
     user?._id || existingUser?._id
   }&token=${unHashedToken}`;
 
-   console.log("verification link", verificationLink);
+  console.log("verification link", verificationLink);
   console.log("link", process.env.BASE_URL_PROD_ADMIN);
 
   await sendMail(
