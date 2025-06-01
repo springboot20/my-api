@@ -56,7 +56,14 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
 
   await profile.save();
 
-  return new ApiResponse(StatusCodes.CREATED, {}, "admin created successfully");
+  return new ApiResponse(
+    StatusCodes.CREATED,
+    {
+      user,
+      url: verificationLink,
+    },
+    "admin created successfully"
+  );
 });
 
 export const register = apiResponseHandler(async (req, res) => {
