@@ -35,7 +35,9 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const link =
-    process.env.NODE_ENV === "production" ? process.env.BASE_URL_PROD : process.env.BASE_URL_DEV;
+    process.env.NODE_ENV === "production"
+      ? process.env.BASE_URL_PRDO_ADMIN
+      : process.env.BASE_URL_DEV;
 
   const verificationLink = `${link}/verify-email?userId=${
     user?._id || existingUser?._id
