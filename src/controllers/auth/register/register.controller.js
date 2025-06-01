@@ -43,6 +43,9 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
     user?._id || existingUser?._id
   }&token=${unHashedToken}`;
 
+   console.log("verification link", verificationLink);
+  console.log("link", process.env.BASE_URL_PROD_ADMIN);
+
   await sendMail(
     user.email || existingUser?.email,
     "Email verification",
@@ -104,6 +107,9 @@ export const register = apiResponseHandler(async (req, res) => {
     process.env.NODE_ENV === "production" ? process.env.BASE_URL_PROD : process.env.BASE_URL_DEV;
 
   const verificationLink = `${link}/verify-email?userId=${user?._id}&token=${unHashedToken}`;
+
+  console.log("verification link", verificationLink);
+  console.log("link", process.env.BASE_URL_PROD);
 
   await sendMail(
     user.email,
