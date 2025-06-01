@@ -43,6 +43,7 @@ const defaultOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://banking-app-admin.vercel.app",
+  "https://affiliate-dashboard-4sgw.vercel.app",
 ];
 
 const finalAllowedOrigins = origins ? allowedOrigins : defaultOrigins;
