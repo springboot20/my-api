@@ -71,7 +71,12 @@ export const forgotPassword = apiResponseHandler(
 
     const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
 
-    await sendMail(user.email, "Password reset", { resetLink, username: user.username }, "reset");
+    await sendMail(
+      user.email,
+      "Password reset",
+      { resetLink, username: user.username, from: process.env.EMAIL, app: process.env.APP_NAME },
+      "reset"
+    );
 
     return new ApiResponse(
       StatusCodes.OK,
@@ -161,8 +166,13 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
 
   await sendMail(
     user.email,
-    "Password reset",
-    { verificationLink, username: user.username },
+    "Email verification",
+    {
+      verificationLink,
+      username: user.username,
+      from: process.env.EMAIL,
+      app: process.env.APP_NAME,
+    },
     "email"
   );
 
