@@ -35,8 +35,17 @@ const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
-const origins = process.env.CORS_ORIGINs;
-const allowedOrigins = origins.split(",");
+const origins = process.env.CORS_ORIGINS; // Changed from CORS_ORIGINs
+const allowedOrigins = origins ? origins.split(",") : [];
+
+// Add fallback origins for development
+const defaultOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://banking-app-admin.vercel.app",
+];
+
+const finalAllowedOrigins = origins ? allowedOrigins : defaultOrigins;
 
 // socket io connection setups
 const io = new Server(httpServer, {
@@ -45,7 +54,7 @@ const io = new Server(httpServer, {
       // Allow requests with no origin (like mobile apps, curl requests)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (finalAllowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         console.log("Blocked by CORS:", origin);
@@ -67,7 +76,7 @@ app.use(
       // Allow requests with no origin (like mobile apps, curl requests)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (finalAllowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         console.log("Blocked by CORS:", origin);
