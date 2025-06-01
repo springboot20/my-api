@@ -44,7 +44,12 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
   await sendMail(
     user.email || existingUser?.email,
     "Email verification",
-    { verificationLink, username: user.username || existingUser?.username },
+    {
+      verificationLink,
+      username: user.username || existingUser?.username,
+      from: process.env.EMAIL,
+      app: process.env.APP_NAME,
+    },
     "email"
   );
 
@@ -101,7 +106,12 @@ export const register = apiResponseHandler(async (req, res) => {
   await sendMail(
     user.email,
     "Email verification",
-    { verificationLink, username: user.username },
+    {
+      verificationLink,
+      username: user.username,
+      from: process.env.EMAIL,
+      app: process.env.APP_NAME,
+    },
     "email"
   );
 
