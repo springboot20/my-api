@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { AvailableRoles, RoleEnums } from "../../constants.js";
 import { AccountModel } from "../banking/account/account.model.js";
 import { ProfileModel } from "./profile.model.js";
-import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2'
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 /**
  * @swagger 
@@ -137,7 +137,6 @@ const userSchema = new Schema(
       trim: true,
       required: true,
       lowercase: true,
-      unique: true,
     },
     email: {
       type: String,
@@ -171,7 +170,7 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.plugin(mongooseAggregatePaginate)
+userSchema.plugin(mongooseAggregatePaginate);
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -215,7 +214,6 @@ userSchema.post("save", async function (user, next) {
     next(error);
   }
 });
-
 
 userSchema.methods.generateTemporaryTokens = function () {
   const unHashedToken = crypto.randomBytes(20).toString("hex");

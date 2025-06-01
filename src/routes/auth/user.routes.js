@@ -11,6 +11,7 @@ import {
   getUsers,
   getCurrentUser,
   getUserById,
+  registerAdminUser
 } from "../../controllers/auth/index.js";
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
@@ -105,6 +106,7 @@ const router = Router();
  */
 
 router.route("/register").post(userRegisterValidation(), validate, register);
+router.route("/register/admin").post(userRegisterValidation(), validate, registerAdminUser);
 
 /**
  * @swagger

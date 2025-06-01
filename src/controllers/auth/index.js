@@ -1,5 +1,5 @@
 import { login } from "./login/login.controller.js";
-import { register } from "./register/register.controller.js";
+import { register, registerAdminUser } from "./register/register.controller.js";
 import { logout } from "./logout/logout.controller.js";
 import {
   forgotPassword,
@@ -33,4 +33,5 @@ export {
   getUserProfile,
   getUserById,
   updateCurrentUserProfile,
+  registerAdminUser,
 };
