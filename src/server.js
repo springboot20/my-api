@@ -30,6 +30,9 @@ import { intializeSocketIo } from "./socket/socket.js";
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+console.log("link", process.env.BASE_URL_PROD_ADMIN);
+console.log("link", process.env.BASE_URL_PROD);
+
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
