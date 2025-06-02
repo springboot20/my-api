@@ -58,7 +58,7 @@ const corsOriginChecker = function (origin, callback) {
   // Allow requests with no origin (like mobile apps, curl requests)
   if (!origin) return callback(null, true);
 
-  if (finalAllowedOrigins.includes(origin) !== -1) {
+  if (finalAllowedOrigins.includes(origin)) {
     callback(null, true);
   } else {
     console.log("Blocked by CORS:", origin);
