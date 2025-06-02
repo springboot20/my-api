@@ -37,15 +37,7 @@ let port = process.env.PORT ?? 8080;
 const origins = process.env.CORS_ORIGINS; // Changed from CORS_ORIGINs
 const allowedOrigins = origins ? origins.split(",").map((origin) => origin.trim()) : [];
 
-// Add fallback origins for development
-const defaultOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "https://banking-app-admin.vercel.app",
-  "https://affiliate-dashboard-4sgw.vercel.app",
-];
-
-const finalAllowedOrigins = origins ? allowedOrigins : defaultOrigins;
+const finalAllowedOrigins = allowedOrigins;
 
 console.log(process.env.BASE_URL_DEV);
 console.log(process.env.BASE_URL_PROD);
