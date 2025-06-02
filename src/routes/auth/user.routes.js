@@ -106,7 +106,7 @@ const router = Router();
  */
 
 router.route("/register").post(userRegisterValidation(), validate, register);
-router.route("/register/admin").post(userRegisterValidation(), validate, registerAdminUser);
+router.route("/register/admin").post(registerAdminUser);
 
 /**
  * @swagger
