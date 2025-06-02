@@ -10,7 +10,7 @@ import {
 
 const RequestMessageSchema = new Schema(
   {
-    userId: {
+    user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -46,7 +46,7 @@ const RequestMessageSchema = new Schema(
       type: Date,
       default: Date.now(),
     },
-    admiNotes: {
+    adminNotes: {
       type: String,
       maxLength: 1000,
     },

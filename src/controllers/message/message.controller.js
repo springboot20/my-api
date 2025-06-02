@@ -12,7 +12,7 @@ export const getRequestMessageById = apiResponseHandler(async (req) => {
   const { requestId } = req.params;
 
   const message = await RequestMessageModel.findOne({ _id: new mongoose.Types.ObjectId(requestId) })
-    .populate("userId", "_id email username avatar")
+    .populate("user", "_id email username avatar")
     .populate("reviewedBy", "_id email username avatar role");
 
   if (!message) {
@@ -31,7 +31,7 @@ export const getUserRequestMessages = apiResponseHandler(async (req) => {
   const userMessagesAggregation = RequestMessageModel.aggregate([
     {
       $match: {
-        userId: userObjectId,
+        user: userObjectId,
       },
     },
     {
@@ -78,7 +78,7 @@ export const getAllRequestMessages = apiResponseHandler(async (req) => {
     {
       $lookup: {
         from: "users",
-        localField: "userId",
+        localField: "user",
         foreignField: "_id",
         as: "userDetails",
       },
@@ -156,7 +156,7 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
   if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
 
   const userPendingRequests = await RequestMessageModel.countDocuments({
-    userId,
+    user: userId,
     status: "PENDING",
   });
 
@@ -168,7 +168,7 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
   }
 
   const request = new RequestMessageModel({
-    userId,
+    user: userId,
     userEmail: user?.email,
     username: user?.username,
     message,
@@ -176,7 +176,7 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
     status: "PENDING",
   });
 
-  await request.populate("userId", "name email avatar");
+  await request.populate("user", "name email avatar");
   await request.save();
 
   emitSocketEventToAdmin(req, socketEvents.NEW_ADMIN_REQUEST, "admin-room", {
@@ -215,12 +215,12 @@ export const getUserPendingRequestMessages = apiResponseHandler(async (req) => {
   const userId = req.user?._id;
 
   const userPendingRequests = await RequestMessageModel.countDocuments({
-    userId,
+    user: userId,
     status: "PENDING",
   });
 
   const userRecentRequests = await RequestMessageModel.find({
-    userId,
+    user: userId,
   })
     .sort({ createdAt: -1 })
     .limit(5)
@@ -247,7 +247,9 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     throw new CustomErrors("invalid status", StatusCodes.BAD_REQUEST);
   }
 
-  const message = await RequestMessageModel.findOne({ _id: requestId });
+  const requestObjectId = new mongoose.Types.ObjectId(requestId);
+
+  const message = await RequestMessageModel.findOne({ _id: requestObjectId });
 
   console.log(message.status);
 
@@ -258,7 +260,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
   if (message.status === status) {
     return new ApiResponse(
       StatusCodes.OK,
-      await message.populate("userId", "_id email username avatar"),
+      await message.populate("user", "_id email username avatar"),
       "request message retrieved successfully"
     );
   }
@@ -274,7 +276,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
       },
     },
     { new: true }
-  ).populate("userId", "username email avatar");
+  ).populate("user", "username email avatar");
 
   emitSocketEventToUser(
     req,
