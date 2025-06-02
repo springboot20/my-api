@@ -47,6 +47,13 @@ const defaultOrigins = [
 
 const finalAllowedOrigins = origins ? allowedOrigins : defaultOrigins;
 
+console.log(process.env.BASE_URL_DEV);
+console.log(process.env.BASE_URL_PROD);
+console.log(process.env.BASE_URL_PROD_ADMIN);
+console.log(process.env.CORS_ORIGINS);
+console.log(process.env.origins);
+console.log(finalAllowedOrigins);
+
 // socket io connection setups
 const io = new Server(httpServer, {
   cors: {
@@ -160,16 +167,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", finalAllowedOrigins);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
+// app.use((req, res, next) => {
+//   res.header("Access-Control-Allow-Origin", finalAllowedOrigins);
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token"
+//   );
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   next();
+// });
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {
