@@ -172,13 +172,17 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", finalAllowedOrigins);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
+  const origin = req.headers.origin || "*";
+
+  if (!process.env.XORIG_RESTRICT || finalAllowedOrigins.indexOf(origin) > -1) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token"
+    );
+    res.header("Access-Control-Allow-Credentials", "true");
+  }
   next();
 });
 
