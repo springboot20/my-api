@@ -71,9 +71,9 @@ const corsOptions = {
     "X-Requested-With",
     "Accept",
   ],
-  credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  // credentials: true,
+  // preflightContinue: false,
+  // optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
