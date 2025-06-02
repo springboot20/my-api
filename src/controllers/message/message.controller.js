@@ -185,10 +185,20 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
       action: request.action,
       message: request.message,
       user: {
-        id: request.userId,
+        id: request.user,
         name: request.username,
         email: request.email,
       },
+      createdAt: request.createdAt,
+      status: request.status,
+    },
+  });
+
+  emitSocketEventToUser(req, socketEvents.NEW_ADMIN_REQUEST, `user-${request?.user}`, {
+    data: {
+      _id: request._id,
+      action: request.action,
+      message: request.message,
       createdAt: request.createdAt,
       status: request.status,
     },
@@ -258,6 +268,24 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
   }
 
   if (message.status === status) {
+    message.adminNotes = !message.adminNotes ? adminNotes : message.adminNotes;
+    await message.save();
+
+    emitSocketEventToUser(req, socketEvents.REQUEST_STATUS_UPADATE, `user-${message?.user}`, {
+      data: {
+        requestId: message?._id,
+        status: message?.status,
+        adminNotes: message?.adminNotes,
+        reviewedAt: message?.reviewedAt,
+      },
+    });
+
+    emitSocketEventToAdmin(req, socketEvents.REQUEST_UPADATED, "admin-room", {
+      requestId: message?._id,
+      status: message?.status,
+      adminNotes: message?.adminNotes,
+    });
+
     return new ApiResponse(
       StatusCodes.OK,
       await message.populate("user", "_id email username avatar"),
@@ -281,7 +309,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
   emitSocketEventToUser(
     req,
     socketEvents.REQUEST_STATUS_UPADATE,
-    `user-${updatedrequestMessage?.userId}`,
+    `user-${updatedrequestMessage?.user}`,
     {
       data: {
         requestId: updatedrequestMessage?._id,
@@ -295,6 +323,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
   emitSocketEventToAdmin(req, socketEvents.REQUEST_UPADATED, "admin-room", {
     requestId: updatedrequestMessage?._id,
     status: updatedrequestMessage?.status,
+    adminNotes: updatedrequestMessage?.adminNotes,
   });
 
   const pendingCount = await RequestMessageModel.countDocuments({ status: "PENDING" });
