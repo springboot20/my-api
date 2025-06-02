@@ -35,7 +35,7 @@ const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
 const origins = process.env.CORS_ORIGINS; // Changed from CORS_ORIGINs
-const allowedOrigins = origins ? origins.split("," || " ") : [];
+const allowedOrigins = origins ? origins.split(",").map((origin) => origin.trim()) : [];
 
 // Add fallback origins for development
 const defaultOrigins = [
@@ -54,20 +54,40 @@ console.log(process.env.CORS_ORIGINS);
 console.log(process.env.origins);
 console.log(finalAllowedOrigins);
 
+const corsOriginChecker = function (origin, callback) {
+  // Allow requests with no origin (like mobile apps, curl requests)
+  if (!origin) return callback(null, true);
+
+  if (finalAllowedOrigins.indexOf(origin) !== -1) {
+    callback(null, true);
+  } else {
+    console.log("Blocked by CORS:", origin);
+    callback(new Error("Not allowed by CORS"));
+  }
+};
+
+// Configure CORS middleware first before any routes
+app.use(
+  cors({
+    origin: corsOriginChecker,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-access-token",
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+    ],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
 // socket io connection setups
 const io = new Server(httpServer, {
   cors: {
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl requests)
-      if (!origin) return callback(null, true);
-
-      if (finalAllowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: corsOriginChecker,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
     credentials: true,
@@ -77,30 +97,7 @@ const io = new Server(httpServer, {
 });
 
 intializeSocketIo(io);
-
 app.set("io", io);
-
-// Configure CORS middleware first before any routes
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl requests)
-      if (!origin) return callback(null, true);
-
-      if (finalAllowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-);
 
 // Log MongoDB connection status
 mongoose.connection.on("connected", () => {
@@ -167,22 +164,14 @@ app.get("/", (_, res) => {
 });
 
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${req.ip}`);
+  console.log(`${req.method} ${req.path} - ${req.ip} - Origin: ${req.headers.origin || "none"}`);
   next();
 });
 
 app.use((req, res, next) => {
-  const origin = req.headers.origin || "*";
-
-  if (!process.env.XORIG_RESTRICT || finalAllowedOrigins.indexOf(origin) > -1) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token"
-    );
-    res.header("Access-Control-Allow-Credentials", "true");
-  }
+  console.log("Request Origin:", req.headers.origin);
+  console.log("Allowed Origins:", finalAllowedOrigins);
+  console.log("Origin allowed:", finalAllowedOrigins.includes(req.headers.origin));
   next();
 });
 
