@@ -150,6 +150,13 @@ fs.readdirSync(partialsDir).forEach((file) => {
   hbs2?.handlebars?.registerPartial(partialName, partialContent);
 });
 
+app.use((req, res, next) => {
+  console.log("Request Origin:", req.headers.origin);
+  console.log("Allowed Origins:", finalAllowedOrigins);
+  console.log("Origin allowed:", finalAllowedOrigins.includes(req.headers.origin));
+  next();
+});
+
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
 app.use("/api/v1/banking/auth", authRoutes.default);
 app.use("/api/v1/banking/accounts", accountRoutes.default);
@@ -165,13 +172,6 @@ app.get("/", (_, res) => {
 
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - ${req.ip} - Origin: ${req.headers.origin || "none"}`);
-  next();
-});
-
-app.use((req, res, next) => {
-  console.log("Request Origin:", req.headers.origin);
-  console.log("Allowed Origins:", finalAllowedOrigins);
-  console.log("Origin allowed:", finalAllowedOrigins.includes(req.headers.origin));
   next();
 });
 
