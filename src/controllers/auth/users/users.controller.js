@@ -25,7 +25,7 @@ export const getUserById = apiResponseHandler(async (req, res) => {
   const userAggregate = await UserModel.aggregate([
     {
       $match: {
-        _id: mongoose.Types.ObjectId.createFromTime(userId),
+        _id: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -147,7 +147,7 @@ export const updateCurrentUserProfile = apiResponseHandler(async (req, res) => {
 export const adminDeleteUser = apiResponseHandler(async (req, res) => {
   const { userId } = req.body;
 
-  const user = await UserModel.findById(mongoose.Types.ObjectId(userId));
+  const user = await UserModel.findById(new mongoose.Types.ObjectId(userId));
 
   if (!user) {
     throw new CustomErrors("user notfound", StatusCodes.NOT_FOUND);
