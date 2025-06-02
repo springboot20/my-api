@@ -39,11 +39,9 @@ const allowedOrigins = origins ? origins.split(",").map((origin) => origin.trim(
 
 const finalAllowedOrigins = allowedOrigins;
 
-console.log(process.env.BASE_URL_DEV);
-console.log(process.env.BASE_URL_PROD);
-console.log(process.env.BASE_URL_PROD_ADMIN);
+console.log(process.env.BASE_URL_PROD, "Prod");
+console.log(process.env.BASE_URL_PROD_ADMIN, "Prod-admin");
 console.log(process.env.CORS_ORIGINS);
-console.log(process.env.origins);
 console.log(finalAllowedOrigins);
 
 const corsOriginChecker = function (origin, callback) {
