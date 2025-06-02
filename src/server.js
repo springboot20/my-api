@@ -69,6 +69,10 @@ const io = new Server(httpServer, {
       }
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   },
 });
 
