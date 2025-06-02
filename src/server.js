@@ -34,9 +34,15 @@ const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
-const allowedOrigins = process.env.CORS_ORIGINS?.split(",").map((origin) => origin.trim()) || [];
+// const allowedOrigins = process.env.CORS_ORIGINS?.split(",").map((origin) => origin.trim()) || [];
 
-const finalAllowedOrigins = allowedOrigins;
+const finalAllowedOrigins = [
+  "https://banking-app-admin.vercel.app",
+  "https://affiliate-dashboard-4sgw.vercel.app",
+  "http://localhost:5174",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
 console.log(process.env.BASE_URL_PROD, "Prod");
 console.log(process.env.BASE_URL_PROD_ADMIN, "Prod-admin");
