@@ -34,8 +34,7 @@ const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
-const origins = process.env.CORS_ORIGINS; // Changed from CORS_ORIGINs
-const allowedOrigins = origins ? origins.split(",").map((origin) => origin.trim()) : [];
+const allowedOrigins = process.env.CORS_ORIGINS?.split(",").map((origin) => origin.trim()) || [];
 
 const finalAllowedOrigins = allowedOrigins;
 
@@ -57,33 +56,29 @@ const corsOriginChecker = function (origin, callback) {
 };
 
 // Configure CORS middleware first before any routes
-app.use(
-  cors({
-    origin: corsOriginChecker,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-access-token",
-      "Origin",
-      "X-Requested-With",
-      "Accept",
-    ],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-);
+
+const corsOptions = {
+  origin: corsOriginChecker,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-access-token",
+    "Origin",
+    "X-Requested-With",
+    "Accept",
+  ],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Preflight handler
+
 // socket io connection setups
 const io = new Server(httpServer, {
-  cors: {
-    origin: corsOriginChecker,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  },
+  cors: corsOptions,
 });
 
 intializeSocketIo(io);
