@@ -79,7 +79,28 @@ app.use(
     ],
   })
 );
-app.options("*", cors()); // Preflight handler
+app.options(
+  "*",
+  cors({
+    origin: corsOriginChecker,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-access-token",
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers",
+      "Access-Control-Allow-Credentials",
+      "Access-Control-Allow-Private-Network",
+      "Access-Control-Allow-Expose-Headers",
+    ],
+  })
+); // Preflight handler
 
 // socket io connection setups
 const io = new Server(httpServer, {
