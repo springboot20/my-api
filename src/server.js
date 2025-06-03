@@ -53,13 +53,32 @@ export const corsOriginChecker = function (origin, callback) {
   if (finalAllowedOrigins.indexOf(origin) !== -1 || !origin) {
     callback(null, true);
   } else {
-    console.log("Blocked by CORS:", origin);
-    callback(new Error("Not allowed by CORS"));
+    callback(null, false);
   }
 };
 
 // Configure CORS middleware first before any routes
-app.use(cors());
+app.use(
+  cors({
+    origin: corsOriginChecker,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-access-token",
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers",
+      "Access-Control-Allow-Credentials",
+      "Access-Control-Allow-Private-Network",
+      "Access-Control-Allow-Expose-Headers",
+    ],
+  })
+);
 app.options("*", cors()); // Preflight handler
 
 // socket io connection setups
@@ -122,20 +141,6 @@ fs.readdirSync(partialsDir).forEach((file) => {
   const partialName = path.basename(file, path.extname(file));
   const partialContent = fs.readFileSync(filePath, "utf8");
   hbs2?.handlebars?.registerPartial(partialName, partialContent);
-});
-
-app.use((req, res, next) => {
-  console.log("Request Origin:", req.headers.origin);
-  console.log("Allowed Origins:", finalAllowedOrigins);
-  console.log("Origin allowed:", finalAllowedOrigins.includes(req.headers.origin));
-
-  res.header("Access-Control-Allow-Origin", "https://banking-app-admin.vercel.app");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Authorization,x-access-token,Origin,X-Requested-With,Accept"
-  );
-  next();
 });
 
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
