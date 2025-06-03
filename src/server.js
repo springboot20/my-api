@@ -53,6 +53,14 @@ console.log("Allowed CORS origins:", allowedOrigins);
 
 const corsOptions = {
   origin: (origin, callback) => {
+    console.log("cors origin: ", origin);
+    // If no origin is provided, allow the request (e.g., for curl requests)
+    // or if the origin is in the allowed list
+    // This is important for local development and testing
+    // If the origin is not provided, it will be undefined
+    // If the origin is not in the allowed list, it will be blocked
+    // If the origin is not provided, allow the request
+    // If the origin is in the allowed list, allow the request
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -88,7 +96,16 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 // socket io connection setups
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      console.log("socekt origin: ", origin);
+      // If no origin is provided, allow the request
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("Blocked CORS origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   },
