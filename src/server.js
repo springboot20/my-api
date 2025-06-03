@@ -81,7 +81,7 @@ app.options("*", cors()); // Preflight handler
 
 // socket io connection setups
 const io = new Server(httpServer, {
-  cors: corsOptions,
+  // cors: corsOptions,
 });
 
 intializeSocketIo(io);
