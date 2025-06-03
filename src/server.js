@@ -76,8 +76,8 @@ const corsOptions = {
   // optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Preflight handler
+app.use(cors());
+app.options("*", cors()); // Preflight handler
 
 // socket io connection setups
 const io = new Server(httpServer, {
@@ -142,6 +142,13 @@ app.use((req, res, next) => {
   console.log("Request Origin:", req.headers.origin);
   console.log("Allowed Origins:", finalAllowedOrigins);
   console.log("Origin allowed:", finalAllowedOrigins.includes(req.headers.origin));
+
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type,Authorization,x-access-token,Origin,X-Requested-With,Accept"
+  );
   next();
 });
 
