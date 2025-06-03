@@ -49,7 +49,7 @@ console.log(process.env.BASE_URL_PROD_ADMIN, "Prod-admin");
 console.log(process.env.CORS_ORIGINS);
 console.log(finalAllowedOrigins);
 
-const corsOriginChecker = function (origin, callback) {
+export const corsOriginChecker = function (origin, callback) {
   if (finalAllowedOrigins.indexOf(origin) !== -1 || !origin) {
     callback(null, true);
   } else {
@@ -60,28 +60,49 @@ const corsOriginChecker = function (origin, callback) {
 
 // Configure CORS middleware first before any routes
 
-const corsOptions = {
-  origin: corsOriginChecker,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "x-access-token",
-    "Origin",
-    "X-Requested-With",
-    "Accept",
-  ],
-  // credentials: true,
-  // preflightContinue: false,
-  // optionsSuccessStatus: 204,
-};
-
-app.use(cors());
-app.options("*", cors()); // Preflight handler
+app.use(
+  cors({
+    origin: finalAllowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-access-token",
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+    ],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    credentials: true,
+  })
+);
+app.options(
+  "*",
+  cors({
+    origin: finalAllowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-access-token",
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+    ],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+); // Preflight handler
 
 // socket io connection setups
 const io = new Server(httpServer, {
-  // cors: corsOptions,
+  cors: {
+    origin: finalAllowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  },
 });
 
 intializeSocketIo(io);
@@ -143,7 +164,7 @@ app.use((req, res, next) => {
   console.log("Allowed Origins:", finalAllowedOrigins);
   console.log("Origin allowed:", finalAllowedOrigins.includes(req.headers.origin));
 
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", "https://banking-app-admin.vercel.app");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   res.header(
     "Access-Control-Allow-Headers",
