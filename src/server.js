@@ -34,33 +34,24 @@ const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT ?? 8080;
 
-// const allowedOrigins = process.env.CORS_ORIGINS?.split(",").map((origin) => origin.trim()) || [];
-
-const finalAllowedOrigins = [
-  "https://banking-app-admin.vercel.app",
-  "https://affiliate-dashboard-4sgw.vercel.app",
-  "http://localhost:5174",
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+  : [
+      "https://banking-app-admin.vercel.app",
+      "https://affiliate-dashboard-4sgw.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+    ];
 
 console.log(process.env.BASE_URL_PROD, "Prod");
 console.log(process.env.BASE_URL_PROD_ADMIN, "Prod-admin");
 console.log(process.env.CORS_ORIGINS);
-console.log(finalAllowedOrigins);
-
-export const corsOriginChecker = function (origin, callback) {
-  if (finalAllowedOrigins.indexOf(origin) !== -1 || !origin) {
-    callback(null, true);
-  } else {
-    callback(null, false);
-  }
-};
 
 // Configure CORS middleware first before any routes
 app.use(
   cors({
-    origin: corsOriginChecker,
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: [
@@ -70,43 +61,18 @@ app.use(
       "Origin",
       "X-Requested-With",
       "Accept",
-      "Access-Control-Allow-Origin",
-      "Access-Control-Allow-Methods",
-      "Access-Control-Allow-Headers",
-      "Access-Control-Allow-Credentials",
-      "Access-Control-Allow-Private-Network",
-      "Access-Control-Allow-Expose-Headers",
     ],
   })
 );
-app.options(
-  "*",
-  cors({
-    origin: corsOriginChecker,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-access-token",
-      "Origin",
-      "X-Requested-With",
-      "Accept",
-      "Access-Control-Allow-Origin",
-      "Access-Control-Allow-Methods",
-      "Access-Control-Allow-Headers",
-      "Access-Control-Allow-Credentials",
-      "Access-Control-Allow-Private-Network",
-      "Access-Control-Allow-Expose-Headers",
-    ],
-  })
-); // Preflight handler
+app.use(express.json({ limit: "16kb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 
 // socket io connection setups
 const io = new Server(httpServer, {
   cors: {
-    origin: finalAllowedOrigins,
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
   },
 });
 
@@ -136,10 +102,6 @@ app.use(
     },
   })
 );
-
-app.use(express.json({ limit: "16kb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
-app.use(bodyParser.json());
 
 app.use("/public", express.static(__dirname + "/public"));
 
