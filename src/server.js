@@ -59,43 +59,8 @@ export const corsOriginChecker = function (origin, callback) {
 };
 
 // Configure CORS middleware first before any routes
-
-app.use(
-  cors({
-    origin: finalAllowedOrigins,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-access-token",
-      "Origin",
-      "X-Requested-With",
-      "Accept",
-    ],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    credentials: true,
-  })
-);
-app.options(
-  "*",
-  cors({
-    origin: finalAllowedOrigins,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-access-token",
-      "Origin",
-      "X-Requested-With",
-      "Accept",
-    ],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-); // Preflight handler
+app.use(cors());
+app.options("*", cors()); // Preflight handler
 
 // socket io connection setups
 const io = new Server(httpServer, {
