@@ -49,21 +49,33 @@ console.log(process.env.BASE_URL_PROD_ADMIN, "Prod-admin");
 console.log(process.env.CORS_ORIGINS);
 
 // Configure CORS middleware first before any routes
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-access-token",
-      "Origin",
-      "X-Requested-With",
-      "Accept",
-    ],
-  })
-);
+console.log("Allowed CORS origins:", allowedOrigins);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked CORS origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-access-token",
+    "Origin",
+    "X-Requested-With",
+    "Accept",
+  ],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 app.use(express.json({ limit: "16kb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 
