@@ -68,6 +68,7 @@ const corsOptions = {
     "x-access-token",
     "Origin",
     "X-Requested-With",
+    "withcredentials",
     "Accept",
   ],
   optionsSuccessStatus: 204,
