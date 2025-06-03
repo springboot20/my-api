@@ -48,12 +48,8 @@ console.log(process.env.BASE_URL_PROD, "Prod");
 console.log(process.env.BASE_URL_PROD_ADMIN, "Prod-admin");
 console.log(process.env.CORS_ORIGINS);
 
-// Configure CORS middleware first before any routes
-console.log("Allowed CORS origins:", allowedOrigins);
-
 const corsOptions = {
   origin: (origin, callback) => {
-    console.log("cors origin: ", origin);
     // If no origin is provided, allow the request (e.g., for curl requests)
     // or if the origin is in the allowed list
     // This is important for local development and testing
@@ -97,7 +93,6 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));
 const io = new Server(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      console.log("socekt origin: ", origin);
       // If no origin is provided, allow the request
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
