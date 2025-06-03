@@ -138,6 +138,11 @@ fs.readdirSync(partialsDir).forEach((file) => {
   hbs2?.handlebars?.registerPartial(partialName, partialContent);
 });
 
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${req.ip} - Origin: ${req.headers.origin || "none"}`);
+  next();
+});
+
 app.use("/api/v1/banking/healthcheck", healthcheck.default);
 app.use("/api/v1/banking/auth", authRoutes.default);
 app.use("/api/v1/banking/accounts", accountRoutes.default);
@@ -149,11 +154,6 @@ app.use("/api/v1/banking/messagings", messageRoutes.default);
 
 app.get("/", (_, res) => {
   res.redirect("api/v1/api-docs");
-});
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${req.ip} - Origin: ${req.headers.origin || "none"}`);
-  next();
 });
 
 httpServer.on("error", (error) => {
