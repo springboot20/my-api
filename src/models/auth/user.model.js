@@ -166,6 +166,10 @@ const userSchema = new Schema(
       enum: ["email_and_password", "google"],
       default: "email_and_password",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

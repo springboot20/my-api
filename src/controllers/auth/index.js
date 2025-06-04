@@ -14,6 +14,7 @@ import {
   getCurrentUser,
   getUserById,
   updateCurrentUserProfile,
+  adminDeleteUser,
 } from "./users/users.controller.js";
 import { createUserProfile, getUserProfile } from "./profile/profile.controller.js";
 
@@ -34,4 +35,5 @@ export {
   getUserById,
   updateCurrentUserProfile,
   registerAdminUser,
+  adminDeleteUser,
 };

@@ -11,7 +11,8 @@ import {
   getUsers,
   getCurrentUser,
   getUserById,
-  registerAdminUser
+  registerAdminUser,
+  adminDeleteUser,
 } from "../../controllers/auth/index.js";
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
@@ -372,6 +373,10 @@ router
     checkPermissions(RoleEnums.ADMIN, RoleEnums.MODERATOR, RoleEnums.USER),
     getUserById
   );
+
+router
+  .route("/users/:userId")
+  .delete(verifyJWT, checkPermissions(RoleEnums.ADMIN), adminDeleteUser);
 
 router.route("/users/current-user").get(verifyJWT, getCurrentUser);
 

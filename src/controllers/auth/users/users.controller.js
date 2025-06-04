@@ -3,11 +3,12 @@ import {
   ApiResponse,
   apiResponseHandler,
 } from "../../../middleware/api/api.response.middleware.js";
-import { TransactionModel, UserModel } from "../../../models/index.js";
+import { AccountModel, TransactionModel, UserModel, WalletModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { StatusCodes } from "http-status-codes";
 import { getMognogoosePagination } from "../../../utils/index.js";
 import mongoose from "mongoose";
+import { AvailableAccountStatus } from "../../../constants.js";
 
 export const getCurrentUser = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
@@ -145,21 +146,49 @@ export const updateCurrentUserProfile = apiResponseHandler(async (req, res) => {
 });
 
 export const adminDeleteUser = apiResponseHandler(async (req, res) => {
-  const { userId } = req.body;
+  const { userId } = req.params;
 
   const user = await UserModel.findById(new mongoose.Types.ObjectId(userId));
 
+  console.log(userId);
+
   if (!user) {
-    throw new CustomErrors("user notfound", StatusCodes.NOT_FOUND);
+    throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
   }
 
-  // await TransactionModel.up
-
-  return new ApiResponse(
-    StatusCodes.OK,
+  await UserModel.findByIdAndUpdate(
+    user?._id,
     {
-      user: updatedUser,
+      $set: {
+        isDeleted: true,
+      },
     },
-    "user updated successfully"
+    { new: true }
   );
+
+  if (WalletModel) {
+    await WalletModel.updateMany(
+      {
+        user: user._id,
+      },
+      {
+        isActive: false,
+      }
+    );
+  }
+
+  if (AccountModel) {
+    await AccountModel.updateMany(
+      {
+        user: user._id,
+      },
+      {
+        $set: {
+          status: AvailableAccountStatus.CLOSED,
+        },
+      }
+    );
+  }
+
+  return new ApiResponse(StatusCodes.OK, {}, "user deleted successfully");
 });
