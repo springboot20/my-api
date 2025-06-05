@@ -44,6 +44,50 @@ export const getUserRequestMessages = apiResponseHandler(async (req) => {
           }
         : {},
     },
+
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "userDetails",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$userDetails",
+        preserveNullAndEmptyArrays: true, // Keep messages without user details
+      },
+    },
+
+    {
+      $project: {
+        _id: 1,
+        userId: 1,
+        userEmail: 1,
+        username: 1,
+        action: 1,
+        message: 1,
+        status: 1,
+        reviewedBy: 1,
+        reviewedAt: 1,
+        adminNotes: 1,
+        priority: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        userDetails: {
+          _id: "$userDetails._id",
+          username: "$userDetails.username",
+          email: "$userDetails.email",
+          avatar: "$userDetails.avatar",
+        },
+      },
+    },
+
+    {
+      $sort: { createdAt: -1 }, // Sort by creation date, most recent first
+    },
   ]);
 
   const messages = await RequestMessageModel.aggregatePaginate(
