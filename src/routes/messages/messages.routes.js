@@ -27,7 +27,7 @@ router
   .route("/admin-requests-message/user-requests")
   .get(
     verifyJWT,
-    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    checkPermissions(RoleEnums.USER),
     messageRequestController.getUserRequestMessages
   );
 
