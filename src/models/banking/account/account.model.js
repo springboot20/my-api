@@ -1,18 +1,22 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 import {
   AvailableAccountEnums,
   AvailableAccountStatus,
   AvailableAccountStatusEnums,
   AvailableAccountTypes,
-} from '../../../constants.js';
-import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
+} from "../../../constants.js";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const AccountSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
+    },
+    wallet: {
+      type: Schema.Types.ObjectId,
+      ref: "Wallet",
     },
     account_number: {
       type: String,
@@ -31,7 +35,7 @@ const AccountSchema = new Schema(
     cards: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Card',
+        ref: "Card",
       },
     ],
     pin: {
@@ -46,4 +50,4 @@ const AccountSchema = new Schema(
 
 AccountSchema.plugin(mongooseAggregatePaginate);
 
-export const AccountModel = model('Account', AccountSchema);
+export const AccountModel = model("Account", AccountSchema);

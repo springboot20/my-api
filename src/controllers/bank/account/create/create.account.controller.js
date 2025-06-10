@@ -57,6 +57,9 @@ const createAccountWithWallet = async ({ userData, accountData, walletData }) =>
     },
   ]);
 
+  newAccount[0].wallet = wallet[0]?._id;
+  await new newAccount[0].save();
+
   if (!wallet?.[0]) {
     throw new CustomErrors(ERRORS.WALLET_CREATION, StatusCodes.INTERNAL_SERVER_ERROR);
   }

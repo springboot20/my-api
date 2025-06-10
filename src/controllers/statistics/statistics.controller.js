@@ -59,10 +59,10 @@ async function getUserStatistics(dateRange) {
         ],
 
         // Users by status
-        byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }, { $sort: { count: -1 } }],
+        byStatus: [{ $group: { _id: "$isDeleted", count: { $sum: 1 } } }, { $sort: { count: -1 } }],
 
         // Users by verification status
-        byVerification: [{ $group: { _id: "$isVerified", count: { $sum: 1 } } }],
+        byVerification: [{ $group: { _id: "$isEmailVerified", count: { $sum: 1 } } }],
 
         // User registration trend (daily)
         registrationTrend: [
@@ -77,17 +77,17 @@ async function getUserStatistics(dateRange) {
         ],
 
         // Top countries
-        topCountries: [
-          { $match: { "profile.country": { $exists: true } } },
-          { $group: { _id: "$profile.country", count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-          { $limit: 10 },
-        ],
+        // topCountries: [
+        //   { $match: { "profile.country": { $exists: true } } },
+        //   { $group: { _id: "$profile.country", count: { $sum: 1 } } },
+        //   { $sort: { count: -1 } },
+        //   { $limit: 10 },
+        // ],
       },
     },
   ];
 
-  const result = await User.aggregate(pipeline);
+  const result = await UserModel.aggregate(pipeline);
   const data = result[0];
 
   return {
@@ -97,7 +97,7 @@ async function getUserStatistics(dateRange) {
     verified: data.byVerification.find((item) => item._id === true)?.count || 0,
     unverified: data.byVerification.find((item) => item._id === false)?.count || 0,
     registrationTrend: data.registrationTrend,
-    topCountries: data.topCountries,
+    // topCountries: data.topCountries,
   };
 }
 
@@ -117,23 +117,63 @@ async function getAccountStatistics(dateRange) {
           { $count: "count" },
         ],
 
+        // JavaScript
+
         // Accounts by type
-        byType: [{ $group: { _id: "$accountType", count: { $sum: 1 } } }, { $sort: { count: -1 } }],
+        byType: [{ $group: { _id: "$type", count: { $sum: 1 } } }, { $sort: { count: -1 } }],
 
         // Accounts by status
         byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }, { $sort: { count: -1 } }],
 
         // Total balance across all accounts
-        totalBalance: [{ $group: { _id: null, total: { $sum: "$balance" } } }],
+        totalBalance: [
+          {
+            $lookup: {
+              from: "wallets",
+              foreignField: "_id",
+              localField: "wallet",
+              as: "wallet",
+            },
+          },
+          { $addFields: { wallet: { $first: "$wallet" } } },
+          { $group: { _id: null, total: { $sum: "$wallet.balance" } } },
+        ],
 
         // Average balance
-        avgBalance: [{ $group: { _id: null, avg: { $avg: "$balance" } } }],
+        avgBalance: [
+          {
+            $lookup: {
+              from: "wallets",
+              foreignField: "_id",
+              localField: "wallet",
+              as: "wallet",
+            },
+          },
+          { $addFields: { wallet: { $first: "$wallet" } } },
+          {
+            $group: {
+              _id: null,
+              avg: {
+                $avg: "$wallet.balance",
+              },
+            },
+          },
+        ],
 
         // Balance distribution
         balanceDistribution: [
           {
+            $lookup: {
+              from: "wallets",
+              foreignField: "_id",
+              localField: "wallet",
+              as: "wallet",
+            },
+          },
+          { $addFields: { wallet: { $first: "$wallet" } } },
+          {
             $bucket: {
-              groupBy: "$balance",
+              groupBy: "$wallet.balance",
               boundaries: [0, 100, 1000, 5000, 10000, 50000, Number.MAX_VALUE],
               default: "50000+",
               output: { count: { $sum: 1 } },
@@ -156,7 +196,7 @@ async function getAccountStatistics(dateRange) {
     },
   ];
 
-  const result = await Account.aggregate(pipeline);
+  const result = await AccountModel.aggregate(pipeline);
   const data = result[0];
 
   return {
@@ -248,8 +288,8 @@ async function getTransactionStatistics(dateRange) {
               type: 1,
               status: 1,
               createdAt: 1,
-              fromAccount: 1,
-              toAccount: 1,
+              // fromAccount: 1,
+              // toAccount: 1,
             },
           },
         ],
@@ -257,7 +297,7 @@ async function getTransactionStatistics(dateRange) {
     },
   ];
 
-  const result = await Transaction.aggregate(pipeline);
+  const result = await TransactionModel.aggregate(pipeline);
   const data = result[0];
 
   return {
@@ -312,7 +352,7 @@ async function getRevenueStatistics(dateRange) {
     },
   ];
 
-  const result = await Transaction.aggregate(pipeline);
+  const result = await TransactionModel.aggregate(pipeline);
   const data = result[0];
 
   return {
@@ -466,5 +506,3 @@ export const transactionsStatistics = apiResponseHandler(async (req, res) => {
     "stats generated successfully"
   );
 });
-
-module.exports = router;
