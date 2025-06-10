@@ -80,6 +80,8 @@ export const validateTransactionPin = apiResponseHandler(async (req) => {
 
   const matchPins = await bcrypt.compare(pin, account?.pin);
 
+  console.log(matchPins);
+
   return new ApiResponse(
     StatusCodes.OK,
     { isValid: matchPins },

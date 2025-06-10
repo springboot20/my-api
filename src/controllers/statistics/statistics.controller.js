@@ -107,6 +107,15 @@ async function getUserStatistics(dateRange) {
 async function getAccountStatistics(dateRange) {
   const pipeline = [
     {
+      $lookup: {
+        from: "wallets",
+        foreignField: "_id",
+        localField: "wallet",
+        as: "wallet",
+      },
+    },
+    { $addFields: { wallet: { $first: "$wallet" } } },
+    {
       $facet: {
         // Total accounts
         total: [{ $count: "count" }],
@@ -126,30 +135,10 @@ async function getAccountStatistics(dateRange) {
         byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }, { $sort: { count: -1 } }],
 
         // Total balance across all accounts
-        totalBalance: [
-          {
-            $lookup: {
-              from: "wallets",
-              foreignField: "_id",
-              localField: "wallet",
-              as: "wallet",
-            },
-          },
-          { $addFields: { wallet: { $first: "$wallet" } } },
-          { $group: { _id: null, total: { $sum: "$wallet.balance" } } },
-        ],
+        totalBalance: [{ $group: { _id: null, total: { $sum: "$wallet.balance" } } }],
 
         // Average balance
         avgBalance: [
-          {
-            $lookup: {
-              from: "wallets",
-              foreignField: "_id",
-              localField: "wallet",
-              as: "wallet",
-            },
-          },
-          { $addFields: { wallet: { $first: "$wallet" } } },
           {
             $group: {
               _id: null,
@@ -162,15 +151,6 @@ async function getAccountStatistics(dateRange) {
 
         // Balance distribution
         balanceDistribution: [
-          {
-            $lookup: {
-              from: "wallets",
-              foreignField: "_id",
-              localField: "wallet",
-              as: "wallet",
-            },
-          },
-          { $addFields: { wallet: { $first: "$wallet" } } },
           {
             $bucket: {
               groupBy: "$wallet.balance",
