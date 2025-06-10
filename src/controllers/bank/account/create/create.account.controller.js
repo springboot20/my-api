@@ -34,39 +34,35 @@ const createAccountWithWallet = async ({ userData, accountData, walletData }) =>
   const hashedPin = await bcrypt.hash(accountData.pin, await bcrypt.genSalt(SALT_ROUNDS));
 
   // Create account
-  const newAccount = await AccountModel.create([
-    {
-      user: userData.userId,
-      type: accountData.type,
-      account_number,
-      pin: hashedPin,
-    },
-  ]);
+  const newAccount = await AccountModel.create({
+    user: userData.userId,
+    type: accountData.type,
+    account_number,
+    pin: hashedPin,
+  });
 
-  if (!newAccount?.[0]) {
+  if (!newAccount) {
     throw new CustomErrors(ERRORS.ACCOUNT_CREATION, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 
   // Create wallet
-  const wallet = await WalletModel.create([
-    {
-      user: userData.userId,
-      account: newAccount[0]._id,
-      balance: walletData.initialBalance || 0,
-      currency: walletData.currency || "USD",
-    },
-  ]);
+  const wallet = await WalletModel.create({
+    user: userData.userId,
+    account: newAccount._id,
+    balance: walletData.initialBalance || 0,
+    currency: walletData.currency || "USD",
+  });
 
-  newAccount[0].wallet = wallet[0]?._id;
-  await new newAccount[0].save();
+  newAccount.wallet = wallet._id;
+  await newAccount.save();
 
-  if (!wallet?.[0]) {
+  if (!wallet) {
     throw new CustomErrors(ERRORS.WALLET_CREATION, StatusCodes.INTERNAL_SERVER_ERROR);
   }
 
   return {
-    account: newAccount[0],
-    wallet: wallet[0],
+    account: newAccount,
+    wallet: wallet,
   };
 };
 
