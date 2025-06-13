@@ -20,23 +20,21 @@ export const getAllStatistics = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
     StatusCodes.OK,
     {
-      data: {
-        overview: {
-          totalUsers: userStats.total,
-          totalAccounts: accountStats.total,
-          totalTransactions: transactionStats.total,
-          totalVolume: transactionStats.totalVolume,
-          totalRevenue: revenueStats.total,
-        },
-        users: userStats,
-        accounts: accountStats,
-        transactions: transactionStats,
-        revenue: revenueStats,
-        growth: growthStats,
-        generatedAt: new Date(),
-        timeframe: timeframe,
-        dateRange: dateRange,
+      overview: {
+        totalUsers: userStats.total,
+        totalAccounts: accountStats.total,
+        totalTransactions: transactionStats.total,
+        totalVolume: transactionStats.totalVolume,
+        totalRevenue: revenueStats.total,
       },
+      users: userStats,
+      accounts: accountStats,
+      transactions: transactionStats,
+      revenue: revenueStats,
+      growth: growthStats,
+      generatedAt: new Date(),
+      timeframe: timeframe,
+      dateRange: dateRange,
     },
     "stats generated successfully"
   );
