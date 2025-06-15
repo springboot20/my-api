@@ -3,7 +3,7 @@ import { AccountModel, TransactionModel, UserModel } from "../../models/index.js
 import { StatusCodes } from "http-status-codes";
 
 export const getAllStatistics = apiResponseHandler(async (req, res) => {
-  const { timeframe = "30d", startDate, endDate } = req.query;
+  const { timeframe = "7d", startDate, endDate } = req.query;
 
   // Calculate date range
   const dateRange = getDateRange(timeframe, startDate, endDate);
@@ -401,6 +401,8 @@ async function getGrowthStatistics(dateRange) {
  * Utility function to calculate date ranges
  */
 function getDateRange(timeframe, startDate, endDate) {
+  console.log({ timeframe, startDate, endDate });
+
   const now = new Date();
   let start,
     end = now;
@@ -435,7 +437,7 @@ function getDateRange(timeframe, startDate, endDate) {
  * Returns detailed user statistics only
  */
 export const usersStatistics = apiResponseHandler(async (req, res) => {
-  const { timeframe = "30d", startDate, endDate } = req.query;
+  const { timeframe = "7d", startDate, endDate } = req.query;
   const dateRange = getDateRange(timeframe, startDate, endDate);
   const userStats = await getUserStatistics(dateRange);
 
@@ -452,7 +454,7 @@ export const usersStatistics = apiResponseHandler(async (req, res) => {
 });
 
 export const accountsStatistics = apiResponseHandler(async (req) => {
-  const { timeframe = "30d", startDate, endDate } = req.query;
+  const { timeframe = "7d", startDate, endDate } = req.query;
   const dateRange = getDateRange(timeframe, startDate, endDate);
   const accountStats = await getAccountStatistics(dateRange);
 
@@ -469,7 +471,7 @@ export const accountsStatistics = apiResponseHandler(async (req) => {
 });
 
 export const transactionsStatistics = apiResponseHandler(async (req, res) => {
-  const { timeframe = "30d", startDate, endDate } = req.query;
+  const { timeframe = "7d", startDate, endDate } = req.query;
   const dateRange = getDateRange(timeframe, startDate, endDate);
   const transactionStats = await getTransactionStatistics(dateRange);
 
