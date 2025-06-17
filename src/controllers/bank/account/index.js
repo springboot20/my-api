@@ -1,9 +1,10 @@
 import { getUserAccounts, getUsersAccounts } from "./all-account/all.account.controller.js";
 import { createAccount, validateAccountNumber } from "./create/create.account.controller.js";
-import { adminDeleteUserAccount,closeAccount } from "./delete/delete.account.controller.js";
+import { adminDeleteUserAccount, closeAccount } from "./delete/delete.account.controller.js";
 import {
-  getAccountDetails,
+  getAccountDetailById,
   adminGetAccountDetails,
+  getAccountByNumber,
 } from "./get-account/user.account.controller.js";
 import {
   updateAccountStatus,
@@ -11,8 +12,9 @@ import {
 } from "./update/update-account.controller.js";
 
 const accountController = {
-  getAccountDetails,
+  getAccountDetailById,
   createAccount,
+  getAccountByNumber,
   adminDeleteUserAccount,
   getUserAccounts,
   updateAccountStatus,
@@ -20,7 +22,7 @@ const accountController = {
   adminUpdateAccountStatus,
   getUsersAccounts,
   adminGetAccountDetails,
-  closeAccount
+  closeAccount,
 };
 
 export default accountController;

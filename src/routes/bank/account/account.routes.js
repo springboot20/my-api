@@ -51,11 +51,15 @@ router
   );
 
 router
+  .route("/user-accounts/by-number")
+  .get(verifyJWT, checkPermissions(RoleEnums.USER), accountController.getAccountByNumber);
+
+router
   .route("/user-accounts/:accountId")
   .get(
     verifyJWT,
     checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
-    accountController.getAccountDetails
+    accountController.getAccountDetailById
   )
   .patch(
     verifyJWT,
