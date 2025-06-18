@@ -9,4 +9,5 @@ export default {
   UPDATE_REQUEST_STATUS: "update-request-status",
   REQUEST_STATUS_UPADATE: "request-status-update",
   REQUEST_UPADATED: "request-updated",
+  ADMIN_MESSAGE_BROADCAST: "admin-message-broadcast",
 };

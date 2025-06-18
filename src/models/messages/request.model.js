@@ -13,6 +13,9 @@ const RequestMessageSchema = new Schema(
     type: {
       type: String,
     },
+    adminMessageTitle: {
+      type: String,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",

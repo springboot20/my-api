@@ -321,7 +321,7 @@ export const markAsRead = apiResponseHandler(async (req, res) => {
 });
 
 export const adminSendRequest = apiResponseHandler(async (req, res) => {
-  const { recievers, message, type } = req.body;
+  const { recievers, message, type, adminMessageTitle } = req.body;
 
   const userId = req?.user?._id;
 
@@ -341,15 +341,48 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
 
   const messageMember = [...new Set([...recievers, userId])];
 
-  const newGroupChatMessage = await RequestMessageModel.create({
+  const newAdminMessage = await RequestMessageModel.create({
     user: req.user._id,
     receiver: messageMember,
     isRead: false,
     userEmail: user?.email,
     username: user?.username,
     message,
+    adminMessageTitle,
     type,
   });
+
+  const createdAdminMessage = await chatModel.aggregate([
+    {
+      $match: {
+        _id: newAdminMessage._id,
+      },
+    },
+  ]);
+
+  const adminMessagePayload = createdAdminMessage[0];
+
+  adminMessagePayload?.receivers?.forEach((receiver) => {
+    if (userId === receiver?._id.toString()) return;
+
+    emitSocketEventToUser(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `user-${receiver}`, {
+      data: adminMessagePayload,
+    });
+  });
+
+  adminMessagePayload?.receivers?.forEach((receiver) => {
+    if (userId !== receiver?._id.toString()) return;
+
+    emitSocketEventToAdmin(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `admin-room`, {
+      data: adminMessagePayload,
+    });
+  });
+
+  return new ApiResponse(
+    StatusCodes.CREATED,
+    adminMessagePayload,
+    "admin message broadcast sent successfully"
+  );
 });
 
 export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) => {
