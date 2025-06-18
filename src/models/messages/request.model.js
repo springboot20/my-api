@@ -10,10 +10,22 @@ import {
 
 const RequestMessageSchema = new Schema(
   {
+    type: {
+      type: String,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    receivers: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
+      default: [],
     },
     userEmail: {
       type: String,
@@ -54,6 +66,10 @@ const RequestMessageSchema = new Schema(
       type: String,
       enum: AvailableRequestPrioritiesEnums,
       default: AvailableRequestPriorities.MEDIUM,
+    },
+    isRead: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

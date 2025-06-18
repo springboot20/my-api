@@ -294,6 +294,64 @@ export const getUserPendingRequestMessages = apiResponseHandler(async (req) => {
   );
 });
 
+export const markAsRead = apiResponseHandler(async (req, res) => {
+  const { requestId } = req.params;
+  const { isRead } = req.body;
+
+  const requestObjectId = new mongoose.Types.ObjectId(requestId);
+
+  const requestMessage = await RequestMessageModel.findByIdAndUpdate(
+    requestObjectId,
+    {
+      $set: {
+        isRead,
+      },
+    },
+    { new: true }
+  );
+
+  if (!requestMessage) {
+    throw new CustomErrors(
+      "error while marking request message.",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+
+  return new ApiResponse(StatusCodes.OK, {}, "message marked as read successfully.");
+});
+
+export const adminSendRequest = apiResponseHandler(async (req, res) => {
+  const { recievers, message, type } = req.body;
+
+  const userId = req?.user?._id;
+
+  const user = await UserModel.findOne({
+    _id: userId,
+    $or: [{ role: "AMDIN" }, { role: "MODERATOR" }],
+  });
+
+  if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
+
+  if (recievers?.includes(userId)) {
+    throw new CustomErrors(
+      "Reciever payload should not contain the message sender",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const messageMember = [...new Set([...recievers, userId])];
+
+  const newGroupChatMessage = await RequestMessageModel.create({
+    user: req.user._id,
+    receiver: messageMember,
+    isRead: false,
+    userEmail: user?.email,
+    username: user?.username,
+    message,
+    type,
+  });
+});
+
 export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) => {
   const { status, adminNotes, requestId } = req.body;
 
