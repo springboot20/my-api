@@ -386,3 +386,18 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     "message status updated successfully"
   );
 });
+
+export const deleteRequestMessage = apiResponseHandler(async (req, res) => {
+  const { requestId } = req.params;
+
+  const requestObjectId = new mongoose.Types.ObjectId(requestId);
+  const deletedMessage = await RequestMessageModel.findOneAndDelete({ _id: requestObjectId });
+
+  if (!deletedMessage) {
+    throw new CustomErrors(
+      "error while deleteting request message",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+  return new ApiResponse(StatusCodes.OK, {}, "message deleted successfully");
+});

@@ -37,6 +37,11 @@ router
     verifyJWT,
     checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
     messageRequestController.getRequestMessageById
+  )
+  .delete(
+    verifyJWT,
+    checkPermissions(RoleEnums.USER, RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    messageRequestController.deleteRequestMessage
   );
 
 router
