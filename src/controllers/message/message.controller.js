@@ -329,7 +329,7 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
 
   const user = await UserModel.findOne({
     _id: userId,
-    $or: [{ role: "AMDIN" }, { role: "MODERATOR" }],
+    $or: [{ role: "ADMIN" }, { role: "MODERATOR" }],
   });
 
   if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
@@ -354,31 +354,40 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
     type,
   });
 
-  const createdAdminMessage = await RequestMessageModel.aggregate([
-    {
-      $match: {
-        _id: newAdminMessage._id,
-      },
-    },
-  ]);
+  const populatedMessage = await RequestMessageModel.findById(newAdminMessage._id)
+    .populate("user", "_id username email avatar")
+    .populate("receivers", "_id username email avatar");
 
-  const adminMessagePayload = createdAdminMessage[0];
-
-  console.log(adminMessagePayload)
-
-  adminMessagePayload?.receivers?.forEach((receiver) => {
+  populatedMessage?.receivers?.forEach((receiver) => {
     if (userId === receiver?.toString()) return;
 
     emitSocketEventToUser(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `user-${receiver}`, {
-      data: adminMessagePayload,
+      data: {
+        _id: populatedMessage._id,
+        type: populatedMessage.type,
+        message: populatedMessage.message,
+        adminMessageTitle: populatedMessage.adminMessageTitle,
+        user: populatedMessage.user,
+        isRead: false,
+        createdAt: populatedMessage.createdAt,
+        priority: populatedMessage.priority,
+      },
     });
   });
 
-  adminMessagePayload?.receivers?.forEach((receiver) => {
+  populatedMessage?.receivers?.forEach((receiver) => {
     if (userId !== receiver?.toString()) return;
 
     emitSocketEventToAdmin(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `admin-room`, {
-      data: adminMessagePayload,
+      data: {
+        _id: populatedMessage._id,
+        type: populatedMessage.type,
+        message: populatedMessage.message,
+        adminMessageTitle: populatedMessage.adminMessageTitle,
+        receivers: populatedMessage.receivers,
+        sentBy: populatedMessage.user,
+        createdAt: populatedMessage.createdAt,
+      },
     });
   });
 
