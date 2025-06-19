@@ -393,7 +393,7 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
 
   return new ApiResponse(
     StatusCodes.CREATED,
-    adminMessagePayload,
+    populatedMessage,
     "admin message broadcast sent successfully"
   );
 });
