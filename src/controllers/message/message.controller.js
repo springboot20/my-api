@@ -321,7 +321,9 @@ export const markAsRead = apiResponseHandler(async (req, res) => {
 });
 
 export const adminSendRequest = apiResponseHandler(async (req, res) => {
-  const { recievers, message, type, adminMessageTitle } = req.body;
+  const { receivers, message, type, adminMessageTitle } = req.body;
+
+  console.log(receivers);
 
   const userId = req?.user?._id;
 
@@ -332,18 +334,18 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
 
   if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
 
-  if (recievers?.includes(userId)) {
+  if (receivers?.includes(userId)) {
     throw new CustomErrors(
       "Reciever payload should not contain the message sender",
       StatusCodes.BAD_REQUEST
     );
   }
 
-  const messageMember = [...new Set([...recievers, userId])];
+  const messageMember = [...new Set([...receivers, userId])];
 
   const newAdminMessage = await RequestMessageModel.create({
     user: req.user._id,
-    receiver: messageMember,
+    receivers: messageMember,
     isRead: false,
     userEmail: user?.email,
     username: user?.username,
@@ -352,7 +354,7 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
     type,
   });
 
-  const createdAdminMessage = await chatModel.aggregate([
+  const createdAdminMessage = await RequestMessageModel.aggregate([
     {
       $match: {
         _id: newAdminMessage._id,
@@ -362,8 +364,10 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
 
   const adminMessagePayload = createdAdminMessage[0];
 
+  console.log(adminMessagePayload)
+
   adminMessagePayload?.receivers?.forEach((receiver) => {
-    if (userId === receiver?._id.toString()) return;
+    if (userId === receiver?.toString()) return;
 
     emitSocketEventToUser(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `user-${receiver}`, {
       data: adminMessagePayload,
@@ -371,7 +375,7 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
   });
 
   adminMessagePayload?.receivers?.forEach((receiver) => {
-    if (userId !== receiver?._id.toString()) return;
+    if (userId !== receiver?.toString()) return;
 
     emitSocketEventToAdmin(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `admin-room`, {
       data: adminMessagePayload,

@@ -16,6 +16,14 @@ router
   );
 
 router
+  .route("/send-message-broadcast")
+  .post(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    messageRequestController.adminSendRequest
+  );
+
+router
   .route("/admin-requests-message/all")
   .get(
     verifyJWT,
