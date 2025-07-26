@@ -6,29 +6,45 @@ import {
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { UserModel, ProfileModel } from "../../../models/index.js";
 import { sendMail } from "../../../service/email.service.js";
-import { RoleEnums } from "../../../constants.js";
+import * as bcrypt from "bcrypt";
 
-export const registerAdminUser = apiResponseHandler(async (req, res) => {
-  const { username, firstname, lastname, email, password, role } = req.body;
+/**
+ *
+ * @param {string} password
+ * @param {boolean} saltRound
+ * @returns {string}
+ */
+const hashPassword = (password, saltRound) => {
+  const salt = bcrypt.genSaltSync(saltRound); // 10 is a reasonable salt rounds value
+  return bcrypt.hashSync(password, salt);
+};
 
-  const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
+export const registerAdminUser = apiResponseHandler(async (req) => {
+  const { email, password, lastname, firstname, role, phone_number } = req.body;
+
+  const existingUser = await UserModel.findOne({ email });
 
   if (existingUser) throw new CustomErrors("user credentials exists", StatusCodes.CONFLICT);
 
-  const user = await UserModel.create({
-    username,
+  const user = new UserModel({
     email,
-    password,
+    lastname,
+    firstname,
     role,
+    phone_number,
   });
 
   if (!user) throw new CustomErrors("error while creating user", StatusCodes.INTERNAL_SERVER_ERROR);
 
-  const { unHashedToken, hashedToken, tokenExpiry } =
-    (await user.generateTemporaryTokens()) || (await existingUser.generateTemporaryTokens());
+  const profile = new ProfileModel({
+    userId: user?._id,
+  });
 
-  console.log({ unHashedToken, hashedToken, tokenExpiry });
+  await profile.save();
 
+  const { unHashedToken, hashedToken, tokenExpiry } = await existingUser.generateTemporaryTokens();
+
+  user.password = hashPassword(password, 20);
   user.emailVerificationToken = hashedToken;
   user.emailVerificationTokenExpiry = tokenExpiry;
 
@@ -58,14 +74,6 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
     "email"
   );
 
-  const profile = new ProfileModel({
-    firstname,
-    lastname,
-    user: existingUser?._id || user?._id,
-  });
-
-  await profile.save();
-
   return new ApiResponse(
     StatusCodes.CREATED,
     {
@@ -76,32 +84,36 @@ export const registerAdminUser = apiResponseHandler(async (req, res) => {
   );
 });
 
-export const register = apiResponseHandler(async (req, res) => {
-  const { email, password, username, role } = req.body;
+export const register = apiResponseHandler(async (req) => {
+  console.log(req.body);
+  const { email, password, lastname, firstname, role, phone_number } = req.body;
 
-  const existingUser = await UserModel.findOne({
-    $or: [{ email }, { username }],
-  });
+  const existingUser = await UserModel.findOne({ email });
 
-  if (existingUser)
+  if (existingUser) {
     throw new CustomErrors("user with username or email already exists", StatusCodes.CONFLICT);
+  }
 
   const user = await UserModel.create({
-    username,
     email,
+    lastname,
+    firstname,
     password,
-    role: role || RoleEnums.USER,
-    isEmailVerified: false,
+    role,
+    phone_number,
   });
 
   const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
 
-  console.log({ unHashedToken, hashedToken, tokenExpiry });
-
   user.emailVerificationToken = hashedToken;
   user.emailVerificationTokenExpiry = tokenExpiry;
+  await user.save();
 
-  await user.save({ validateBeforeSave: false });
+  if (!user) throw new CustomErrors("error while creating user", StatusCodes.INTERNAL_SERVER_ERROR);
+
+  await ProfileModel.create({
+    userId: user?._id,
+  });
 
   const link =
     process.env.NODE_ENV === "production" ? process.env.BASE_URL_PROD : process.env.BASE_URL_DEV;

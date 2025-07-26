@@ -1,59 +1,65 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
+import { AvailableRoles, RoleEnums } from "../../constants.js";
 
 const ProfileSchema = new Schema(
   {
-    firstname: {
+    username: {
       type: String,
-      default: 'John',
+      index: true,
       trim: true,
+      lowercase: true,
     },
-    lastname: {
-      type: String,
-      default: 'Doe',
-      trim: true,
-    },
-    phoneNumber: {
-      type: String,
-      default: '',
-    },
-    user: {
+    userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
     present_address: {
       type: String,
-      default: '',
+      default: "",
     },
     permanent_address: {
       type: String,
-      default: '',
+      default: "",
     },
     city: {
       type: String,
-      default: '',
+      default: "",
     },
     country: {
       type: String,
-      default: '',
+      default: "",
     },
     postal_code: {
       type: String,
-      default: '',
+      default: "",
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
+      type: String,
+      enum: AvailableRoles,
+      default: RoleEnums.USER,
     },
     // Add preferred view setting for app switching
     preferred_view: {
       type: String,
-      enum: ['app', 'dashboard'],
-      default: 'app', // Default to main banking app view
+      enum: ["app", "dashboard"],
+      default: "app", // Default to main banking app view
     },
     currency: {
       type: String,
-      enum: ['USD', 'NGN'],
-      default: 'NGN',
+      enum: ["USD", "NGN"],
+      default: "NGN",
     },
     timezone: {
       type: Date,
       default: Date.now(),
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -61,4 +67,4 @@ const ProfileSchema = new Schema(
   }
 );
 
-export const ProfileModel = model('Profile', ProfileSchema);
+export const ProfileModel = model("Profile", ProfileSchema);

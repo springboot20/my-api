@@ -42,6 +42,7 @@ const allowedOrigins = process.env.CORS_ORIGINS
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:3000",
+      "*",
     ];
 
 console.log(process.env.BASE_URL_PROD, "Prod");
@@ -157,6 +158,7 @@ fs.readdirSync(partialsDir).forEach((file) => {
 });
 
 app.use((req, res, next) => {
+  console.log(req.headers.origin);
   console.log(`${req.method} ${req.path} - ${req.ip} - Origin: ${req.headers.origin || "none"}`);
   next();
 });

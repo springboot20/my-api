@@ -2,8 +2,6 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { AvailableRoles, RoleEnums } from "../../constants.js";
-import { AccountModel } from "../banking/account/account.model.js";
-import { ProfileModel } from "./profile.model.js";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 /**
@@ -13,15 +11,20 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
  *     CreateUser:
  *       type: object
  *       required:
- *       - username
+ *       - firstname
+ *       - lastname
  *       - email
+ *       - password
  *       properties:
  *         _id:
  *           type: string
  *           description: Auto-generated MongoDB ID
- *         username:
+ *         firstname:
  *           type: string
- *           description: Unique username for the user
+ *           description: Unique firstname for the user
+ *         lastname:
+ *           type: string
+ *           description: Unique lastname for the user
  *         email:
  *           type: string
  *           format: email
@@ -45,18 +48,18 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
  *         isEmailVerified:
  *           type: boolean
  *           description: Indicates if the user's email is verified
- *       i  sAuthenticated:
+ *         isAuthenticated:
  *           type: boolean
  *           description: Indicates if the user is currently authenticated
  *       example:
- *         username: john_doe
+ *         firstname: john
+ *         lastname: doe
  *         email: john@example.com
  *         phone_number: "1234567890"
  *         role: USER
  *         avatar:
  *           url: https://res.cloudinary.com/example/image/upload/v1234567890/avatar.jpg
  *           public_id: ecommerce/users-image/avatar
- *         isEmailVerified: true
  *         isAuthenticated: true
 
  *     ApiResponse:
@@ -131,12 +134,19 @@ const userSchema = new Schema(
         url: `https://via.placeholder.com/200x200.png`,
       },
     },
-    username: {
+    firstname: {
       type: String,
-      index: true,
+      default: "John",
       trim: true,
-      required: true,
-      lowercase: true,
+    },
+    phone_number: {
+      type: String,
+      default: "",
+    },
+    lastname: {
+      type: String,
+      default: "Doe",
+      trim: true,
     },
     email: {
       type: String,
@@ -152,7 +162,7 @@ const userSchema = new Schema(
       enum: AvailableRoles,
       default: RoleEnums.USER,
     },
-    isEmailVerified: {
+    isAuthenticated: {
       type: Boolean,
       default: false,
     },
@@ -165,10 +175,6 @@ const userSchema = new Schema(
       type: String,
       enum: ["email_and_password", "google"],
       default: "email_and_password",
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
     },
   },
   { timestamps: true }
@@ -198,26 +204,6 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPasswords = async function (entered_password) {
   return await bcrypt.compare(entered_password, this.password);
 };
-
-userSchema.post("save", async function (user, next) {
-  try {
-    await ProfileModel.findOneAndUpdate(
-      {
-        user: user?._id,
-      },
-      {
-        $setOnInsert: {
-          user: user._id,
-        },
-      },
-      { upsert: true, new: true }
-    );
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
 
 userSchema.methods.generateTemporaryTokens = function () {
   const unHashedToken = crypto.randomBytes(20).toString("hex");

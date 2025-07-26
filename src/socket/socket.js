@@ -1,6 +1,4 @@
 import { UserModel, RequestMessageModel } from "../models/index.js";
-import { CustomErrors } from "../middleware/custom/custom.errors.js";
-import { StatusCodes } from "http-status-codes";
 import { validateToken } from "../utils/jwt.js";
 import SOCKET_EVENTS from "../enums/socket-events.js";
 
