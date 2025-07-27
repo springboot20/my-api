@@ -30,6 +30,16 @@ export const getUserById = apiResponseHandler(async (req, res) => {
       },
     },
     {
+      $project: {
+        password: 0,
+        refreshToken: 0,
+        emailVerificationToken: 0,
+        emailVerificationExpiry: 0,
+        forgotPasswordExpiry: 0,
+        forgotPasswordExpiryToken: 0,
+      },
+    },
+    {
       $lookup: {
         from: "profiles",
         foreignField: "user",
