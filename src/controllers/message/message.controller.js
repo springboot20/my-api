@@ -306,7 +306,7 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
     type,
   });
 
-  const populatedMessage = await RequestMessageModel.findById(newAdminMessage._id)
+  const populatedMessage = await RequestMessageModel.findById(newAdminMessage._id) 
     .populate("user", "_id username email avatar")
     .populate("receivers", "_id username email avatar");
 

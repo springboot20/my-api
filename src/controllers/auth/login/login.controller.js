@@ -3,7 +3,6 @@ import {
   ApiResponse,
 } from "../../../middleware/api/api.response.middleware.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
-import { mongooseTransactions } from "../../../middleware/mongoose/mongoose.transactions.js";
 import { UserModel } from "../../../models/index.js";
 import { generateAccessToken, generateRefreshToken } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
@@ -46,9 +45,11 @@ export const generateTokens = async (userId) => {
 };
 
 export const login = apiResponseHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { email, password } = req.body;
 
-  const user = await UserModel.findOne({ $or: [{ email }, { username }] });
+  console.log(req.body);
+
+  const user = await UserModel.findOne({ email });
 
   if (!user) throw new CustomErrors("user does not exists", StatusCodes.NOT_FOUND);
 

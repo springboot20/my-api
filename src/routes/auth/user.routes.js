@@ -106,8 +106,7 @@ const router = Router();
  *                          example: false
  */
 
-// router.route("/register").post(userRegisterValidation(), validate, register);
-router.route("/register").post(register);
+router.route("/register").post(userRegisterValidation(), validate, register);
 router.route("/register/admin").post(registerAdminUser);
 
 /**

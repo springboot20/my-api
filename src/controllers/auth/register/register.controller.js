@@ -6,18 +6,6 @@ import {
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { UserModel, ProfileModel } from "../../../models/index.js";
 import { sendMail } from "../../../service/email.service.js";
-import * as bcrypt from "bcrypt";
-
-/**
- *
- * @param {string} password
- * @param {boolean} saltRound
- * @returns {string}
- */
-const hashPassword = (password, saltRound) => {
-  const salt = bcrypt.genSaltSync(saltRound); // 10 is a reasonable salt rounds value
-  return bcrypt.hashSync(password, salt);
-};
 
 export const registerAdminUser = apiResponseHandler(async (req) => {
   const { email, password, lastname, firstname, role, phone_number } = req.body;
@@ -26,29 +14,30 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
 
   if (existingUser) throw new CustomErrors("user credentials exists", StatusCodes.CONFLICT);
 
-  const user = new UserModel({
+  const user = await UserModel.create({
     email,
     lastname,
     firstname,
     role,
     phone_number,
+    password,
   });
 
   if (!user) throw new CustomErrors("error while creating user", StatusCodes.INTERNAL_SERVER_ERROR);
 
-  const profile = new ProfileModel({
+  await ProfileModel.create({
     userId: user?._id,
   });
 
-  await profile.save();
+  const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
 
-  const { unHashedToken, hashedToken, tokenExpiry } = await existingUser.generateTemporaryTokens();
+  console.log("line 34: ", { unHashedToken, hashedToken, tokenExpiry });
 
-  user.password = hashPassword(password, 20);
   user.emailVerificationToken = hashedToken;
   user.emailVerificationTokenExpiry = tokenExpiry;
+  await user.save();
 
-  await user.save({ validateBeforeSave: false });
+  console.log("line 40: ", user.emailVerificationToken, user.emailVerificationTokenExpiry);
 
   const link =
     process.env.NODE_ENV === "production"
@@ -61,6 +50,8 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
 
   console.log("verification link", verificationLink);
   console.log("link", process.env.BASE_URL_PROD_ADMIN);
+
+  const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
 
   await sendMail(
     user.email || existingUser?.email,
@@ -77,7 +68,7 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
   return new ApiResponse(
     StatusCodes.CREATED,
     {
-      user,
+      user: createdUser,
       url: verificationLink,
     },
     "admin created successfully"
