@@ -32,8 +32,7 @@ export const getAccountByNumber = apiResponseHandler(async (req, res) => {
           {
             $project: {
               _id: 1,
-              firstname: 1,
-              lastname: 1,
+              username: 1,
             },
           },
         ],
@@ -54,7 +53,8 @@ export const getAccountByNumber = apiResponseHandler(async (req, res) => {
           {
             $project: {
               _id: 1,
-              username: 1,
+              firstname: 1,
+              lastname: 1,
               avatar: 1,
               email: 1,
             },
@@ -126,8 +126,7 @@ export const getAccountDetailById = apiResponseHandler(async (req, res) => {
           {
             $project: {
               _id: 1,
-              firstname: 1,
-              lastname: 1,
+              username: 1,
             },
           },
         ],
@@ -149,7 +148,8 @@ export const getAccountDetailById = apiResponseHandler(async (req, res) => {
           {
             $project: {
               _id: 1,
-              username: 1,
+              firstname: 1,
+              lastname: 1,
               avatar: 1,
               email: 1,
             },
@@ -250,7 +250,8 @@ export const adminGetAccountDetails = apiResponseHandler(async (req, res) => {
           {
             $project: {
               _id: 1,
-              username: 1,
+              firstname: 1,
+              lastname: 1,
               avatar: 1,
               email: 1,
             },

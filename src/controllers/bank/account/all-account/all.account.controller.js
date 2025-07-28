@@ -20,7 +20,8 @@ const accountPipeline = () => {
           {
             $project: {
               _id: 1,
-              username: 1,
+              firstname: 1,
+              lastname: 1,
               avatar: 1,
               email: 1,
             },
@@ -65,6 +66,30 @@ export const getUserAccounts = apiResponseHandler(
         {
           $match: {
             user: userId,
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  firstname: 1,
+                  lastname: 1,
+                  avatar: 1,
+                  email: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            user: { $first: "$user" },
           },
         },
         {
@@ -141,11 +166,36 @@ export const getUsersAccounts = apiResponseHandler(
           $match: search
             ? {
                 $or: [
-                  { "user.username": { $regex: search, $options: "i" } },
+                  { "user.firsname": { $regex: search, $options: "i" } },
+                  { "user.lastname": { $regex: search, $options: "i" } },
                   { "user.email": { $regex: search, $options: "i" } },
                 ],
               }
             : {},
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  firstname: 1,
+                  lastname: 1,
+                  avatar: 1,
+                  email: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            user: { $first: "$user" },
+          },
         },
         {
           $lookup: {

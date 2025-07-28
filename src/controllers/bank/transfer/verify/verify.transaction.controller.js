@@ -51,7 +51,58 @@ export const verifyPaystackWebhook = apiResponseHandler(
 
     transaction.transactionStatus = transactionStatus;
 
-    await transaction.save({ session });
+    await transaction.save({});
+
+    return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
+  }
+);
+
+export const verifyPaystackDepositTransaction = apiResponseHandler(
+  /**
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async (req, res) => {
+    const { reference } = req.query;
+    const transaction = await TransactionModel.findOne({ reference });
+
+    if (!transaction) {
+      throw new CustomErrors("no transaction found", StatusCodes.NOT_FOUND);
+    }
+
+    if (transaction.status === PaymentStatuses.COMPLETED) {
+      return new ApiResponse(StatusCodes.OK, { transaction }, "transaction already verified");
+    }
+
+    const transactionReference = transaction.reference;
+
+    let response = await PaymentService.verifyHelper(transactionReference);
+
+    if (!response) {
+      return null;
+    }
+
+    const transactionStatus = response?.data?.status;
+    const paymentConfirmed = transactionStatus === paystackStatus.success;
+
+    if (paymentConfirmed) {
+      transaction.status = PaymentStatuses.COMPLETED;
+
+      const account = await AccountModel.findOne({ user: transaction?.user });
+
+      if (account) {
+        account.balance += transaction.amount;
+        account.status = AvailableAccountStatus.ACTIVE;
+        await account.save({});
+      }
+    } else {
+      transaction.status = PaymentStatuses.FAILED;
+    }
+
+    transaction.transactionStatus = transactionStatus;
+
+    await transaction.save({});
 
     return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
   }

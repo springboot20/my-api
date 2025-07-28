@@ -6,9 +6,9 @@ import {
   AvailableTransactionTypesEnum,
   PaymentMethods,
   AvailablePaymentStatusEnums,
-  AvailablePaymentMethods
+  AvailablePaymentMethods,
 } from "../../../constants.js";
-import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const TransactionSchema = new Schema(
   {
@@ -54,6 +54,9 @@ const TransactionSchema = new Schema(
         recieverAccountNumber: {
           type: String,
         },
+        senderAccountNumber: {
+          type: String,
+        },
       },
     },
     status: {
@@ -61,10 +64,10 @@ const TransactionSchema = new Schema(
       enum: AvailablePaymentStatusEnums,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-TransactionSchema.plugin(mongooseAggregatePaginate)
+TransactionSchema.plugin(mongooseAggregatePaginate);
 
 const TransactionModel = model("transaction", TransactionSchema);
 

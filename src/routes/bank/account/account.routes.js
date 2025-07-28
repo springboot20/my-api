@@ -22,7 +22,7 @@ router
   .route("/")
   .get(
     verifyJWT,
-    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.USER, RoleEnums.ADMIN),
     accountController.getUsersAccounts
   );
 

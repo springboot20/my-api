@@ -17,7 +17,7 @@ import {
   PaymentStatuses,
 } from "../../../../constants.js";
 import bcrypt from "bcrypt";
-import { createHmac, timingSafeEqual } from "crypto";
+import mongoose from "mongoose";
 
 export const initiatePaystackDepositTransaction = apiResponseHandler(
   /**
@@ -38,6 +38,8 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
       channel,
       currency,
     });
+
+    console.log(depositInfo);
 
     let transaction = undefined;
 
@@ -67,10 +69,6 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
   }
 );
 
-const existingAccount = async (account, account_number) => {
-  return await AccountModel.findOne({ $or: [{ _id: account }, { account_number }] });
-};
-
 export const validateTransactionPin = apiResponseHandler(async (req) => {
   const { pin, accountId } = req.body;
   const account = await AccountModel.findOne({ _id: accountId });
@@ -90,47 +88,90 @@ export const validateTransactionPin = apiResponseHandler(async (req) => {
   );
 });
 
+const getAccountDetails = async (accountId) => {
+  const objectId = new mongoose.Types.ObjectId(accountId);
+  return AccountModel.findById(objectId);
+};
+
 export const sendTransaction = apiResponseHandler(async (req, res) => {
-  const { amount, description, from_account, to_account } = req.body;
+  const {
+    amount,
+    from_account,
+    to_account,
+    description,
+    currency = "NGN",
+    channel = "card",
+  } = req.body;
 
-  const fromAccountExists = await existingAccount(from_account, undefined);
-  const toAccountExists = await existingAccount(undefined, to_account);
+  console.log(req.body);
 
-  if (!fromAccountExists) {
-    throw new CustomErrors("from account doesn't exists", StatusCodes.NOT_FOUND);
+  if (!amount || !from_account || !to_account) {
+    throw new CustomErrors("Missing transaction details", StatusCodes.BAD_REQUEST);
   }
 
-  if (!toAccountExists) {
-    throw new CustomErrors("to account doesn't exists", StatusCodes.NOT_FOUND);
+  const [fromAccount, toAccount] = await Promise.all([
+    getAccountDetails(from_account),
+    getAccountDetails(to_account),
+  ]);
+
+  if (!fromAccount || !toAccount) {
+    throw new CustomErrors("One or both accounts not found", StatusCodes.NOT_FOUND);
   }
 
-  if (fromAccountExists?._id === toAccountExists?._id) {
-    throw new CustomErrors("cannot send to the same account", StatusCodes.BAD_REQUEST);
+  const [fromWallet, toWallet] = await Promise.all([
+    WalletModel.findOne({ account: fromAccount._id }),
+    WalletModel.findOne({ account: toAccount._id }),
+  ]);
+
+  if (!fromWallet || !toWallet) {
+    throw new CustomErrors("Wallet(s) not found", StatusCodes.NOT_FOUND);
   }
 
-  const fromWallet = await WalletModel.findOne({ account: fromAccountExists?._id });
-  const toWallet = await WalletModel.findOne({ account: toAccountExists?._id });
-
-  if (fromWallet.balance >= 100) {
-    throw new CustomErrors("insufficient account balance", StatusCodes.BAD_REQUEST);
+  if (fromWallet.balance < parseFloat(amount)) {
+    throw new CustomErrors("Insufficient account balance", StatusCodes.BAD_REQUEST);
   }
 
-  toWallet.balance = parseInt(toWallet.balance) + parseInt(amount);
-  await toWallet.save();
+  // Update balances
+  fromWallet.balance -= parseFloat(amount);
+  toWallet.balance += parseFloat(amount);
 
-  let transaction = await TransactionModel.create({
-    // reference: depositInfo.data.reference,
-    user: req.user?._id,
+  await fromWallet.save({});
+  await toWallet.save({});
+
+  const user = await UserModel.findById(req.user._id);
+  if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
+
+  // Initialize Paystack
+  const depositInfo = await PaymentService.initializePaystackPayment({
+    email: user.email,
+    amount,
+    channel,
+    currency,
+  });
+
+  const transaction = await TransactionModel.create({
+    reference: depositInfo.data.reference,
+    user: req.user._id,
     amount,
     description,
-    // currency,
-    type: AvailableTransactionTypes.DEPOSIT,
+    currency,
+    type: AvailableTransactionTypes.TRANSFER,
     detail: {
       gateway: PaymentMethods.PAYSTACK,
-      recieverAccountNumber: toAccountExists?.account_number,
+      senderAccountNumber: fromAccount.account_number,
+      receiverAccountNumber: toAccount.account_number,
     },
     status: PaymentStatuses.IN_PROGRESS,
   });
 
-  return new ApiResponse(StatusCodes.OK, transaction, "transaction successfull");
+  console.log(depositInfo);
+
+  return new ApiResponse(
+    StatusCodes.CREATED,
+    {
+      transaction,
+      authorizationUrl: depositInfo.data.authorization_url,
+    },
+    "Redirect user to complete payment"
+  );
 });
