@@ -100,19 +100,16 @@ export const getAccountByNumber = apiResponseHandler(async (req, res) => {
 });
 
 export const getAccountDetailById = apiResponseHandler(async (req, res) => {
-  const userId = req.user?._id;
   const { accountId } = req.params;
 
   console.log({ accountId });
 
   // Convert string ID to ObjectId if needed
   const objectId = new mongoose.Types.ObjectId(accountId);
-  const userObjectId = new mongoose.Types.ObjectId(userId);
 
   const accountDetails = await AccountModel.aggregate([
     {
       $match: {
-        user: userObjectId,
         _id: objectId,
       },
     },
@@ -172,7 +169,7 @@ export const getAccountDetailById = apiResponseHandler(async (req, res) => {
           {
             $match: {
               $expr: {
-                $and: [{ $eq: ["$account", "$$accountId"] }, { $eq: ["$user", userId] }],
+                $and: [{ $eq: ["$account", "$$accountId"], $eq: ["$user", "$user"] }],
               },
             },
           },
