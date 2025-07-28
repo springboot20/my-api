@@ -118,25 +118,28 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     throw new CustomErrors("One or both accounts not found", StatusCodes.NOT_FOUND);
   }
 
+  console.log("line 121:  ", fromAccount.wallet, toAccount.wallet);
+
   const [fromWallet, toWallet] = await Promise.all([
-    WalletModel.findOne({ account: fromAccount._id }),
-    WalletModel.findOne({ account: toAccount._id }),
+    WalletModel.findById(new mongoose.Types.ObjectId(fromAccount.wallet)),
+    WalletModel.findById(new mongoose.Types.ObjectId(toAccount.wallet)),
   ]);
 
-  if (!fromWallet || !toWallet) {
-    throw new CustomErrors("Wallet(s) not found", StatusCodes.NOT_FOUND);
-  }
+  console.log("line 122:  ", fromWallet, toWallet);
+  console.log(await WalletModel.findById(new mongoose.Types.ObjectId(toAccount.wallet)));
 
   if (fromWallet.balance < parseFloat(amount)) {
     throw new CustomErrors("Insufficient account balance", StatusCodes.BAD_REQUEST);
   }
 
   // Update balances
-  fromWallet.balance -= parseFloat(amount);
-  toWallet.balance += parseFloat(amount);
+  await WalletModel.findByIdAndUpdate(fromWallet._id, {
+    $inc: { balance: -parseFloat(amount) },
+  });
 
-  await fromWallet.save({});
-  await toWallet.save({});
+  await WalletModel.findByIdAndUpdate(toWallet._id, {
+    $inc: { balance: parseFloat(amount) },
+  });
 
   const user = await UserModel.findById(req.user._id);
   if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
