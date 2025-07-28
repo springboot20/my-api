@@ -11,6 +11,7 @@ import * as path from "path";
 import { create } from "express-handlebars";
 import * as url from "url";
 import fs from "fs";
+import * as yaml from "yaml";
 
 import {
   healthcheck,
@@ -24,7 +25,6 @@ import {
 } from "./routes/index.routes.js";
 import { notFoundError, handleError } from "./middleware/error/error.middleware.js";
 import mongoDbConnection from "./connection/mongodb.connection.js";
-import { specs } from "./documentation/swagger.js";
 import { intializeSocketIo } from "./socket/socket.js";
 
 const __filename = url.fileURLToPath(import.meta.url);
@@ -40,6 +40,7 @@ const allowedOrigins = process.env.CORS_ORIGINS
       "https://banking-app-admin.vercel.app",
       "https://affiliate-dashboard-4sgw.vercel.app",
       "http://localhost:5173",
+      "http://localhost:5010",
       "http://localhost:5174",
       "http://localhost:3000",
       "*",
@@ -122,12 +123,17 @@ process.on("SIGINT", () => {
   });
 });
 
+const file = fs.readFileSync(path.resolve(__dirname, "./swagger.yaml"), "utf8");
+const specs = yaml.parse(file);
+
 // Serve Swagger UI
 app.use(
   "/api/v1/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(specs, {
     explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "E-commerce API Documentation",
     swaggerOptions: {
       docExpansion: "none", // keep all the sections collapsed by default
     },

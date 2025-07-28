@@ -1,0 +1,151 @@
+openapi: 3.1.0
+info:
+  title: "Banking Rest Api Docs"
+  version: 1.0.0
+  description: "E-commerce API documentation with authentication, user management, and other features"
+  contact:
+    name: "CodeSuite"
+    url: "https://github.com/springboot20"
+    email: "opeyemiakanbi328@gmail.com"
+  license:
+    name: "MIT"
+    url: "https://spdx.org/licenses/MIT.html"
+
+servers:
+- url: "http://localhost:5010/api/v1/banking"
+  description: "Development server"
+- url: "https://banking-api-kyiv.onrender.com/api/v1/banking"
+  description: "Production server"
+
+tags:
+- name: "Authentication"
+  description: "Authentication and authorization endpoints"
+- name: "Users"
+  description: "User management endpoints"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: "access_token"
+      description: "JWT token for authentication"
+      components:
+
+
+  schemas:
+    CreateUser:
+      type: object
+      required:
+      - firstname
+      - lastname
+      - email
+      - password
+      properties:
+        _id:
+          type: string
+          description: Auto-generated MongoDB ID
+        firstname:
+          type: string
+          description: Unique firstname for the user
+        lastname:
+          type: string
+          description: Unique lastname for the user
+        email:
+          type: string
+          format: email
+          description: User's email address
+        phone_number:
+          type: string
+          description: User's phone number
+        role:
+          type: string
+          enum: [ USER, ADMIN ]
+          description: User role for authorization
+        avatar:
+          type: object
+          properties:
+            url:
+              type: string
+              description: URL of the user's avatar image
+            public_id:
+              type: string
+              description: Public ID for the avatar in Cloudinary
+        isEmailVerified:
+          type: boolean
+          description: Indicates if the user's email is verified
+        isAuthenticated:
+          type: boolean
+          description: Indicates if the user is currently authenticated
+      example:
+        firstname: john
+        lastname: doe
+        email: john@example.com
+        phone_number: "1234567890"
+        role: USER
+        avatar:
+          url: https://res.cloudinary.com/example/image/upload/v1234567890/avatar.jpg
+          public_id: ecommerce/users-image/avatar
+        isAuthenticated: true
+
+    ApiResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: HTTP status code
+        message:
+          type: string
+          description: Response message
+        data:
+          type: object
+          description: Response data
+
+    LoginResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            tokens:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                refresh_token:
+                  type: string
+
+    VerificationResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            isEmailVerified:
+              type: boolean
+
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
