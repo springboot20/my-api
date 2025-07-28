@@ -14,10 +14,12 @@ export const resetPassword = apiResponseHandler(async (req, res) => {
   const { resetToken } = req.params;
   const { password } = req.body;
 
-  if (!resetToken) throw new CustomErrors("Reset password token is missing", StatusCodes.NOT_FOUND);
+  console.log(resetToken, password);
+
+  if (!resetToken)
+    throw new CustomErrors("Reset password token is missing", StatusCodes.BAD_REQUEST);
 
   const user = await UserModel.findOne({
-    _id: req.user.id,
     forgotPasswordTokenExpiry: { $gte: Date.now() },
   });
 
@@ -25,8 +27,9 @@ export const resetPassword = apiResponseHandler(async (req, res) => {
 
   const validToken = await bcrypt.compare(resetToken, user.forgotPasswordToken);
 
-  if (!validToken)
+  if (!validToken) {
     throw new CustomErrors("Invalid reset password token provided", StatusCodes.UNAUTHORIZED);
+  }
 
   user.forgotPasswordToken = undefined;
   user.forgotPasswordTokenExpiry = undefined;
@@ -41,12 +44,13 @@ export const changeCurrentPassword = apiResponseHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
   const user = await UserModel.findById(req.user?._id);
+  if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
-  if (!(await user.matchPasswords(oldPassword)))
-    throw new CustomErrors("Invalid old password entered", StatusCodes.BAD_REQUEST);
+  const isMatch = await user.matchPasswords(oldPassword);
+  if (!isMatch) throw new CustomErrors("Invalid old password entered", StatusCodes.BAD_REQUEST);
 
   user.password = newPassword;
-  user.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
 
   return new ApiResponse(StatusCodes.OK, {}, "Password changed successfully");
 });
@@ -87,33 +91,30 @@ export const forgotPassword = apiResponseHandler(
 );
 
 export const refreshToken = apiResponseHandler(async (req, res) => {
-  const {
-    body: { inComingRefreshToken },
-  } = req;
+  const { inComingRefreshToken } = req.body;
 
   const decodedRefreshToken = validateToken(inComingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-  let user = await UserModel.findByIdAndUpdate(decodedRefreshToken?._id);
+  const user = await UserModel.findById(decodedRefreshToken?._id);
 
-  if (!user) {
-    throw new CustomErrors("Invalid Token", StatusCodes.UNAUTHORIZED);
+  if (!user || inComingRefreshToken !== user.refreshToken) {
+    throw new CustomErrors("Token has expired or is invalid", StatusCodes.UNAUTHORIZED);
   }
 
-  if (inComingRefreshToken !== user?.refreshToken) {
-    throw new CustomErrors("Token has expired or has already been used", StatusCodes.UNAUTHORIZED);
-  }
+  const { accessToken, refreshToken: newRefreshToken } = await generateTokens(user._id);
 
-  const { accessToken, refreshToken } = await generateTokens(user?._id);
-
-  user.refreshToken = refreshToken;
-  await user.save({});
+  user.refreshToken = newRefreshToken;
+  await user.save();
 
   return new ApiResponse(
     StatusCodes.OK,
     {
-      tokens: { accessToken, refreshToken },
+      tokens: {
+        accessToken,
+        refreshToken: newRefreshToken,
+      },
     },
-    "access token refreshed successfully"
+    "Access token refreshed successfully"
   );
 });
 

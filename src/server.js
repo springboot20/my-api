@@ -175,7 +175,7 @@ app.use("/api/v1/banking/accounts", accountRoutes.default);
 app.use("/api/v1/banking/card", cardRoutes.default);
 app.use("/api/v1/banking/transactions", transactionRoutes.default);
 app.use("/api/v1/banking/statistics", statisticRoutes.default);
-app.use("/api/v1/banking/profile", profileRoutes.default);
+app.use("/api/v1/banking/profiles", profileRoutes.default);
 app.use("/api/v1/banking/messagings", messageRoutes.default);
 
 app.get("/", (_, res) => {

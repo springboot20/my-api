@@ -1,27 +1,27 @@
 openapi: 3.1.0
 info:
-  title: "Banking Rest Api Docs"
+  title: Banking Rest Api Docs
   version: 1.0.0
-  description: "E-commerce API documentation with authentication, user management, and other features"
+  description: E-commerce API documentation with authentication, user management, and other features
   contact:
-    name: "CodeSuite"
-    url: "https://github.com/springboot20"
-    email: "opeyemiakanbi328@gmail.com"
+    name: CodeSuite
+    url: https://github.com/springboot20
+    email: opeyemiakanbi328@gmail.com
   license:
-    name: "MIT"
-    url: "https://spdx.org/licenses/MIT.html"
+    name: MIT
+    url: https://spdx.org/licenses/MIT.html
 
 servers:
-- url: "http://localhost:5010/api/v1/banking"
-  description: "Development server"
-- url: "https://banking-api-kyiv.onrender.com/api/v1/banking"
-  description: "Production server"
+- url: http://localhost:5010/api/v1/banking
+  description: Development server
+- url: https://banking-api-kyiv.onrender.com/api/v1/banking
+  description: Production server
 
 tags:
-- name: "Authentication"
-  description: "Authentication and authorization endpoints"
-- name: "Users"
-  description: "User management endpoints"
+- name: 🔐 Authentication
+  description: Authentication and authorization endpoints
+- name: Users
+  description: User management endpoints
 
 components:
   securitySchemes:
@@ -32,8 +32,8 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: "access_token"
-      description: "JWT token for authentication"
+      name: access_token
+      description: JWT token for authentication
       components:
 
 
@@ -64,7 +64,7 @@ components:
           description: User's phone number
         role:
           type: string
-          enum: [ USER, ADMIN ]
+          enum: [ USER, ADMIN, MODERATOR ]
           description: User role for authorization
         avatar:
           type: object
@@ -75,9 +75,6 @@ components:
             public_id:
               type: string
               description: Public ID for the avatar in Cloudinary
-        isEmailVerified:
-          type: boolean
-          description: Indicates if the user's email is verified
         isAuthenticated:
           type: boolean
           description: Indicates if the user is currently authenticated
@@ -85,7 +82,7 @@ components:
         firstname: john
         lastname: doe
         email: john@example.com
-        phone_number: "1234567890"
+        phone_number: 1234567890
         role: USER
         avatar:
           url: https://res.cloudinary.com/example/image/upload/v1234567890/avatar.jpg
@@ -149,3 +146,718 @@ components:
           type: array
           items:
             type: string
+
+paths:
+  /auth/register:
+    post:
+      tags:
+      - 🔐 Authentication
+      summary: Register a new user
+      description: Endpoint for user registration.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - username
+              - email
+              - password
+              - role
+              properties:
+                username:
+                  type: string
+                  example: '@codesuite2004'
+                email:
+                  type: string
+                  format: email
+                  example: codesuite2004@gmail.com
+                password:
+                  type: string
+                  example: '@codesuite2004'
+                role:
+                  type: string
+                  example: ADMIN
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: user successfully created
+                      statusCode:
+                        type: integer
+                        example: 201
+                      success:
+                        type: boolean
+                        example: true
+        409:
+          description: User with email or username already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: user with username or email already exists
+                      statusCode:
+                        type: integer
+                        example: 409
+                      success:
+                        type: boolean
+                        example: false
+
+  /auth/register-admin:
+    post:
+      summary: Register a new admin user
+      description: Creates a new admin user, initializes their profile, generates a temporary verification token, and sends an email verification link.
+      tags:
+      - 🔐 Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - password
+              - firstname
+              - lastname
+              - role
+              - phone_number
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@example.com
+                password:
+                  type: string
+                  example: strongpassword123
+                firstname:
+                  type: string
+                  example: John
+                lastname:
+                  type: string
+                  example: Doe
+                role:
+                  type: string
+                  example: admin
+                phone_number:
+                  type: string
+                  example: 8012345678
+      responses:
+        201:
+          description: Admin created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: admin created successfully
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      url:
+                        type: string
+                        example: https://example.com/verify-email?userId=abc123&token=xyz456
+        409:
+          description: User already exists
+        500:
+          description: Internal server error
+
+  /auth/login:
+    post:
+      tags:
+      - 🔐 Authentication
+      summary: Login user
+      description: >-
+        Api endopint that allows users to login into their register account
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: codesuite2004@gmail.com
+                password:
+                  type: string
+                  example: '@codesuite2004'
+            example:
+              email: codesuite2004@gmail.com
+              password: '@codesuite2004'
+      responses:
+        '200':
+          description: Login registered user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: user logged in successfully
+                      statusCode:
+                        type: number
+                        example: 200
+                      success:
+                        type: boolean
+                        example: true
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: user does not exists
+                      statusCode:
+                        type: number
+                        example: 404
+                      success:
+                        type: boolean
+                        example: false
+
+        '400':
+          description: check for the presence of login credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: please provide an email and a password
+                      statusCode:
+                        type: number
+                        example: 400
+                      success:
+                        type: boolean
+                        example: false
+
+        '401':
+          description: check for corelation between the stored password in the database and the one the user is entering
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: invalid password entered
+                      statusCode:
+                        type: number
+                        example: 401
+                      success:
+                        type: boolean
+                        example: false
+
+  /auth/logout:
+    post:
+      tags:
+      - 🔐 Authentication
+      summary: Logout user
+      description: >-
+        Api endopint that allows users to logout of their register account
+      operationId: logoutUser
+      responses:
+        '200':
+          description: Logout registered user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: you have successfully logged out
+                      statusCode:
+                        type: number
+                        example: 200
+                      success:
+                        type: boolean
+                        example: true
+        '401':
+          description: check if authorization credential is present on the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: verifyJWT Invalid
+                      statusCode:
+                        type: number
+                        example: 401
+                      success:
+                        type: boolean
+                        example: false
+
+  /auth/change-password:
+    patch:
+      tags:
+      - 🔐 Authentication
+      security:
+      - bearerAuth: []
+      summary: Change already logged in user password
+      description: >-
+        Api endopint that allows logged in users to change their register account password
+      operationId: changeUserPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: '@codesuite2004'
+                newPassword:
+                  type: string
+                  example: codesuite@2004
+            example:
+              oldPassword: '@codesuite2004'
+              newPassword: 'codesuite@2004'
+      responses:
+        '200':
+          description: Change user current password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: Password changed successfully
+                      statusCode:
+                        type: number
+                        example: 200
+                      success:
+                        type: boolean
+                        example: true
+
+        '400':
+          description: check for corelation between the old password in the database and the new password the user is entering
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    types: object
+                    properties:
+                      message:
+                        type: string
+                        example: invalid old password entered
+                      statusCode:
+                        type: number
+                        example: 400
+                      success:
+                        type: boolean
+                        example: false
+
+  /auth/forgot-password:
+    post:
+      summary: Send password reset link to user's email
+      tags:
+      - 🔐 Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        200:
+          description: Reset link sent
+        404:
+          description: User not found
+
+  /auth/reset-password/{resetToken}:
+    post:
+      summary: Reset password using token
+      tags:
+      - 🔐 Authentication
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: resetToken
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - password
+              properties:
+                password:
+                  type: string
+      responses:
+        200:
+          description: Password reset successfully
+        401:
+          description: Invalid or expired token
+
+  /auth/refresh-token:
+    post:
+      summary: Refresh access token using a refresh token
+      tags:
+      - 🔐 Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - inComingRefreshToken
+              properties:
+                inComingRefreshToken:
+                  type: string
+      responses:
+        200:
+          description: New access and refresh tokens returned
+        401:
+          description: Token is invalid or expired
+
+  /auth/verify-email:
+    get:
+      summary: Verify user's email using token
+      tags:
+      - 🔐 Authentication
+      parameters:
+      - in: query
+        name: token
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: userId
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Email verified successfully
+        401:
+          description: Invalid or expired token
+
+  /auth/resend-verification:
+    post:
+      summary: Resend email verification link
+      tags:
+      - 🔐 Authentication
+      security:
+      - bearerAuth: []
+      responses:
+        200:
+          description: Verification link sent
+        404:
+          description: User not found
+        409:
+          description: Email already verified
+
+  /auth/users:
+    get:
+      summary: Fetch a paginated list of users
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 10
+        description: Number of users per page
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        description: Page number to retrieve
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search keyword (username, email, or role)
+      - in: query
+        name: role
+        schema:
+          type: string
+          default: USER
+        description: Filter by user role
+      responses:
+        200:
+          description: List of users fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: users fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: integer
+                        example: 50
+                      docs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      totalPages:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+
+  /auth/users/detail:
+    get:
+      summary: Get a user by ID
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: query
+        name: userId
+        required: true
+        schema:
+          type: string
+          example: 64f05cf55fbc8b0023456aaa
+      responses:
+        200:
+          description: User details fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: user details fetched
+
+  /auth/users/{userId}:
+    delete:
+      summary: Admin deletes a user (soft delete)
+      tags:
+      - Admin
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: user deleted successfully
+
+  /auth/users/current-user:
+    get:
+      summary: Get current authenticated user
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully fetched current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Current user fetched successfully
+
+  /auth/users/upload:
+    post:
+      summary: Upload or update user's avatar
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Avatar updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: avatar updated successfully
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+
+  /auth/profiles/me:
+    get:
+      summary: Get the currently authenticated user's details
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      responses:
+        200:
+          description: Current user fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Current user fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      currentUser:
+                        $ref: '#/components/schemas/User'
+
+  /auth/user:
+    patch:
+      summary: Update the currently authenticated user's profile
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: user updated successfully
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'

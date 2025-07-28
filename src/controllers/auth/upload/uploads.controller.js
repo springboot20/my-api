@@ -38,7 +38,7 @@ export const uploadAvatar = apiResponseHandler(
 
       uploadImage = await uploadFileToCloudinary(
         req.file.buffer,
-        `${process.env.CLOUDINARY_BASE_FOLDER}/users-image`,
+        `${process.env.CLOUDINARY_BASE_FOLDER}/users-image`
       );
     }
 
@@ -52,13 +52,17 @@ export const uploadAvatar = apiResponseHandler(
           },
         },
       },
-      { new: true, runvalidators: true },
+      { new: true, runvalidators: true }
     ).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry");
 
     console.log({ updatedUserAvatar });
 
-    return new ApiResponse(StatusCodes.OK, "avatar updated successfully", {
-      user: updatedUserAvatar,
-    });
-  },
+    return new ApiResponse(
+      StatusCodes.OK,
+      {
+        user: updatedUserAvatar,
+      },
+      "avatar updated successfully"
+    );
+  }
 );
