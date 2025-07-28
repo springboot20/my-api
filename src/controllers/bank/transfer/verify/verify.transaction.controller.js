@@ -7,70 +7,15 @@ import { TransactionModel, AccountModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
 import { AvailableAccountStatus, PaymentStatuses, paystackStatus } from "../../../../constants.js";
-import { mongooseTransactions } from "../../../../middleware/mongoose/mongoose.transactions.js";
 import { createHmac, timingSafeEqual } from "crypto";
-
-export const verifyPaystackDepositTransaction = apiResponseHandler(
-  mongooseTransactions(
-    /**
-     *
-     * @param {import('express').Request} req
-     * @param {import('express').Response} res
-     * @param {import('mongoose').ClientSession} session
-     */
-    async (req, res, session) => {
-      const { reference } = req.query;
-      const transaction = await TransactionModel.findOne({ reference });
-
-      if (!transaction) {
-        throw new CustomErrors("no transaction found", StatusCodes.NOT_FOUND);
-      }
-
-      if (transaction.status === PaymentStatuses.COMPLETED) {
-        return new ApiResponse(StatusCodes.OK, { transaction }, "transaction already verified");
-      }
-
-      const transactionReference = transaction.reference;
-
-      let response = await PaymentService.verifyHelper(transactionReference);
-
-      if (!response) {
-        return null;
-      }
-
-      const transactionStatus = response?.data?.status;
-      const paymentConfirmed = transactionStatus === paystackStatus.success;
-
-      if (paymentConfirmed) {
-        transaction.status = PaymentStatuses.COMPLETED;
-
-        const account = await AccountModel.findOne({ user: transaction?.user });
-
-        if (account) {
-          account.balance += transaction.amount;
-          account.status = AvailableAccountStatus.ACTIVE;
-          await account.save({ session });
-        }
-      } else {
-        transaction.status = PaymentStatuses.FAILED;
-      }
-
-      transaction.transactionStatus = transactionStatus;
-
-      await transaction.save({ session });
-
-      return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
-    },
-  ),
-);
 
 export const verifyPaystackWebhook = apiResponseHandler(
   /**
-   *
+   * @route GET /api/payment/paystack/callback
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
-  async (req, res) => {
+  async (req) => {
     if (!req.body) {
       return false;
     }
@@ -109,5 +54,60 @@ export const verifyPaystackWebhook = apiResponseHandler(
     await transaction.save({ session });
 
     return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
-  },
+  }
+);
+
+export const verifyPaystackCallback = apiResponseHandler(
+  /**
+   * Paystack callback verification controller
+   * @route GET /api/payment/paystack/callback
+   * @param {import("express").Request} req
+   * @param {import("express").Response} res
+   */
+  async (req, res) => {
+    const { reference } = req.query;
+
+    if (!reference) {
+      throw new CustomErrors("Transaction reference is required", StatusCodes.BAD_REQUEST);
+    }
+
+    const transaction = await TransactionModel.findOne({ reference });
+
+    if (!transaction) {
+      throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
+    }
+
+    if (transaction.status === PaymentStatuses.COMPLETED) {
+      return res.redirect(`${process.env.FRONTEND_PAYMENT_SUCCESS_URL}?reference=${reference}`);
+    }
+
+    const verifyResponse = await PaymentService.verifyHelper(reference);
+
+    if (!verifyResponse?.data) {
+      throw new CustomErrors("Unable to verify transaction", StatusCodes.BAD_REQUEST);
+    }
+
+    const status = verifyResponse.data.status;
+
+    if (status === paystackStatus.success) {
+      transaction.status = PaymentStatuses.COMPLETED;
+      transaction.transactionStatus = status;
+
+      const account = await AccountModel.findOne({ user: transaction.user });
+      if (account) {
+        account.balance += transaction.amount;
+        account.status = AvailableAccountStatus.ACTIVE;
+        await account.save();
+      }
+
+      await transaction.save();
+      return res.redirect(`${process.env.FRONTEND_PAYMENT_SUCCESS_URL}?reference=${reference}`);
+    }
+
+    transaction.status = PaymentStatuses.FAILED;
+    transaction.transactionStatus = status;
+    await transaction.save();
+
+    return res.redirect(`${process.env.FRONTEND_PAYMENT_FAILED_URL}?reference=${reference}`);
+  }
 );

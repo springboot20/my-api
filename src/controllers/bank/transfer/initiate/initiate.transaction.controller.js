@@ -17,6 +17,7 @@ import {
   PaymentStatuses,
 } from "../../../../constants.js";
 import bcrypt from "bcrypt";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export const initiatePaystackDepositTransaction = apiResponseHandler(
   /**

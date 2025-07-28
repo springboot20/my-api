@@ -18,14 +18,10 @@ router
 
 router
   .route("/paystack/verify-callback")
-  .get(verifyJWT,checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN), transactionController.verifyPaystackDepositTransaction);
-
-router
-  .route("/paystack/webhook")
-  .post(
+  .get(
     verifyJWT,
     checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
-    transactionController.verifyPaystackWebhook
+    transactionController.verifyPaystackCallback
   );
 
 router
@@ -45,5 +41,13 @@ router
   );
 
 router.route("/user").get(verifyJWT, transactionController.getUserTransactionsByType);
+
+router
+  .route("/paystack/webhook")
+  .post(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    transactionController.verifyPaystackWebhook
+  );
 
 export default router;
