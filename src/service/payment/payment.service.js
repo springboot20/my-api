@@ -54,9 +54,10 @@ export default class PaymentService {
 
       const { data } = response;
       console.log(data);
-      
+
       return data;
     } catch (error) {
+      console.log("Error:", error);
       throw new CustomErrors("something went wrong", StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }

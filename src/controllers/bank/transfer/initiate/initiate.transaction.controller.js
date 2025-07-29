@@ -39,32 +39,30 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
       currency,
     });
 
-    console.log(depositInfo);
-
-    let transaction = undefined;
-
-    if (depositInfo.status === true) {
-      transaction = await TransactionModel.create({
-        reference: depositInfo.data.reference,
-        user: req.user?._id,
-        amount,
-        description,
-        currency,
-        type: AvailableTransactionTypes.DEPOSIT,
-        detail: {
-          gateway: PaymentMethods.PAYSTACK,
-        },
-        status: PaymentStatuses.IN_PROGRESS,
-      });
+    if (depositInfo?.status !== true || !depositInfo.data) {
+      throw new CustomErrors("Failed to initialize deposit", StatusCodes.BAD_REQUEST);
     }
 
-    if (!transaction)
-      throw new CustomErrors("error while deposit transaction", StatusCodes.INTERNAL_SERVER_ERROR);
+    const transaction = await TransactionModel.create({
+      reference: depositInfo.data.reference,
+      user: req.user._id,
+      amount,
+      description,
+      currency,
+      type: AvailableTransactionTypes.DEPOSIT,
+      detail: {
+        gateway: PaymentMethods.PAYSTACK,
+      },
+      status: PaymentStatuses.IN_PROGRESS,
+    });
 
     return new ApiResponse(
       StatusCodes.CREATED,
-      { transaction, url: depositInfo.data.authorization_url },
-      "deposit transaction successfull created"
+      {
+        transaction,
+        url: depositInfo.data.authorization_url,
+      },
+      "Deposit transaction successfully created"
     );
   }
 );
@@ -90,6 +88,8 @@ export const validateTransactionPin = apiResponseHandler(async (req) => {
 
 const getAccountDetails = async (accountId) => {
   const objectId = new mongoose.Types.ObjectId(accountId);
+
+  console.log(accountId);
   return AccountModel.findById(objectId);
 };
 
@@ -103,8 +103,6 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     channel = "card",
   } = req.body;
 
-  console.log(req.body);
-
   if (!amount || !from_account || !to_account) {
     throw new CustomErrors("Missing transaction details", StatusCodes.BAD_REQUEST);
   }
@@ -114,46 +112,30 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     getAccountDetails(to_account),
   ]);
 
+  console.log("From Account:", fromAccount);
+  console.log("To Account:", toAccount);
+
   if (!fromAccount || !toAccount) {
     throw new CustomErrors("One or both accounts not found", StatusCodes.NOT_FOUND);
   }
 
-  console.log("line 121:  ", fromAccount.wallet, toAccount.wallet);
-
-  const [fromWallet, toWallet] = await Promise.all([
-    WalletModel.findById(new mongoose.Types.ObjectId(fromAccount.wallet)),
-    WalletModel.findById(new mongoose.Types.ObjectId(toAccount.wallet)),
-  ]);
-
-  console.log("line 122:  ", fromWallet, toWallet);
-  console.log(await WalletModel.findById(new mongoose.Types.ObjectId(toAccount.wallet)));
-
-  if (fromWallet.balance < parseFloat(amount)) {
-    throw new CustomErrors("Insufficient account balance", StatusCodes.BAD_REQUEST);
-  }
-
-  // Update balances
-  await WalletModel.findByIdAndUpdate(fromWallet._id, {
-    $inc: { balance: -parseFloat(amount) },
-  });
-
-  await WalletModel.findByIdAndUpdate(toWallet._id, {
-    $inc: { balance: parseFloat(amount) },
-  });
-
   const user = await UserModel.findById(req.user._id);
   if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
 
-  // Initialize Paystack
-  const depositInfo = await PaymentService.initializePaystackPayment({
+  // Do not check balance or deduct now — wait until Paystack verifies
+  const paymentInit = await PaymentService.initializePaystackPayment({
     email: user.email,
     amount,
     channel,
     currency,
   });
 
+  if (!paymentInit?.status || !paymentInit.data) {
+    throw new CustomErrors("Failed to initialize transfer", StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+
   const transaction = await TransactionModel.create({
-    reference: depositInfo.data.reference,
+    reference: paymentInit.data.reference,
     user: req.user._id,
     amount,
     description,
@@ -161,19 +143,17 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     type: AvailableTransactionTypes.TRANSFER,
     detail: {
       gateway: PaymentMethods.PAYSTACK,
-      senderAccountNumber: fromAccount.account_number,
       receiverAccountNumber: toAccount.account_number,
+      senderAccountNumber: fromAccount.account_number,
     },
     status: PaymentStatuses.IN_PROGRESS,
   });
-
-  console.log(depositInfo);
 
   return new ApiResponse(
     StatusCodes.CREATED,
     {
       transaction,
-      authorizationUrl: depositInfo.data.authorization_url,
+      authorizationUrl: paymentInit.data.authorization_url,
     },
     "Redirect user to complete payment"
   );

@@ -20,7 +20,7 @@ router
   .route("/paystack/verify-callback")
   .get(
     verifyJWT,
-    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.USER, RoleEnums.ADMIN),
     transactionController.verifyPaystackCallback
   );
 
@@ -36,7 +36,7 @@ router
   .route("/details")
   .get(
     verifyJWT,
-    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN, RoleEnums.USER),
     transactionController.getTransactionById
   );
 
@@ -46,7 +46,7 @@ router
   .route("/paystack/webhook")
   .post(
     verifyJWT,
-    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN),
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.USER, RoleEnums.ADMIN),
     transactionController.verifyPaystackWebhook
   );
 

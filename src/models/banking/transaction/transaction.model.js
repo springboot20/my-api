@@ -51,7 +51,7 @@ const TransactionSchema = new Schema(
           enum: AvailablePaymentMethods,
           default: PaymentMethods.UNKNOWN,
         },
-        recieverAccountNumber: {
+        receiverAccountNumber: {
           type: String,
         },
         senderAccountNumber: {
