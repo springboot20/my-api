@@ -40,7 +40,7 @@ router
     transactionController.getTransactionById
   );
 
-router.route("/user").get(verifyJWT, transactionController.getUserTransactionsByType);
+router.route("/user").get(verifyJWT, transactionController.getUserTransactions);
 
 router
   .route("/paystack/webhook")

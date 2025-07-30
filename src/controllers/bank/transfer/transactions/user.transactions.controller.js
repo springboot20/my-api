@@ -11,15 +11,15 @@ const getPipelineData = () => {
     // lookup for user related to a transaction
     {
       $lookup: {
-        from: "profiles",
-        foreignField: "user",
+        from: "users",
+        foreignField: "_id",
         localField: "user",
         as: "user",
         pipeline: [
           {
             $project: {
               _id: 1,
-              fisrtname: 1,
+              firstname: 1,
               lastname: 1,
             },
           },
@@ -56,7 +56,7 @@ const getPipelineData = () => {
   ];
 };
 
-export const getUserTransactionsByType = apiResponseHandler(async (req, res) => {
+export const getUserTransactions = apiResponseHandler(async (req, res) => {
   const { type, search, page = 1, limit = 10 } = req.query;
 
   const transactionsAggregate = TransactionModel.aggregate([
