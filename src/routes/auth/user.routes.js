@@ -35,7 +35,7 @@ router.route("/register").post(userRegisterValidation(), validate, register);
 
 router.route("/login").post(userLoginValidation(), validate, login);
 
-router.route("/upload").patch(verifyJWT, upload, uploadAvatar);
+router.route("/upload-avatar").patch(verifyJWT, upload, uploadAvatar);
 
 router.route("/forgot-password").post(userValidation(), validate, forgotPassword);
 

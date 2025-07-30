@@ -42,6 +42,8 @@ export const uploadAvatar = apiResponseHandler(
       );
     }
 
+    console.log({ uploadImage });
+
     const updatedUserAvatar = await UserModel.findByIdAndUpdate(
       req.user._id,
       {
