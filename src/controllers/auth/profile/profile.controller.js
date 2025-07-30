@@ -1,26 +1,28 @@
-import { StatusCodes } from 'http-status-codes';
+import { StatusCodes } from "http-status-codes";
 import {
   apiResponseHandler,
   ApiResponse,
-} from '../../../middleware/api/api.response.middleware.js';
-import { CustomErrors } from '../../../middleware/custom/custom.errors.js';
-import { ProfileModel } from '../../../models/index.js';
+} from "../../../middleware/api/api.response.middleware.js";
+import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
+import { ProfileModel, UserModel } from "../../../models/index.js";
+import mongoose from "mongoose";
 
 const getProfile = () => {
   return [
     {
       $lookup: {
-        from: 'users',
-        localField: 'user',
-        foreignField: '_id',
-        as: 'user',
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
         pipeline: [
           {
             $project: {
               _id: 1,
               avatar: 1,
               email: 1,
-              username: 1,
+              firstname: 1,
+              lastname: 1,
             },
           },
         ],
@@ -28,7 +30,7 @@ const getProfile = () => {
     },
     {
       $addFields: {
-        user: { $first: '$user' },
+        user: { $first: "$user" },
       },
     },
   ];
@@ -36,9 +38,9 @@ const getProfile = () => {
 
 export const createUserProfile = apiResponseHandler(async (req, res) => {
   const {
+    username,
     firstname,
     lastname,
-    phoneNumber,
     present_address,
     permanent_address,
     city,
@@ -46,18 +48,20 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
     postal_code,
     preferred_view,
     currency,
-    timezone
+    timezone,
   } = req.body;
+
+  console.log(req.body);
+
+  const objectId = new mongoose.Types.ObjectId(req?.user._id);
 
   const userProfile = await ProfileModel.findOneAndUpdate(
     {
-      user: req?.user._id,
+      userId: objectId,
     },
     {
       $set: {
-        firstname,
-        lastname,
-        phoneNumber,
+        username,
         present_address,
         permanent_address,
         city,
@@ -65,7 +69,7 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
         postal_code,
         preferred_view,
         currency,
-        timezone
+        timezone,
       },
     },
     { new: true }
@@ -73,18 +77,35 @@ export const createUserProfile = apiResponseHandler(async (req, res) => {
 
   if (!userProfile)
     throw new CustomErrors(
-      'Error while trying to update user profile',
+      "Error while trying to updating user profile",
       StatusCodes.INTERNAL_SERVER_ERROR
     );
 
-  return new ApiResponse(StatusCodes.OK, userProfile, 'User profile updated successfully');
+  const user = await UserModel.findByIdAndUpdate(
+    objectId,
+    {
+      $set: {
+        firstname,
+        lastname,
+      },
+    },
+    { new: true }
+  );
+
+  if (!user)
+    throw new CustomErrors(
+      "Error while trying to updating user details",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+
+  return new ApiResponse(StatusCodes.OK, userProfile, "User profile updated successfully");
 });
 
 export const getUserProfile = apiResponseHandler(async (req, res) => {
   const profile = await ProfileModel.aggregate([
     {
       $match: {
-        user: req?.user?._id,
+        userId: req?.user?._id,
       },
     },
     ...getProfile(),
@@ -95,6 +116,6 @@ export const getUserProfile = apiResponseHandler(async (req, res) => {
   return new ApiResponse(
     StatusCodes.OK,
     { profile: _profile },
-    'user profile fetched successfully'
+    "user profile fetched successfully"
   );
 });

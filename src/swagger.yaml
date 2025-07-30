@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Banking Rest Api Docs
   version: 1.0.0
-  description: E-commerce API documentation with authentication, user management, and other features
+  description: Banking API documentation with authentication, user management, and other features
   contact:
     name: CodeSuite
     url: https://github.com/springboot20
@@ -162,14 +162,17 @@ paths:
             schema:
               type: object
               required:
-              - username
+              - firstname
+              - lastname
               - email
               - password
-              - role
               properties:
-                username:
+                firstname:
                   type: string
-                  example: '@codesuite2004'
+                  example: 'Bob'
+                lastname:
+                  type: string
+                  example: 'John'
                 email:
                   type: string
                   format: email
@@ -179,7 +182,7 @@ paths:
                   example: '@codesuite2004'
                 role:
                   type: string
-                  example: ADMIN
+                  example: USER
       responses:
         201:
           description: User registered successfully
