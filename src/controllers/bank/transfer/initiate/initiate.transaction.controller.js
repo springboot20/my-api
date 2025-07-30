@@ -94,7 +94,7 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
       StatusCodes.CREATED,
       {
         transaction,
-        url: depositInfo.data.authorization_url,
+        authorizationUrl: depositInfo.data.authorization_url,
       },
       "Deposit transaction successfully created"
     );
