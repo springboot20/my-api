@@ -83,11 +83,14 @@ export default class AccountService {
    * @returns {Promise<string>} A unique account number
    */
   static generateUniqueAccountNumber = async () => {
+    const prefixes = ["21", "22"];
     let isUnique = false;
     let accountNumber = "";
 
     while (!isUnique) {
-      accountNumber = this.generateUniqueNumber(10);
+      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+      const randomDigits = this.generateUniqueNumber(8, true);
+      accountNumber = prefix + randomDigits;
 
       // Check if this account number already exists
       const existingAccount = await AccountModel.findOne({ account_number: accountNumber });

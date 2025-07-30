@@ -6,8 +6,42 @@ import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { TransactionModel, AccountModel, WalletModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
-import { AvailableAccountStatus, PaymentStatuses, paystackStatus } from "../../../../constants.js";
+import { PaymentStatuses, paystackStatus } from "../../../../constants.js";
 import { createHmac, timingSafeEqual } from "crypto";
+
+/**
+ * Transfer funds between two wallets
+ * @param {ObjectId} fromWalletId - Sender's wallet ID
+ * @param {ObjectId} toWalletId - Receiver's wallet ID
+ * @param {Number} amount - Amount to transfer
+ */
+export const transferBetweenWallets = async (fromWalletId, toWalletId, amount) => {
+  const [fromWallet, toWallet] = await Promise.all([
+    WalletModel.findById(fromWalletId),
+    WalletModel.findById(toWalletId),
+  ]);
+
+  if (!fromWallet || !toWallet) {
+    throw new CustomErrors("Sender or receiver wallet not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (fromWallet._id.equals(toWallet._id)) {
+    throw new CustomErrors("Cannot transfer to the same wallet", StatusCodes.BAD_REQUEST);
+  }
+
+  if (fromWallet.balance < amount) {
+    throw new CustomErrors("Insufficient funds in sender wallet", StatusCodes.BAD_REQUEST);
+  }
+
+  await Promise.all([
+    WalletModel.findByIdAndUpdate(fromWallet._id, {
+      $inc: { balance: -parseFloat(amount) },
+    }),
+    WalletModel.findByIdAndUpdate(toWallet._id, {
+      $inc: { balance: parseFloat(amount) },
+    }),
+  ]);
+};
 
 export const verifyPaystackWebhook = apiResponseHandler(
   /**
@@ -44,74 +78,32 @@ export const verifyPaystackWebhook = apiResponseHandler(
     const paymentConfirmed = transactionStatus === paystackStatus.success;
 
     if (paymentConfirmed) {
-      transaction.status = PaymentStatuses.COMPLETED;
-    } else {
-      transaction.status = PaymentStatuses.FAILED;
-    }
-
-    transaction.transactionStatus = transactionStatus;
-
-    await transaction.save({});
-
-    return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
-  }
-);
-
-export const verifyPaystackDepositTransaction = apiResponseHandler(
-  /**
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
-  async (req, res) => {
-    const { reference } = req.query;
-    const transaction = await TransactionModel.findOne({ reference });
-
-    if (!transaction) {
-      throw new CustomErrors("no transaction found", StatusCodes.NOT_FOUND);
-    }
-
-    if (transaction.status === PaymentStatuses.COMPLETED) {
-      return new ApiResponse(StatusCodes.OK, { transaction }, "transaction already verified");
-    }
-
-    const transactionReference = transaction.reference;
-
-    let response = await PaymentService.verifyHelper(transactionReference);
-
-    if (!response) {
-      return null;
-    }
-
-    const transactionStatus = response?.data?.status;
-    const paymentConfirmed = transactionStatus === paystackStatus.success;
-
-    if (paymentConfirmed) {
-      transaction.status = PaymentStatuses.COMPLETED;
-
-      const account = await AccountModel.findOne({ user: transaction?.user });
-
-      if (account) {
-        account.balance += transaction.amount;
-        account.status = AvailableAccountStatus.ACTIVE;
-        await account.save({});
+      if (transaction.status === PaymentStatuses.COMPLETED) {
+        return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
       }
-    } else {
-      transaction.status = PaymentStatuses.FAILED;
+
+      const fromAccount = await AccountModel.findOne({
+        account_number: transaction.detail.senderAccountNumber,
+      });
+      const toAccount = await AccountModel.findOne({
+        account_number: transaction.detail.receiverAccountNumber,
+      });
+
+      if (!fromAccount || !toAccount) {
+        throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
+      }
+
+      await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
+
+      transaction.status = PaymentStatuses.COMPLETED;
+      transaction.transactionStatus = transactionStatus;
+      await transaction.save();
+
+      return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
     }
-
-    transaction.transactionStatus = transactionStatus;
-
-    await transaction.save({});
-
-    return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
   }
 );
 
-/**
- * Paystack callback verification controller
- * @route GET /api/payment/paystack/callback
- */
 export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   const { reference } = req.query;
 
@@ -126,62 +118,45 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   }
 
   const transaction = await TransactionModel.findOne({ reference });
-
   if (!transaction) {
     throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
   }
 
-  // If already completed, avoid duplicate processing
   if (transaction.status === PaymentStatuses.COMPLETED) {
     return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
   }
 
-  const paystackStatus = verifyResponse.data.status;
+  const _paystackStatus = verifyResponse.data.status;
+  const paymentConfirmed = _paystackStatus === paystackStatus.success;
 
-  if (paystackStatus !== "success") {
-    transaction.status = PaymentStatuses.FAILED;
-    transaction.transactionStatus = paystackStatus;
-    await transaction.save();
-    return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction failed on Paystack");
-  }
-
-  // Finalize transaction
-  transaction.status = PaymentStatuses.COMPLETED;
-  transaction.transactionStatus = paystackStatus;
+  transaction.transactionStatus = _paystackStatus;
+  transaction.status = paymentConfirmed ? PaymentStatuses.COMPLETED : PaymentStatuses.FAILED;
   await transaction.save();
 
-  const [fromAccount, toAccount] = await Promise.all([
-    AccountModel.findOne({ account_number: transaction.detail.senderAccountNumber }),
-    AccountModel.findOne({ account_number: transaction.detail.receiverAccountNumber }),
-  ]);
+  if (paymentConfirmed) {
+    // 🛑 Prevent duplicate wallet deduction
+    if (transaction.status === PaymentStatuses.COMPLETED) {
+      return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
+    }
 
-  if (!fromAccount || !toAccount) {
-    throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
+    const fromAccount = await AccountModel.findOne({
+      account_number: transaction.detail.senderAccountNumber,
+    });
+
+    const toAccount = await AccountModel.findOne({
+      account_number: transaction.detail.receiverAccountNumber,
+    });
+
+    if (!fromAccount || !toAccount) {
+      throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
+    }
+
+    await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
+
+    transaction.status = PaymentStatuses.COMPLETED;
+    transaction.transactionStatus = _paystackStatus;
+    await transaction.save();
+
+    return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
   }
-
-  const [fromWallet, toWallet] = await Promise.all([
-    WalletModel.findById(fromAccount.wallet),
-    WalletModel.findById(toAccount.wallet),
-  ]);
-
-  if (!fromWallet || !toWallet) {
-    throw new CustomErrors("Sender or receiver wallet not found", StatusCodes.NOT_FOUND);
-  }
-
-  // Confirm balance before final deduction
-  if (fromWallet.balance < transaction.amount) {
-    throw new CustomErrors("Insufficient funds in sender wallet", StatusCodes.BAD_REQUEST);
-  }
-
-  // Perform atomic balance update
-  await Promise.all([
-    WalletModel.findByIdAndUpdate(fromWallet._id, {
-      $inc: { balance: -parseFloat(transaction.amount) },
-    }),
-    WalletModel.findByIdAndUpdate(toWallet._id, {
-      $inc: { balance: parseFloat(transaction.amount) },
-    }),
-  ]);
-
-  return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction verified and completed");
 });

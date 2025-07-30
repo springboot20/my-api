@@ -7,10 +7,10 @@ import { checkPermissions } from "../../../utils/permissions.js";
 const router = Router();
 
 router
-  .route("/paystack/initialize-payment")
+  .route("/paystack/deposit")
   .post(verifyJWT, transactionController.initiatePaystackDepositTransaction);
 
-router.route("/paystack/send-transaction").post(verifyJWT, transactionController.sendTransaction);
+router.route("/paystack/transfer").post(verifyJWT, transactionController.sendTransaction);
 
 router
   .route("/paystack/validate-pin")
