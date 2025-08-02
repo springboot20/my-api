@@ -168,6 +168,8 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     throw new CustomErrors("Failed to initialize transfer", StatusCodes.INTERNAL_SERVER_ERROR);
   }
 
+  console.log(paymentInit);
+
   const transaction = await TransactionModel.create({
     reference: paymentInit.data.reference,
     user: req.user._id,
