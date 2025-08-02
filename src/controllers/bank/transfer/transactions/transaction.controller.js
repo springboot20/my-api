@@ -11,8 +11,8 @@ const getPipelineData = () => {
     // lookup for user related to a transaction
     {
       $lookup: {
-        from: "profiles",
-        foreignField: "user",
+        from: "users",
+        foreignField: "_id",
         localField: "user",
         as: "user",
         pipeline: [
@@ -60,11 +60,6 @@ export const getTransactionById = apiResponseHandler(async (req, res) => {
   const { transactionId } = req.query;
 
   const transactionDetails = await TransactionModel.aggregate([
-    {
-      $match: {
-        user: req.user?._id,
-      },
-    },
     {
       $match: transactionId
         ? {
