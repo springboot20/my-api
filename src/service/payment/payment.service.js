@@ -1,6 +1,4 @@
-import { StatusCodes } from "http-status-codes";
 import { paystack_urls } from "../../constants.js";
-import { CustomErrors } from "../../middleware/custom/custom.errors.js";
 import { convertToKobo } from "../../utils/index.js";
 import axios from "axios";
 
@@ -22,11 +20,7 @@ export default class PaymentService {
         callback_url: `${process.env.PAYSTACK_CALLBACK_URL}`,
       };
 
-      const payload = JSON.stringify(paymentConfig);
-
-      console.log(payload);
-
-      const response = await axios.post(paystack_urls.initiate, payload, {
+      const response = await axios.post(paystack_urls.initiate, paymentConfig, {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
           "Content-Type": "application/json",
@@ -34,19 +28,16 @@ export default class PaymentService {
       });
 
       const { data } = response;
-      if (data && data.status) {
-        return data;
-      }
-      return null;
+      return data?.status ? data : null;
     } catch (error) {
-      console.log(error);
+      console.error("Paystack initialization error:", error.message);
       return null;
     }
   }
 
   static async verifyHelper(reference) {
     try {
-      let response = await axios.get(`${paystack_urls.verify}/${reference}`, {
+      const response = await axios.get(`${paystack_urls.verify}/${reference}`, {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
           "Content-Type": "application/json",
@@ -54,12 +45,12 @@ export default class PaymentService {
       });
 
       const { data } = response;
-      console.log(data);
 
-      return data;
+      // Always return the response data (even if verification failed)
+      return data || null;
     } catch (error) {
-      console.log("Error:", error);
-      throw new CustomErrors("something went wrong", StatusCodes.INTERNAL_SERVER_ERROR);
+      console.error("Paystack verification error:", error.message);
+      return null;
     }
   }
 }

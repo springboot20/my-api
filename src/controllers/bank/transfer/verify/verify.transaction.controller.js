@@ -111,52 +111,65 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
     throw new CustomErrors("Transaction reference is required", StatusCodes.BAD_REQUEST);
   }
 
-  const verifyResponse = await PaymentService.verifyHelper(reference);
-
-  if (!verifyResponse?.status || !verifyResponse.data) {
-    throw new CustomErrors("Transaction verification failed", StatusCodes.BAD_REQUEST);
-  }
-
   const transaction = await TransactionModel.findOne({ reference });
+
   if (!transaction) {
     throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
   }
 
+  // Already completed
   if (transaction.status === PaymentStatuses.COMPLETED) {
     return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
   }
 
+  const verifyResponse = await PaymentService.verifyHelper(reference);
+
+  if (!verifyResponse) {
+    transaction.status = PaymentStatuses.FAILED;
+    await transaction.save();
+
+    throw new CustomErrors(
+      "Transaction verification failed",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      [],
+      { transaction }
+    );
+  }
+
+  console.log(verifyResponse);
+
   const _paystackStatus = verifyResponse.data.status;
+  console.log(_paystackStatus);
   const paymentConfirmed = _paystackStatus === paystackStatus.success;
 
   transaction.transactionStatus = _paystackStatus;
   transaction.status = paymentConfirmed ? PaymentStatuses.COMPLETED : PaymentStatuses.FAILED;
+
+  if (!paymentConfirmed) {
+    await transaction.save();
+    return new ApiResponse(StatusCodes.OK, { transaction }, "Payment verification failed");
+  }
+
+  // Prevent duplicate processing
+  if (transaction.status === PaymentStatuses.COMPLETED) {
+    return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
+  }
+
+  const fromAccount = await AccountModel.findOne({
+    account_number: transaction.detail.senderAccountNumber,
+  });
+
+  const toAccount = await AccountModel.findOne({
+    account_number: transaction.detail.receiverAccountNumber,
+  });
+
+  if (!fromAccount || !toAccount) {
+    throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
+  }
+
+  await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
+
   await transaction.save();
 
-  if (paymentConfirmed) {
-    // 🛑 Prevent duplicate wallet deduction
-    if (transaction.status === PaymentStatuses.COMPLETED) {
-      return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
-    }
-
-    const fromAccount = await AccountModel.findOne({
-      account_number: transaction.detail.senderAccountNumber,
-    });
-
-    const toAccount = await AccountModel.findOne({
-      account_number: transaction.detail.receiverAccountNumber,
-    });
-
-    if (!fromAccount || !toAccount) {
-      throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
-    }
-
-    await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
-
-    transaction.status = PaymentStatuses.COMPLETED;
-    transaction.transactionStatus = _paystackStatus;
-    await transaction.save();
-
-    return new ApiResponse(StatusCodes.OK, { transaction }, "payment verified successfully");
-  }
+  return new ApiResponse(StatusCodes.OK, { transaction }, "Payment verified successfully");
 });
