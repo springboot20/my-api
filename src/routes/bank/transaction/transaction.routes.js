@@ -39,6 +39,13 @@ router
     checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN, RoleEnums.USER),
     transactionController.getTransactionById
   );
+router
+  .route("/delete")
+  .delete(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN, RoleEnums.USER),
+    transactionController.deleteTransactionById
+  );
 
 router.route("/user").get(verifyJWT, transactionController.getUserTransactions);
 

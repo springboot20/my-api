@@ -114,7 +114,9 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   const transaction = await TransactionModel.findOne({ reference });
 
   if (!transaction) {
-    throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
+    throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND, [], {
+      status: "ERROR",
+    });
   }
 
   // Already completed

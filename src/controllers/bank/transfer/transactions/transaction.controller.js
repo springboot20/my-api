@@ -80,3 +80,20 @@ export const getTransactionById = apiResponseHandler(async (req, res) => {
     "transaction details fetched successfully"
   );
 });
+
+export const deleteTransactionById = apiResponseHandler(async (req, res) => {
+  const { transactionId } = req.query;
+
+  const objectId = new mongoose.Types.ObjectId(transactionId);
+
+  const deletedTransaction = await TransactionModel.findByIdAndDelete(objectId);
+
+  if (!deletedTransaction) {
+    throw new CustomErrors(
+      "Transaction not found. Failed to delete transaction.",
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  return new ApiResponse(StatusCodes.OK, {}, "transaction deleted successfully");
+});
