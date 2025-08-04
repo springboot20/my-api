@@ -71,8 +71,9 @@ const intializeSocketIo = (io) => {
 
       socket.on(SOCKET_EVENTS.JOIN_USER_ROOM, () => {
         if (user.role === "USER") {
-          const userRoom = `user-${user._id}`;
-          console.log(`👤 User ${user.username} joined user room: ${userRoom}`);
+          console.log(`users-${user._id}`);
+          const userRoom = `users-${user._id}`;
+          console.log(`👤 User ${user.firstname} ${user.lastname} joined user room: ${userRoom}`);
           socket.join(userRoom);
           socket.userRoomId = userRoom;
         }
@@ -80,7 +81,7 @@ const intializeSocketIo = (io) => {
 
       // Handle disconnection
       socket.on("disconnect", (reason) => {
-        console.log(`❌ User ${user.username} disconnected: ${reason}`);
+        console.log(`❌ User ${user.firstname} ${user.lastname} disconnected: ${reason}`);
 
         try {
           // Leave all rooms

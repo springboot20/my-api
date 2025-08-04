@@ -8,6 +8,15 @@ import socketEvents from "../../enums/socket-events.js";
 import mongoose from "mongoose";
 import { getMognogoosePagination } from "../../utils/index.js";
 
+const emitToReceivers = (req, receivers, event, data, excludeId = null) => {
+  receivers?.forEach((receiver) => {
+    const receiverId = receiver?._id?.toString();
+    if (receiverId && receiverId !== excludeId?.toString()) {
+      emitSocketEventToUser(req, event, `users-${receiverId}`, { data });
+    }
+  });
+};
+
 export const getRequestMessageById = apiResponseHandler(async (req) => {
   const { requestId } = req.params;
 
@@ -276,75 +285,61 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
 
   const userId = req?.user?._id;
 
-  const user = await UserModel.findOne({
-    _id: userId,
-    $or: [{ role: "ADMIN" }, { role: "MODERATOR" }],
-  });
-
-  if (!user) throw new CustomErrors("user not found", StatusCodes.NOT_FOUND);
-
   if (receivers?.includes(userId)) {
-    throw new CustomErrors(
-      "Reciever payload should not contain the message sender",
-      StatusCodes.BAD_REQUEST
-    );
+    throw new CustomErrors("Sender should not be among receivers", StatusCodes.BAD_REQUEST);
   }
 
-  const messageMember = [...new Set([...receivers, userId])];
+  const uniqueReceivers = [...new Set(receivers)];
+  const participants = [...uniqueReceivers, userId];
 
   const newAdminMessage = await RequestMessageModel.create({
-    user: req.user._id,
-    receivers: messageMember,
-    isRead: false,
+    user: userId,
+    receivers: participants,
     message,
-    adminMessageTitle,
     type,
+    adminMessageTitle,
+    isRead: false,
   });
 
-  console.log(newAdminMessage);
-
-  const populatedMessage = await RequestMessageModel.findById(newAdminMessage._id)
+  const populated = await RequestMessageModel.findById(newAdminMessage._id)
     .populate("user", "_id firstname lastname email avatar")
     .populate("receivers", "_id firstname lastname email avatar")
     .populate("reviewedBy", "_id firstname lastname email avatar");
-  console.log(populatedMessage);
 
-  populatedMessage?.receivers?.forEach((receiver) => {
-    if (userId === receiver?.toString()) return;
+  const dataPayload = {
+    _id: populated._id,
+    type: populated.type,
+    message: populated.message,
+    adminMessageTitle: populated.adminMessageTitle,
+    user: populated.user,
+    isRead: false,
+    createdAt: populated.createdAt,
+    priority: populated.priority,
+  };
 
-    emitSocketEventToUser(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `user-${receiver}`, {
-      data: {
-        _id: populatedMessage._id,
-        type: populatedMessage.type,
-        message: populatedMessage.message,
-        adminMessageTitle: populatedMessage.adminMessageTitle,
-        user: populatedMessage.user,
-        isRead: false,
-        createdAt: populatedMessage.createdAt,
-        priority: populatedMessage.priority,
-      },
-    });
-  });
+  // Emit to all receivers except the admin/sender
+  emitToReceivers(
+    req,
+    populated.receivers,
+    socketEvents.ADMIN_MESSAGE_BROADCAST,
+    dataPayload,
+    userId
+  );
 
-  populatedMessage?.receivers?.forEach((receiver) => {
-    if (userId !== receiver?.toString()) return;
+  console.log(populated?.receivers);
 
-    emitSocketEventToAdmin(req, socketEvents.ADMIN_MESSAGE_BROADCAST, `admin-room`, {
-      data: {
-        _id: populatedMessage._id,
-        type: populatedMessage.type,
-        message: populatedMessage.message,
-        adminMessageTitle: populatedMessage.adminMessageTitle,
-        receivers: populatedMessage.receivers,
-        sentBy: populatedMessage.user,
-        createdAt: populatedMessage.createdAt,
-      },
-    });
+  // Admin room broadcast
+  emitSocketEventToAdmin(req, socketEvents.ADMIN_MESSAGE_BROADCAST, "admin-room", {
+    data: {
+      ...dataPayload,
+      receivers: populated.receivers,
+      sentBy: populated.user,
+    },
   });
 
   return new ApiResponse(
     StatusCodes.CREATED,
-    populatedMessage,
+    populated,
     "admin message broadcast sent successfully"
   );
 });
@@ -370,7 +365,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
     message.adminNotes = !message.adminNotes ? adminNotes : message.adminNotes;
     await message.save();
 
-    emitSocketEventToUser(req, socketEvents.REQUEST_STATUS_UPADATE, `user-${message?.user}`, {
+    emitSocketEventToUser(req, socketEvents.REQUEST_STATUS_UPADATE, `users-${message?.user}`, {
       data: {
         requestId: message?._id,
         status: message?.status,
