@@ -32,6 +32,24 @@ router
     transactionController.getAllTransactions
   );
 
+// Download receipt as PDF
+router
+  .route("/receipt/download/:transactionId")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN, RoleEnums.USER),
+    transactionController.downloadTransactionById
+  );
+
+// Get receipt data for sharing
+router
+  .route("/receipt/share/:transactionId")
+  .get(
+    verifyJWT,
+    checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN, RoleEnums.USER),
+    transactionController.getReceiptData
+  );
+
 router
   .route("/details")
   .get(
@@ -39,6 +57,7 @@ router
     checkPermissions(RoleEnums.MODERATOR, RoleEnums.ADMIN, RoleEnums.USER),
     transactionController.getTransactionById
   );
+
 router
   .route("/delete")
   .delete(

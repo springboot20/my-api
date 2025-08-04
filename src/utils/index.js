@@ -31,3 +31,26 @@ export const getMognogoosePagination = ({ limit = 10, page = 1, customLabels }) 
     },
   };
 };
+
+export const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return {
+    date: date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    time: date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }),
+  };
+};
+
+export const formatMoney = (price, currency, format) => {
+  return new Intl.NumberFormat(format, {
+    currency,
+    style: "currency",
+  }).format(price);
+};
