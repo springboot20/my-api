@@ -30,14 +30,6 @@ const RequestMessageSchema = new Schema(
       ],
       default: [],
     },
-    userEmail: {
-      type: String,
-      required: true,
-    },
-    username: {
-      type: String,
-      required: true,
-    },
     action: {
       type: String,
       enum: AvailableRequestActionsEnums,

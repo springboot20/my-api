@@ -12,8 +12,9 @@ export const getRequestMessageById = apiResponseHandler(async (req) => {
   const { requestId } = req.params;
 
   const message = await RequestMessageModel.findOne({ _id: new mongoose.Types.ObjectId(requestId) })
-    .populate("user", "_id email username avatar")
-    .populate("reviewedBy", "_id email username avatar role");
+    .populate("user", "_id email firstname lastname avatar")
+    .populate("receivers", "_id email firstname lastname avatar role")
+    .populate("reviewedBy", "_id email firstname lastname avatar role");
 
   if (!message) {
     throw new CustomErrors("request message not found", StatusCodes.NOT_FOUND);
@@ -165,26 +166,22 @@ export const accountMessageRequest = apiResponseHandler(async (req) => {
 
   const request = new RequestMessageModel({
     user: userId,
-    userEmail: user?.email,
-    username: user?.username,
     message,
     action,
     status: "PENDING",
   });
 
-  await request.populate("user", "name email avatar");
+  await request.populate("user", "lastname firstname email avatar");
   await request.save();
+
+  console.log(request);
 
   emitSocketEventToAdmin(req, socketEvents.NEW_ADMIN_REQUEST, "admin-room", {
     data: {
       _id: request._id,
       action: request.action,
       message: request.message,
-      user: {
-        id: request.user,
-        name: request.username,
-        email: request.email,
-      },
+      user: request.user,
       createdAt: request.createdAt,
       status: request.status,
     },
@@ -299,16 +296,18 @@ export const adminSendRequest = apiResponseHandler(async (req, res) => {
     user: req.user._id,
     receivers: messageMember,
     isRead: false,
-    userEmail: user?.email,
-    username: user?.username,
     message,
     adminMessageTitle,
     type,
   });
 
-  const populatedMessage = await RequestMessageModel.findById(newAdminMessage._id) 
-    .populate("user", "_id username email avatar")
-    .populate("receivers", "_id username email avatar");
+  console.log(newAdminMessage);
+
+  const populatedMessage = await RequestMessageModel.findById(newAdminMessage._id)
+    .populate("user", "_id firstname lastname email avatar")
+    .populate("receivers", "_id firstname lastname email avatar")
+    .populate("reviewedBy", "_id firstname lastname email avatar");
+  console.log(populatedMessage);
 
   populatedMessage?.receivers?.forEach((receiver) => {
     if (userId === receiver?.toString()) return;
@@ -388,7 +387,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
 
     return new ApiResponse(
       StatusCodes.OK,
-      await message.populate("user", "_id email username avatar"),
+      await message.populate("user", "_id email lastname firstname avatar"),
       "request message retrieved successfully"
     );
   }
@@ -404,7 +403,7 @@ export const adminUpdateRequestMessageStatus = apiResponseHandler(async (req) =>
       },
     },
     { new: true }
-  ).populate("user", "username email avatar");
+  ).populate("user", "lastname firstname email avatar");
 
   emitSocketEventToUser(
     req,
