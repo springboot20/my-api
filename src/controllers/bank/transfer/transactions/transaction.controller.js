@@ -103,7 +103,10 @@ export const deleteTransactionById = apiResponseHandler(async (req, res) => {
 export const downloadTransactionById = apiResponseHandler(async (req, res) => {
   const { transactionId } = req.params;
 
-  const transaction = await TransactionModel.findById(transactionId);
+  const transaction = await TransactionModel.findById(transactionId).populate(
+    "user",
+    "_id email firstname lastname"
+  );
 
   if (!transaction) {
     throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
@@ -198,7 +201,7 @@ export const downloadTransactionById = apiResponseHandler(async (req, res) => {
     doc.moveDown(0.5);
 
     const userDetails = [
-      ["Name:", `${transaction.user.firstName} ${transaction.user.lastName}`],
+      ["Name:", `${transaction.user.firstname} ${transaction.user.lastname}`],
       ["Email:", transaction.user.email],
       ["User ID:", transaction.user._id.toString()],
     ];
@@ -231,7 +234,7 @@ export const getReceiptData = apiResponseHandler(async (req, res) => {
 
   const transaction = await TransactionModel.findById(transactionId).populate(
     "user",
-    "firstName lastName email"
+    "firstname lastname email"
   );
 
   if (!transaction) {
@@ -255,7 +258,7 @@ export const getReceiptData = apiResponseHandler(async (req, res) => {
     receiverAccount: transaction.detail?.receiverAccountNumber,
     user: transaction.user
       ? {
-          name: `${transaction.user.firstName} ${transaction.user.lastName}`,
+          name: `${transaction.user.firstname} ${transaction.user.lastname}`,
           email: transaction.user.email,
         }
       : null,
