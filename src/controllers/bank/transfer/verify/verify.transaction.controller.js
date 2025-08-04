@@ -144,6 +144,7 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   console.log(_paystackStatus);
   const paymentConfirmed = _paystackStatus === paystackStatus.success;
 
+  // Update transaction status based on verification result
   transaction.transactionStatus = _paystackStatus;
   transaction.status = paymentConfirmed ? PaymentStatuses.COMPLETED : PaymentStatuses.FAILED;
 
@@ -152,11 +153,8 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
     return new ApiResponse(StatusCodes.OK, { transaction }, "Payment verification failed");
   }
 
-  // Prevent duplicate processing
-  if (transaction.status === PaymentStatuses.COMPLETED) {
-    return new ApiResponse(StatusCodes.OK, { transaction }, "Transaction already completed");
-  }
-
+  // At this point, payment is confirmed and status is set to COMPLETED
+  // Find the accounts for wallet transfer
   const fromAccount = await AccountModel.findOne({
     account_number: transaction.detail.senderAccountNumber,
   });
@@ -169,9 +167,24 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
     throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
   }
 
-  await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
+  try {
+    // Perform the wallet transfer
+    await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
 
-  await transaction.save();
+    // Save the transaction with COMPLETED status
+    await transaction.save();
 
-  return new ApiResponse(StatusCodes.OK, { transaction }, "Payment verified successfully");
+    return new ApiResponse(StatusCodes.OK, { transaction }, "Payment verified successfully");
+  } catch (error) {
+    // If wallet transfer fails, mark transaction as failed
+    transaction.status = PaymentStatuses.FAILED;
+    await transaction.save();
+
+    throw new CustomErrors(
+      "Transaction verification failed",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      [],
+      { transaction }
+    );
+  }
 });
