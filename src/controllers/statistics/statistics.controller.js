@@ -9,13 +9,15 @@ export const getAllStatistics = apiResponseHandler(async (req, res) => {
   const dateRange = getDateRange(timeframe, startDate, endDate);
 
   // Run all aggregations in parallel
-  const [userStats, accountStats, transactionStats, revenueStats, growthStats] = await Promise.all([
-    getUserStatistics(dateRange),
-    getAccountStatistics(dateRange),
-    getTransactionStatistics(dateRange),
-    getRevenueStatistics(dateRange),
-    getGrowthStatistics(dateRange),
-  ]);
+  const [userStats, accountStats, transactionStats, revenueStats, growthStats, balanceHistory] =
+    await Promise.allSettled([
+      getUserStatistics(dateRange),
+      getAccountStatistics(dateRange),
+      getTransactionStatistics(dateRange),
+      getRevenueStatistics(dateRange),
+      getGrowthStatistics(dateRange),
+      getBalanceHistory(dateRange),
+    ]);
 
   return new ApiResponse(
     StatusCodes.OK,
@@ -32,6 +34,11 @@ export const getAllStatistics = apiResponseHandler(async (req, res) => {
       transactions: transactionStats,
       revenue: revenueStats,
       growth: growthStats,
+
+      // NEW
+      expenses: transactionStats.expenses,
+      balanceHistory: balanceHistory,
+
       generatedAt: new Date(),
       timeframe: timeframe,
       dateRange: dateRange,
@@ -42,6 +49,7 @@ export const getAllStatistics = apiResponseHandler(async (req, res) => {
 
 /**
  * User Statistics Aggregation
+ * ADMIN / MODERATOR
  */
 async function getUserStatistics(dateRange) {
   const pipeline = [
@@ -101,6 +109,7 @@ async function getUserStatistics(dateRange) {
 
 /**
  * Account Statistics Aggregation
+ * ADMIN / MODERATOR
  */
 async function getAccountStatistics(dateRange) {
   const pipeline = [
@@ -271,12 +280,32 @@ async function getTransactionStatistics(dateRange) {
             },
           },
         ],
+
+        expenseBreakdown: [
+          {
+            $match: {
+              type: { $in: ["WITHDRAW", "TRANSFER"] },
+              status: "COMPLETED",
+              createdAt: { $gte: dateRange.start, $lte: dateRange.end },
+            },
+          },
+          {
+            $group: {
+              _id: "$type",
+              count: { $sum: 1 },
+              total: { $sum: "$amount" },
+            },
+          },
+          { $sort: { total: -1 } },
+        ],
       },
     },
   ];
 
   const result = await TransactionModel.aggregate(pipeline);
   const data = result[0];
+
+  console.log(data);
 
   return {
     total: data.total[0]?.count || 0,
@@ -289,6 +318,8 @@ async function getTransactionStatistics(dateRange) {
     volumeTrend: data.volumeTrend,
     hourlyDistribution: data.hourlyDistribution,
     topTransactions: data.topTransactions,
+    // Return expense stats
+    expenses: data.expenseStats,
   };
 }
 
@@ -340,8 +371,50 @@ async function getRevenueStatistics(dateRange) {
   };
 }
 
+async function getBalanceHistory(dateRange) {
+  const pipeline = [
+    {
+      $match: {
+        status: "COMPLETED",
+        createdAt: { $gte: dateRange.start, $lte: dateRange.end },
+      },
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        inflow: {
+          $sum: {
+            $cond: [{ $eq: ["$type", "DEPOSIT"] }, "$amount", 0],
+          },
+        },
+        outflow: {
+          $sum: {
+            $cond: [{ $in: ["$type", ["TRANSFER", "WITHDRAW"]] }, "$amount", 0],
+          },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ];
+
+  const result = await TransactionModel.aggregate(pipeline);
+
+  // Optionally: compute net balance over time
+  let cumulativeBalance = 0;
+  const history = result.map((entry) => {
+    cumulativeBalance += entry.inflow - entry.outflow;
+    return {
+      date: entry._id,
+      balance: cumulativeBalance,
+    };
+  });
+
+  return history;
+}
+
 /**
  * Growth Statistics
+ * ADMIN / MODERATOR
  */
 async function getGrowthStatistics(dateRange) {
   const thirtyDaysAgo = new Date(dateRange.start.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -435,6 +508,7 @@ function getDateRange(timeframe, startDate, endDate) {
 /**
  * GET /api/stats/users
  * Returns detailed user statistics only
+ * ADMIN / MODERATOR
  */
 export const usersStatistics = apiResponseHandler(async (req, res) => {
   const { timeframe = "7d", startDate, endDate } = req.query;

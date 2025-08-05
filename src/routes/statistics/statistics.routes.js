@@ -6,13 +6,7 @@ import { RoleEnums } from "../../constants.js";
 
 const router = Router();
 
-router
-  .route("/")
-  .get(
-    verifyJWT,
-    checkPermissions(RoleEnums.ADMIN, RoleEnums.MODERATOR),
-    statisticsController.getAllStatistics
-  );
+router.route("/").get(verifyJWT, statisticsController.getAllStatistics);
 
 router
   .route("/transactions")
