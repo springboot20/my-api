@@ -7,6 +7,7 @@ import { TransactionModel } from "../../../../models/index.js";
 import mongoose from "mongoose";
 import PDFDocument from "pdfkit";
 import { formatDate, formatMoney } from "../../../../utils/index.js";
+import { PassThrough } from "stream";
 
 const getPipelineData = () => {
   return [
@@ -99,45 +100,6 @@ export const deleteTransactionById = apiResponseHandler(async (req, res) => {
 
   return new ApiResponse(StatusCodes.OK, {}, "transaction deleted successfully");
 });
-
-// Separate function to generate PDF buffer
-const generateTransactionPDF = (transaction) => {
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({
-        margin: 50,
-        size: "A4",
-        info: {
-          Title: `Transaction Receipt - ${transaction.reference}`,
-          Subject: "Transaction Receipt",
-          Author: "YourApp Financial Services",
-        },
-      });
-
-      const chunks = [];
-
-      // Collect PDF data
-      doc.on("data", (chunk) => chunks.push(chunk));
-      doc.on("end", () => {
-        const result = Buffer.concat(chunks);
-        resolve(result);
-      });
-      doc.on("error", (err) => {
-        console.error("PDF doc error:", err);
-        reject(err);
-      });
-
-      // Start generating content
-      generatePDFContent(doc, transaction);
-
-      // Finalize the document
-      doc.end();
-    } catch (error) {
-      console.error("PDF generation setup error:", error);
-      reject(error);
-    }
-  });
-};
 
 // Function to generate PDF content
 const generatePDFContent = (doc, transaction) => {
@@ -333,6 +295,46 @@ const getStatusColor = (status) => {
     default:
       return "#6b7280";
   }
+};
+
+// Separate function to generate PDF buffer
+const generateTransactionPDF = (transaction) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        margin: 50,
+        size: "A4",
+        info: {
+          Title: `Transaction Receipt - ${transaction.reference}`,
+          Subject: "Transaction Receipt",
+          Author: "YourApp Financial Services",
+        },
+      });
+      const passthrough = new PassThrough();
+      const chunks = [];
+
+      // Collect PDF data
+      passthrough.on("data", (chunk) => chunks.push(chunk));
+      passthrough.on("end", () => {
+        const result = Buffer.concat(chunks);
+        resolve(result);
+      });
+      passthrough.on("error", (err) => {
+        console.error("PDF doc error:", err);
+        reject(err);
+      });
+
+      doc.pipe(passthrough);
+      // Start generating content
+      generatePDFContent(doc, transaction);
+
+      // Finalize the document
+      doc.end();
+    } catch (error) {
+      console.error("PDF generation setup error:", error);
+      reject(error);
+    }
+  });
 };
 
 export const downloadTransactionById = apiResponseHandler(async (req, res) => {
