@@ -134,11 +134,13 @@ const generatePDFContent = (doc, transaction) => {
     .text(
       formatMoney(
         transaction.amount,
-        transaction.currency || "NGN",
+        transaction.currency === "NGN" ? "NGN" : "USD",
         transaction.currency === "NGN" ? "en-NG" : "en-US"
       ),
       { align: "center" }
     );
+
+  doc.moveDown(0.5);
 
   doc
     .fontSize(12)
@@ -165,7 +167,7 @@ const generatePDFContent = (doc, transaction) => {
       "Amount",
       formatMoney(
         transaction.amount,
-        transaction.currency || "NGN",
+        transaction.currency === "NGN" ? "NGN" : "USD",
         transaction.currency === "NGN" ? "en-NG" : "en-US"
       ),
     ],
@@ -385,7 +387,7 @@ export const getReceiptData = apiResponseHandler(async (req, res) => {
     reference: transaction.reference,
     amount: formatMoney(
       transaction.amount,
-      transaction.currency || "NGN",
+      transaction.currency === "NGN" ? "NGN" : "USD",
       transaction.currency === "NGN" ? "en-NG" : "en-US"
     ),
     type: transaction.type,
@@ -405,7 +407,8 @@ export const getReceiptData = apiResponseHandler(async (req, res) => {
     shareUrl: `${req.protocol}://${req.get("host")}/receipt/${transaction._id}`,
     shareText: `Transaction Receipt - ${transaction.reference}\nAmount: ${formatMoney(
       transaction.amount,
-      transaction.currency || "NGN"
+      transaction.currency === "NGN" ? "NGN" : "USD",
+      transaction.currency === "NGN" ? "en-NG" : "en-US"
     )}\nStatus: ${transaction.status}`,
   };
 
