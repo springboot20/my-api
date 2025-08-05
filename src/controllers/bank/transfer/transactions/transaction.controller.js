@@ -187,10 +187,10 @@ const generatePDFContent = (doc, transaction) => {
 
   addDetailRows(doc, details);
 
+  addSection(doc, "ACCOUNT INFORMATION");
   // Account Information Section (if available)
   if (transaction.detail?.senderAccountNumber || transaction.detail?.receiverAccountNumber) {
     doc.moveDown(1);
-    addSection(doc, "ACCOUNT INFORMATION");
 
     const accountDetails = [];
     if (transaction.detail?.senderAccountNumber) {
@@ -203,10 +203,10 @@ const generatePDFContent = (doc, transaction) => {
     addDetailRows(doc, accountDetails);
   }
 
+  addSection(doc, "USER INFORMATION");
   // User Information Section
   if (transaction.user) {
     doc.moveDown(1);
-    addSection(doc, "USER INFORMATION");
 
     const userDetails = [
       [
