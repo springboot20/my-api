@@ -23,21 +23,21 @@ export const getAllStatistics = apiResponseHandler(async (req, res) => {
     StatusCodes.OK,
     {
       overview: {
-        totalUsers: userStats.total,
-        totalAccounts: accountStats.total,
-        totalTransactions: transactionStats.total,
-        totalVolume: transactionStats.totalVolume,
-        totalRevenue: revenueStats.total,
+        totalUsers: userStats?.value?.total,
+        totalAccounts: accountStats?.value?.total,
+        totalTransactions: transactionStats?.value?.total,
+        totalVolume: transactionStats?.value?.totalVolume,
+        totalRevenue: revenueStats?.value?.total,
       },
-      users: userStats,
-      accounts: accountStats,
-      transactions: transactionStats,
-      revenue: revenueStats,
-      growth: growthStats,
+      users: userStats?.value,
+      accounts: accountStats?.value,
+      transactions: transactionStats?.value,
+      revenue: revenueStats?.value,
+      growth: growthStats?.value,
 
       // NEW
-      expenses: transactionStats.expenses,
-      balanceHistory: balanceHistory,
+      expenses: transactionStats?.value?.expenses,
+      balanceHistory: balanceHistory?.value,
 
       generatedAt: new Date(),
       timeframe: timeframe,
@@ -305,21 +305,21 @@ async function getTransactionStatistics(dateRange) {
   const result = await TransactionModel.aggregate(pipeline);
   const data = result[0];
 
-  console.log(data);
+  console.log(data?.expenseBreakdown);
 
   return {
-    total: data.total[0]?.count || 0,
-    timeframeCount: data.timeframeTransactions[0]?.count || 0,
-    totalVolume: data.totalVolume[0]?.total || 0,
-    timeframeVolume: data.timeframeVolume[0]?.total || 0,
-    averageAmount: data.avgAmount[0]?.avg || 0,
-    byType: data.byType,
-    byStatus: data.byStatus,
-    volumeTrend: data.volumeTrend,
-    hourlyDistribution: data.hourlyDistribution,
-    topTransactions: data.topTransactions,
+    total: data?.total[0]?.count || 0,
+    timeframeCount: data?.timeframeTransactions[0]?.count || 0,
+    totalVolume: data?.totalVolume[0]?.total || 0,
+    timeframeVolume: data?.timeframeVolume[0]?.total || 0,
+    averageAmount: data?.avgAmount[0]?.avg || 0,
+    byType: data?.byType,
+    byStatus: data?.byStatus,
+    volumeTrend: data?.volumeTrend,
+    hourlyDistribution: data?.hourlyDistribution,
+    topTransactions: data?.topTransactions,
     // Return expense stats
-    expenses: data.expenseStats,
+    expenses: data?.expenseBreakdown,
   };
 }
 
