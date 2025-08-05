@@ -107,6 +107,8 @@ const generatePDFContent = (doc, transaction) => {
   const primaryColor = "#2563eb";
   const grayColor = "#6b7280";
 
+  doc.font("Helvetica");
+
   // Header with company info
   doc.fontSize(24).fillColor(primaryColor).text("TRANSACTION RECEIPT", { align: "center" });
 
