@@ -101,6 +101,45 @@ export const deleteTransactionById = apiResponseHandler(async (req, res) => {
   return new ApiResponse(StatusCodes.OK, {}, "transaction deleted successfully");
 });
 
+// Helper: Divider
+const drawDivider = (doc) => {
+  doc.strokeColor("#e5e7eb").lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+};
+
+const formatDateTime = (date) => formatDate(date).date + " at " + formatDate(date).time;
+
+const addFooter = (doc) => {
+  doc.moveDown(2); // space from previous content
+
+  // Draw separator
+  doc.strokeColor("#e5e7eb").lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+  doc.moveDown(0.5);
+
+  doc.fontSize(8).fillColor("#6b7280");
+
+  // Footer note
+  doc.text("This is an electronically generated receipt. No signature required.", {
+    align: "center",
+    lineGap: 2,
+  });
+
+  // Date generated
+  doc.text(
+    `Generated on ${new Date().toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZoneName: "short",
+    })}`,
+    {
+      align: "center",
+      lineGap: 2,
+    }
+  );
+};
+
 // Function to generate PDF content
 const generatePDFContent = (doc, transaction) => {
   // Colors
@@ -109,22 +148,15 @@ const generatePDFContent = (doc, transaction) => {
 
   doc.font("Helvetica");
 
-  // Header with company info
+  // Header
   doc.fontSize(24).fillColor(primaryColor).text("TRANSACTION RECEIPT", { align: "center" });
-
-  doc.moveDown(0.5);
-
-  doc
-    .fontSize(12)
-    .fillColor(grayColor)
-    .text("YourApp Financial Services", { align: "center" })
-    .text("Electronic Receipt", { align: "center" });
-
+  doc.moveDown(0.3);
+  doc.fontSize(12).fillColor(grayColor).text("YourApp Financial Services", { align: "center" });
+  doc.text("Electronic Receipt", { align: "center" });
   doc.moveDown(1);
 
-  // Add a line separator
-  doc.strokeColor("#e5e7eb").lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-
+  // Divider
+  drawDivider(doc);
   doc.moveDown(1);
 
   // Transaction amount (prominent display)
@@ -140,14 +172,12 @@ const generatePDFContent = (doc, transaction) => {
       { align: "center" }
     );
 
-  doc.moveDown(0.5);
-
+  doc.moveDown(0.3);
   doc
     .fontSize(12)
     .fillColor(grayColor)
     .text(`${transaction.type} Transaction`, { align: "center" });
-
-  doc.moveDown(1);
+  doc.moveDown(0.3);
 
   // Status badge
   const statusColor = getStatusColor(transaction.status);
@@ -171,94 +201,55 @@ const generatePDFContent = (doc, transaction) => {
         transaction.currency === "NGN" ? "en-NG" : "en-US"
       ),
     ],
-    ["Transaction Type", transaction.type],
-    ["Status", transaction.status],
-    ["Description", transaction.description || "N/A"],
+    ["Transaction Type", transaction?.type],
+    ["Status", transaction?.status],
+    ["Description", transaction?.description || "N/A"],
     ["Payment Gateway", transaction.detail?.gateway || "N/A"],
-    [
-      "Date Created",
-      formatDate(transaction.createdAt).date + " at " + formatDate(transaction.createdAt).time,
-    ],
-    [
-      "Last Updated",
-      formatDate(transaction.updatedAt).date + " at " + formatDate(transaction.updatedAt).time,
-    ],
+    ["Date Created", formatDateTime(transaction.createdAt)],
+    ["Last Updated", formatDateTime(transaction.updatedAt)],
   ];
-
   addDetailRows(doc, details);
+  doc.moveDown(1.2);
 
-  addSection(doc, "ACCOUNT INFORMATION");
   // Account Information Section (if available)
-  if (transaction.detail?.senderAccountNumber || transaction.detail?.receiverAccountNumber) {
-    doc.moveDown(1);
+  addSection(doc, "ACCOUNT INFORMATION");
+  const accountDetails = [
+    ["Sender Account", transaction.detail?.senderAccountNumber],
+    ["Receiver Account", transaction.detail?.receiverAccountNumber],
+  ];
+  addDetailRows(doc, accountDetails);
+  doc.moveDown(1.2);
 
-    const accountDetails = [];
-    if (transaction.detail?.senderAccountNumber) {
-      accountDetails.push(["Sender Account", transaction.detail.senderAccountNumber]);
-    }
-    if (transaction.detail?.receiverAccountNumber) {
-      accountDetails.push(["Receiver Account", transaction.detail.receiverAccountNumber]);
-    }
-
-    addDetailRows(doc, accountDetails);
-  }
-
-  addSection(doc, "USER INFORMATION");
   // User Information Section
-  if (transaction.user) {
-    doc.moveDown(1);
-
-    const userDetails = [
-      [
-        "Full Name",
-        `${transaction.user.firstname || ""} ${transaction.user.lastname || ""}`.trim(),
-      ],
-      ["Email Address", transaction.user.email],
-      ["User ID", transaction.user._id.toString()],
-    ];
-
-    addDetailRows(doc, userDetails);
-  }
+  addSection(doc, "USER INFORMATION");
+  const userDetails = [
+    [
+      "Full Name",
+      `${transaction.user?.firstname || ""} ${transaction.user?.lastname || ""}`.trim(),
+    ],
+    ["Email Address", transaction.user?.email],
+    ["User ID", transaction.user._id.toString()],
+  ];
+  addDetailRows(doc, userDetails);
 
   // Footer
-  doc.moveDown(2);
-
-  // Add a line separator
-  doc.strokeColor("#e5e7eb").lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-
-  doc.moveDown(0.5);
-
-  doc
-    .fontSize(8)
-    .fillColor(grayColor)
-    .text("This is an electronically generated receipt. No signature required.", {
-      align: "center",
-    });
-
-  doc.text(
-    `Generated on ${new Date().toLocaleString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZoneName: "short",
-    })}`,
-    { align: "center" }
-  );
+  addFooter(doc);
 };
 
 // Helper function to add section headers
 const addSection = (doc, title) => {
-  doc.fontSize(14).fillColor("#111827").text(title, { underline: false });
+  const x = 50;
+  const y = doc.y;
+
+  doc.font("Helvetica-Bold").fontSize(14).fillColor("#111827").text(title, x, y);
 
   // Add underline manually
   const titleWidth = doc.widthOfString(title);
   doc
     .strokeColor("#2563eb")
     .lineWidth(2)
-    .moveTo(50, doc.y + 2)
-    .lineTo(50 + titleWidth, doc.y + 2)
+    .moveTo(x, y + 18)
+    .lineTo(x + titleWidth, y + 18)
     .stroke();
 
   doc.moveDown(0.8);
