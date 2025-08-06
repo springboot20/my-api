@@ -63,6 +63,16 @@ const TransactionSchema = new Schema(
       type: String,
       enum: AvailablePaymentStatusEnums,
     },
+    receipt: {
+      type: {
+        url: String,
+        public_id: String,
+      },
+      default: {
+        public_id: null,
+        url: null,
+      },
+    },
   },
   { timestamps: true }
 );
