@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { AvailableCurrencyTypes, AvailableCurrencyTypesEnum } from "../../../constants.js";
 
 const WalletSchema = new Schema(
   {
@@ -18,7 +19,8 @@ const WalletSchema = new Schema(
     },
     currency: {
       type: String,
-      default: "USD",
+      enum: AvailableCurrencyTypesEnum,
+      default: AvailableCurrencyTypes.NGN,
     },
     isActive: {
       type: Boolean,

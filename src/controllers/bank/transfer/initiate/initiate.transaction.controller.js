@@ -7,6 +7,7 @@ import { AccountModel, TransactionModel, UserModel } from "../../../../models/in
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
 import {
+  AvailableCurrencyTypes,
   AvailableTransactionTypes,
   PaymentMethods,
   PaymentStatuses,
@@ -18,7 +19,7 @@ const getAccountDetails = async (accountId) => {
   const objectId = new mongoose.Types.ObjectId(accountId);
 
   console.log(accountId);
-  return AccountModel.findById(objectId);
+  return AccountModel.findById(objectId).populate("user", "firstname lastname");
 };
 
 export const initiatePaystackDepositTransaction = apiResponseHandler(
@@ -30,14 +31,7 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
   async (req, res) => {
     console.log(req.body);
 
-    const {
-      amount,
-      channel = "card",
-      description,
-      currency = "NGN",
-      from_account,
-      to_account,
-    } = req.body;
+    const { amount, channel = "card", description, from_account, to_account } = req.body;
 
     const user = await UserModel.findById(req.user?._id);
 
@@ -69,7 +63,41 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
       email: user.email,
       amount,
       channel,
-      currency,
+      currency: fromAccount?.currency || AvailableCurrencyTypes.NGN,
+      meta_data: {
+        custom_files: [
+          {
+            display_name: "User ID",
+            variable_name: "userId",
+            value: user._id,
+          },
+          {
+            display_name: "Full Name (From)",
+            variable_name: "fullname",
+            value: `${user.firstname} ${user.lastname}`,
+          },
+          {
+            display_name: "Beneficiary (To)",
+            variable_name: "beneficiary",
+            value: `${toAccount?.user?.firstname} ${toAccount?.user?.lastname}`,
+          },
+          {
+            display_name: "Email",
+            variable_name: "email",
+            value: user.email,
+          },
+          {
+            display_name: "Amount",
+            variable_name: "amount",
+            value: parseInt(amount, 10),
+          },
+          {
+            display_name: "Amount",
+            variable_name: "amount",
+            value: parseInt(amount, 10),
+          },
+        ],
+      },
     });
 
     console.log(depositInfo);
@@ -79,14 +107,31 @@ export const initiatePaystackDepositTransaction = apiResponseHandler(
     }
 
     const transaction = await TransactionModel.create({
+      account: fromAccount?._id,
       reference: depositInfo.data.reference,
       user: req.user._id,
       amount,
       description,
-      currency,
+      currency: fromAccount?.currency || AvailableCurrencyTypes.NGN,
       detail,
       type: AvailableTransactionTypes.DEPOSIT,
-      getAccountDetails,
+      status: PaymentStatuses.IN_PROGRESS,
+    });
+
+    // ✅ Create mirror transaction for receiver (optional, can be toggled by config or preference)
+    await TransactionModel.create({
+      reference: `${depositInfo.data.reference}-MIRROR`, // Add suffix to avoid conflict
+      user: toAccount.user, // Receiver's user ID
+      account: toAccount?._id,
+      amount,
+      description,
+      currency: toAccount?.currency || AvailableCurrencyTypes.NGN,
+      type: AvailableTransactionTypes.DEPOSIT, // Can be 'RECEIVED_TRANSFER' if needed
+      detail: {
+        gateway: PaymentMethods.PAYSTACK,
+        senderAccountNumber: fromAccount.account_number,
+        receiverAccountNumber: toAccount.account_number,
+      },
       status: PaymentStatuses.IN_PROGRESS,
     });
 
@@ -121,14 +166,7 @@ export const validateTransactionPin = apiResponseHandler(async (req) => {
 });
 
 export const sendTransaction = apiResponseHandler(async (req, res) => {
-  const {
-    amount,
-    from_account,
-    to_account,
-    description,
-    currency = "NGN",
-    channel = "card",
-  } = req.body;
+  const { amount, from_account, to_account, description, channel = "card" } = req.body;
 
   if (!amount || !from_account || !to_account) {
     throw new CustomErrors("Missing transaction details", StatusCodes.BAD_REQUEST);
@@ -161,7 +199,41 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     email: user.email,
     amount,
     channel,
-    currency,
+    currency: fromAccount?.currency || AvailableCurrencyTypes.NGN,
+    meta_data: {
+      custom_files: [
+        {
+          display_name: "User ID",
+          variable_name: "userId",
+          value: user._id,
+        },
+        {
+          display_name: "Full Name (From)",
+          variable_name: "fullname",
+          value: `${user.firstname} ${user.lastname}`,
+        },
+        {
+          display_name: "Beneficiary (To)",
+          variable_name: "beneficiary",
+          value: `${toAccount?.user?.firstname} ${toAccount?.user?.lastname}`,
+        },
+        {
+          display_name: "Email",
+          variable_name: "email",
+          value: user.email,
+        },
+        {
+          display_name: "Amount",
+          variable_name: "amount",
+          value: parseInt(amount, 10),
+        },
+        {
+          display_name: "Amount",
+          variable_name: "amount",
+          value: parseInt(amount, 10),
+        },
+      ],
+    },
   });
 
   if (!paymentInit?.status || !paymentInit.data) {
@@ -171,11 +243,12 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
   console.log(paymentInit);
 
   const transaction = await TransactionModel.create({
+    account: fromAccount?._id,
     reference: paymentInit.data.reference,
     user: req.user._id,
     amount,
     description,
-    currency,
+    currency: fromAccount?.currency || AvailableCurrencyTypes.NGN,
     type: AvailableTransactionTypes.TRANSFER,
     detail: {
       gateway: PaymentMethods.PAYSTACK,
@@ -189,9 +262,10 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
   await TransactionModel.create({
     reference: `${paymentInit.data.reference}-MIRROR`, // Add suffix to avoid conflict
     user: toAccount.user, // Receiver's user ID
+    account: toAccount?._id,
     amount,
     description,
-    currency,
+    currency: toAccount?.currency || AvailableCurrencyTypes.NGN,
     type: AvailableTransactionTypes.DEPOSIT, // Can be 'RECEIVED_TRANSFER' if needed
     detail: {
       gateway: PaymentMethods.PAYSTACK,

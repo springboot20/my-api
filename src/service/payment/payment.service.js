@@ -7,7 +7,7 @@ export default class PaymentService {
     return new Date().getTime().toString(36) + new Date().getUTCMilliseconds();
   };
 
-  static async initializePaystackPayment({ email, amount, channel, currency }) {
+  static async initializePaystackPayment({ email, amount, channel, currency, meta_data = {} }) {
     try {
       const amountInKobo = convertToKobo(amount);
 
@@ -18,6 +18,7 @@ export default class PaymentService {
         currency,
         reference: PaymentService.generatePaystackRefernce(),
         callback_url: `${process.env.PAYSTACK_CALLBACK_URL}`,
+        meta_data,
       };
 
       const response = await axios.post(paystack_urls.initiate, paymentConfig, {

@@ -5,6 +5,7 @@ import {
 import { StatusCodes } from "http-status-codes";
 import { TransactionModel } from "../../../../models/index.js";
 import { getMognogoosePagination } from "../../../../utils/index.js";
+import mongoose from "mongoose";
 
 const getPipelineData = () => {
   return [
@@ -57,13 +58,20 @@ const getPipelineData = () => {
 };
 
 export const getUserTransactions = apiResponseHandler(async (req, res) => {
-  const { type, search, page = 1, limit = 10 } = req.query;
+  const { type, search, page = 1, limit = 10, accountId } = req.query;
 
   const transactionsAggregate = TransactionModel.aggregate([
     {
       $match: {
         user: req.user?._id,
       },
+    },
+    {
+      $match: accountId
+        ? {
+            account: new mongoose.Types.ObjectId(accountId),
+          }
+        : {},
     },
     {
       $match: type
