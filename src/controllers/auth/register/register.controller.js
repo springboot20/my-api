@@ -27,6 +27,7 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
 
   await ProfileModel.create({
     userId: user?._id,
+    role,
   });
 
   const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
@@ -44,7 +45,7 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
       ? process.env.BASE_URL_PRDO_ADMIN
       : process.env.BASE_URL_DEV;
 
-  const verificationLink = `${link}/verify-email?userId=${
+  const verificationLink = `${link}/auth/email/verify-email?userId=${
     createdUser?._id || existingUser?._id
   }&token=${unHashedToken}`;
 
@@ -52,28 +53,27 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
     `${createdUser.firstname} ${createdUser.lastname}` ||
     `${existingUser.firstname} ${existingUser.lastname}`;
 
-  await Promise.allSettled[
-    (sendMail({
-      to: createdUser.email || existingUser?.email,
-      subject: "Welcome Mail",
-      templateName: "welcome",
-      data: {
-        dashboardUrl: `${link}/app/overview`,
-        appName: process.env.APP_NAME,
-        name,
-      },
-    }),
-    sendMail({
-      to: createdUser.email || existingUser?.email,
-      subject: "Email verification",
-      templateName: "verify-mail",
-      data: {
-        verificationLink,
-        appName: process.env.APP_NAME,
-        name,
-      },
-    }))
-  ];
+  await sendMail({
+    to: createdUser.email || existingUser?.email,
+    subject: "Welcome Mail",
+    templateName: "welcome",
+    data: {
+      dashboardUrl: `${link}/app/overview`,
+      appName: process.env.APP_NAME,
+      name,
+    },
+  });
+
+  await sendMail({
+    to: createdUser.email || existingUser?.email,
+    subject: "Email verification",
+    templateName: "verify-mail",
+    data: {
+      verificationLink,
+      appName: process.env.APP_NAME,
+      name,
+    },
+  });
 
   return new ApiResponse(
     StatusCodes.CREATED,
@@ -114,6 +114,7 @@ export const register = apiResponseHandler(async (req) => {
 
   await ProfileModel.create({
     userId: user?._id,
+    role,
   });
 
   const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");

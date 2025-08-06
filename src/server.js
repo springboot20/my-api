@@ -162,7 +162,7 @@ app.get("/", (_, res) => {
 
 httpServer.on("error", (error) => {
   if (error instanceof Error) {
-    if (error.name === "EADDRINUSE") {
+    if (error.code === "EADDRINUSE") {
       console.log(`Port ${port} already in use`);
     } else {
       console.log(`Server error : ${error}`);

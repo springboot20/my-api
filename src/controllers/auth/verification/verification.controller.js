@@ -2,7 +2,7 @@ import {
   ApiResponse,
   apiResponseHandler,
 } from "../../../middleware/api/api.response.middleware.js";
-import { UserModel } from "../../../models/index.js";
+import { ProfileModel, UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { validateToken } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
@@ -73,14 +73,25 @@ export const forgotPassword = apiResponseHandler(
     user.forgotPasswordTokenExpiry = tokenExpiry;
     await user.save({ validateBeforeSave: false });
 
-    const resetLink = `${process.env.BASE_URL}/reset-password/${unHashedToken}`;
+    const name = `${user.firstname} ${user.lastname}`;
 
-    await sendMail(
-      user.email,
-      "Password reset",
-      { resetLink, username: user.username, from: process.env.EMAIL, app: process.env.APP_NAME },
-      "reset"
-    );
+    const link =
+      process.env.NODE_ENV === "production"
+        ? process.env.BASE_URL_PRDO_ADMIN
+        : process.env.BASE_URL_DEV;
+
+    const resetUrl = `${link}/auth/reset-password/${unHashedToken}`;
+
+    await sendMail({
+      to: user.email,
+      subject: "Password reset",
+      data: {
+        resetUrl,
+        name,
+        appName: process.env.APP_NAME,
+      },
+      templateName: "forgot-password",
+    });
 
     return new ApiResponse(
       StatusCodes.OK,
@@ -121,16 +132,17 @@ export const refreshToken = apiResponseHandler(async (req, res) => {
 export const verifyEmail = apiResponseHandler(async (req, res) => {
   const { token, userId } = req.query;
 
-  if (!token) {
-    throw new CustomErrors("Email verification token is missing", StatusCodes.UNAUTHORIZED);
+  const profile = await ProfileModel.findOne({
+    userId,
+  });
+  const user = await UserModel.findById(userId);
+
+  if (!profile || !user) {
+    throw new CustomErrors("Token is invalid or expired", StatusCodes.UNAUTHORIZED);
   }
 
-  const user = await UserModel.findOne({
-    _id: userId,
-  });
-
-  if (!user) {
-    throw new CustomErrors("Token is invalid or expired", StatusCodes.UNAUTHORIZED);
+  if (!token || !user.emailVerificationToken) {
+    throw new CustomErrors("Email verification token is missing", StatusCodes.UNAUTHORIZED);
   }
 
   const validToken = await bcrypt.compare(token, user.emailVerificationToken);
@@ -140,20 +152,21 @@ export const verifyEmail = apiResponseHandler(async (req, res) => {
 
   user.emailVerificationToken = undefined;
   user.emailVerificationTokenExpiry = undefined;
-
-  user.isEmailVerified = true;
-
   await user.save({ validateBeforeSave: false });
+
+  profile.isEmailVerified = true;
+  await profile.save({ validateBeforeSave: false });
 
   return new ApiResponse(StatusCodes.OK, { isEmailVerified: true }, "Email verified successfully");
 });
 
 export const resendEmailVerification = apiResponseHandler(async (req, res) => {
   const user = await UserModel.findById(req.user?._id);
+  const profile = await ProfileModel.findOne({ userId: req.user?._id });
 
-  if (!user) throw new CustomErrors("User not found", StatusCodes.NOT_FOUND);
+  if (!user || !profile) throw new CustomErrors("User or profile not found", StatusCodes.NOT_FOUND);
 
-  if (user.isEmailVerified) {
+  if (profile.isEmailVerified) {
     throw new CustomErrors("Email has already been verified", StatusCodes.CONFLICT);
   }
 
@@ -161,21 +174,28 @@ export const resendEmailVerification = apiResponseHandler(async (req, res) => {
 
   user.emailVerificationToken = hashedToken;
   user.emailVerificationTokenExpiry = tokenExpiry;
+
   await user.save({ validateBeforeSave: false });
 
-  const verificationLink = `${process.env.BASE_URL}/verify-email/${user._id}/${unHashedToken}`;
+  const link =
+    process.env.NODE_ENV === "production"
+      ? process.env.BASE_URL_PRDO_ADMIN
+      : process.env.BASE_URL_DEV;
 
-  await sendMail(
-    user.email,
-    "Email verification",
-    {
-      verificationLink,
-      username: user.username,
+  const verificationUrl = `${link}/auth/email/verify-email/${user._id}/${unHashedToken}`;
+  const name = `${user.firstname} ${user.lastname}`;
+
+  await sendMail({
+    to: user.email,
+    subject: "Email verification",
+    templateName: "resend-verification",
+    data: {
+      verificationUrl,
+      name,
       from: process.env.EMAIL,
       app: process.env.APP_NAME,
     },
-    "email"
-  );
+  });
 
   return new ApiResponse(StatusCodes.OK, {}, "email verification link sent to your email");
 });
