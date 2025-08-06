@@ -185,6 +185,22 @@ export const sendTransaction = apiResponseHandler(async (req, res) => {
     status: PaymentStatuses.IN_PROGRESS,
   });
 
+  // ✅ Create mirror transaction for receiver (optional, can be toggled by config or preference)
+  await TransactionModel.create({
+    reference: `${paymentInit.data.reference}-MIRROR`, // Add suffix to avoid conflict
+    user: toAccount.user, // Receiver's user ID
+    amount,
+    description,
+    currency,
+    type: AvailableTransactionTypes.DEPOSIT, // Can be 'RECEIVED_TRANSFER' if needed
+    detail: {
+      gateway: PaymentMethods.PAYSTACK,
+      senderAccountNumber: fromAccount.account_number,
+      receiverAccountNumber: toAccount.account_number,
+    },
+    status: PaymentStatuses.IN_PROGRESS,
+  });
+
   return new ApiResponse(
     StatusCodes.CREATED,
     {
