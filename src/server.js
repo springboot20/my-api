@@ -8,7 +8,6 @@ import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
 import { Server } from "socket.io";
 import * as path from "path";
-import { create } from "express-handlebars";
 import * as url from "url";
 import fs from "fs";
 import * as yaml from "yaml";
@@ -141,27 +140,6 @@ app.use(
 );
 
 app.use("/public", express.static(__dirname + "/public"));
-
-const hbs2 = create({
-  defaultLayout: path.join(__dirname, "views/layouts/index.hbs"),
-  extname: "hbs",
-  partialsDir: [path.join(__dirname, "views/partials")],
-});
-
-app.engine("hbs", hbs2.engine);
-app.set("view engine", "hbs");
-app.set("views", path.join(__dirname, "views"));
-
-// Register partials dynamically
-const partialsDir = path.join(__dirname, "views/partials");
-
-// Read and register each partial
-fs.readdirSync(partialsDir).forEach((file) => {
-  const filePath = path.join(partialsDir, file);
-  const partialName = path.basename(file, path.extname(file));
-  const partialContent = fs.readFileSync(filePath, "utf8");
-  hbs2?.handlebars?.registerPartial(partialName, partialContent);
-});
 
 app.use((req, res, next) => {
   console.log(req.headers.origin);

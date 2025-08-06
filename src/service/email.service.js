@@ -1,10 +1,17 @@
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
-import expressHandlebars from "nodemailer-express-handlebars";
 import { __dirname } from "../utils/index.js";
+import * as fs from "fs";
 import path from "path";
 
 const OAuth2 = google.auth.OAuth2;
+
+/**
+ * Replace {{placeholders}} in the HTML template with actual values
+ */
+function injectTemplateData(template, data) {
+  return template.replace(/{{\s*(\w+)\s*}}/g, (_, key) => data[key] || "");
+}
 
 function isTokenExpired(token) {
   let currentTimestamp = Math.floor(Date.now() / 1000);
@@ -23,11 +30,11 @@ async function refreshAccessToken(auth) {
   }
 }
 
-const createTransporter = async () => {
+export const createTransporter = async () => {
   const OAuth2Client = new OAuth2(
     process.env.CLIENT_ID,
     process.env.CLIENT_SECRET,
-    process.env.REDIRECT_URI,
+    process.env.REDIRECT_URI
   );
 
   OAuth2Client.setCredentials({
@@ -69,34 +76,30 @@ const createTransporter = async () => {
   });
 };
 
-const sendMail = async (email, subject, payload, template) => {
+/**
+ *
+ * @param {{ to: string, subject: string, templateName: string, data: any }} emailOptions
+ * @returns
+ */
+const sendMail = async (emailOptions) => {
   try {
+    const { to, subject, templateName, data } = emailOptions;
+
     const transporter = await createTransporter();
     if (!transporter) {
       console.error("Failed to create transporter");
       return;
     }
 
-    transporter.use(
-      "compile",
-      expressHandlebars({
-        viewEngine: {
-          extname: ".hbs",
-          partialsDir: path.resolve(__dirname, "../views/partials/"),
-          layoutsDir: path.resolve(__dirname, "../views/layouts/"),
-          defaultLayout: "index",
-        },
-        extName: ".hbs",
-        viewPath: path.resolve(__dirname, "../views/partials/"),
-      }),
-    );
+    const templatePath = path.resolve(__dirname, `../service/emails/${templateName}.html`);
+    const rawHtml = fs.readFileSync(templatePath, "utf8");
+    const finalHtml = injectTemplateData(rawHtml, data);
 
     const options = {
       from: process.env.EMAIL,
-      to: email,
+      to,
       subject,
-      template,
-      context: payload,
+      html: finalHtml,
     };
 
     const info = await transporter.sendMail(options);

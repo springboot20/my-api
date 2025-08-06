@@ -37,7 +37,7 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
   user.emailVerificationTokenExpiry = tokenExpiry;
   await user.save();
 
-  console.log("line 40: ", user.emailVerificationToken, user.emailVerificationTokenExpiry);
+  const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
 
   const link =
     process.env.NODE_ENV === "production"
@@ -45,25 +45,35 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
       : process.env.BASE_URL_DEV;
 
   const verificationLink = `${link}/verify-email?userId=${
-    user?._id || existingUser?._id
+    createdUser?._id || existingUser?._id
   }&token=${unHashedToken}`;
 
-  console.log("verification link", verificationLink);
-  console.log("link", process.env.BASE_URL_PROD_ADMIN);
+  const name =
+    `${createdUser.firstname} ${createdUser.lastname}` ||
+    `${existingUser.firstname} ${existingUser.lastname}`;
 
-  const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
-
-  await sendMail(
-    user.email || existingUser?.email,
-    "Email verification",
-    {
-      verificationLink,
-      username: user.username || existingUser?.username,
-      from: process.env.EMAIL,
-      app: process.env.APP_NAME,
-    },
-    "email"
-  );
+  await Promise.allSettled[
+    (sendMail({
+      to: createdUser.email || existingUser?.email,
+      subject: "Welcome Mail",
+      templateName: "welcome",
+      data: {
+        dashboardUrl: `${link}/app/overview`,
+        appName: process.env.APP_NAME,
+        name,
+      },
+    }),
+    sendMail({
+      to: createdUser.email || existingUser?.email,
+      subject: "Email verification",
+      templateName: "verify-mail",
+      data: {
+        verificationLink,
+        appName: process.env.APP_NAME,
+        name,
+      },
+    }))
+  ];
 
   return new ApiResponse(
     StatusCodes.CREATED,
@@ -106,27 +116,42 @@ export const register = apiResponseHandler(async (req) => {
     userId: user?._id,
   });
 
-  const link =
-    process.env.NODE_ENV === "production" ? process.env.BASE_URL_PROD : process.env.BASE_URL_DEV;
-
-  const verificationLink = `${link}/verify-email?userId=${user?._id}&token=${unHashedToken}`;
-
-  console.log("verification link", verificationLink);
-  console.log("link", process.env.BASE_URL_PROD);
-
-  await sendMail(
-    user.email,
-    "Email verification",
-    {
-      verificationLink,
-      username: user.username,
-      from: process.env.EMAIL,
-      app: process.env.APP_NAME,
-    },
-    "email"
-  );
-
   const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
+
+  const link =
+    process.env.NODE_ENV === "production"
+      ? process.env.BASE_URL_PRDO_ADMIN
+      : process.env.BASE_URL_DEV;
+
+  const verificationLink = `${link}/verify-email?userId=${
+    createdUser?._id || existingUser?._id
+  }&token=${unHashedToken}`;
+
+  const name =
+    `${createdUser.firstname} ${createdUser.lastname}` ||
+    `${existingUser.firstname} ${existingUser.lastname}`;
+
+  await sendMail({
+    to: createdUser.email || existingUser?.email,
+    subject: "Welcome Mail",
+    templateName: "welcome",
+    data: {
+      dashboardUrl: `${link}/admin/overview`,
+      appName: process.env.APP_NAME,
+      name,
+    },
+  });
+
+  await sendMail({
+    to: createdUser.email || existingUser?.email,
+    subject: "Email verification",
+    templateName: "verify-mail",
+    data: {
+      verificationLink,
+      appName: process.env.APP_NAME,
+      name,
+    },
+  });
 
   return new ApiResponse(
     StatusCodes.CREATED,
