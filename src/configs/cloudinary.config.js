@@ -1,4 +1,4 @@
-import { v2 } from "cloudinary";
+import { v2, UploadApiOptions } from "cloudinary";
 import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
@@ -11,12 +11,19 @@ v2.config({
   cloud_name: process.env.CLOUDINARY_NAME,
 });
 
-const uploadFileToCloudinary = async (buffer, folder) => {
+/**
+ *
+ * @param {Buffer} buffer
+ * @param {string} folder
+ * @param {string} format
+ * @returns {Promise<UploadApiOptions>}
+ */
+const uploadFileToCloudinary = async (buffer, folder, format) => {
   return new Promise((resolve, reject) => {
     v2.uploader
-      .upload_stream({ resource_type: "auto", folder }, (error, result) => {
+      .upload_stream({ resource_type: "auto", folder, format: format }, (error, result) => {
         if (error) {
-          reject(new CustomErrors(error.message, null));
+          reject(new CustomErrors(error.message, error?.http_code, []));
         } else {
           resolve(result);
         }
@@ -38,20 +45,20 @@ const deleteFileFromCloudinary = async (public_id) => {
     if (deletedResource.result === "not found") {
       throw new CustomErrors(
         "Public ID not found. Provide a valid publicId.",
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.BAD_REQUEST
       );
     }
     if (deletedResource.result !== "ok") {
       throw new ApiError(
         StatusCodes.INTERNAL_SERVER_ERROR,
-        "Error while deleting existing file. Try again.",
+        "Error while deleting existing file. Try again."
       );
     }
   } catch (error) {
     // Wrap errors with ApiError for consistent error handling
     throw error instanceof CustomErrors
       ? error
-      : new CustomErrors(error.message, StatusCodes.INTERNAL_SERVER_ERROR);
+      : new CustomErrors(error.message, error?.http_code, []);
   }
 };
 
