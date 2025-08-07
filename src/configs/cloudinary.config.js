@@ -16,16 +16,16 @@ v2.config({
 /**
  *
  * @param {Buffer} buffer
- * @param {string} type
  * @param {string} folder
  * @param {string} format
  * @returns {Promise<UploadApiResponse>}
  */
-const uploadFileToCloudinary = async (buffer, type = "auto", folder, format) => {
+const uploadFileToCloudinary = async (buffer, folder, format) => {
   return new Promise((resolve, reject) => {
     v2.uploader
-      .upload_stream({ resource_type: type, folder, format: format }, (error, result) => {
+      .upload_stream({ resource_type: "auto", folder, format: format }, (error, result) => {
         if (error) {
+          console.log(error);
           reject(new CustomErrors(error.message, error?.http_code, []));
         } else {
           resolve(result);
@@ -39,8 +39,10 @@ const deleteFileFromCloudinary = async (public_id) => {
   try {
     const deletedResource = await v2.uploader.destroy(public_id, (error, result) => {
       if (error) {
+        console.log(error);
         throw new CustomErrors(error.message, StatusCodes.BAD_REQUEST);
       } else {
+        console.log(result);
         return result;
       }
     });

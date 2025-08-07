@@ -311,7 +311,7 @@ const generateTransactionPDF = (transaction) => {
         info: {
           Title: `Transaction Receipt - ${transaction.reference}`,
           Subject: "Transaction Receipt",
-          Author: "YourApp Financial Services",
+          Author: `${process.env.APP_NAME} Financial Services`,
         },
       });
       const passthrough = new PassThrough();
@@ -361,7 +361,7 @@ export const downloadTransactionById = apiResponseHandler(async (req, res) => {
   let upload;
 
   if (transaction.receipt) {
-    if (transaction.receipt?.public_id) {
+    if (transaction.receipt?.public_id !== null) {
       await deleteFileFromCloudinary(transaction.receipt?.public_id);
     }
 
