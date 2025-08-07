@@ -1,7 +1,9 @@
-import { v2, UploadApiResponse } from "cloudinary";
+import pkg from "cloudinary";
 import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
+
+const { v2, UploadApiResponse } = pkg;
 
 dotenv.config();
 
@@ -14,14 +16,15 @@ v2.config({
 /**
  *
  * @param {Buffer} buffer
+ * @param {string} type
  * @param {string} folder
  * @param {string} format
  * @returns {Promise<UploadApiResponse>}
  */
-const uploadFileToCloudinary = async (buffer, folder, format) => {
+const uploadFileToCloudinary = async (buffer, type = "auto", folder, format) => {
   return new Promise((resolve, reject) => {
     v2.uploader
-      .upload_stream({ resource_type: "auto", folder, format: format }, (error, result) => {
+      .upload_stream({ resource_type: type, folder, format: format }, (error, result) => {
         if (error) {
           reject(new CustomErrors(error.message, error?.http_code, []));
         } else {

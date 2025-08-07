@@ -9,7 +9,10 @@ import PDFDocument from "pdfkit";
 import { formatDate, formatMoney } from "../../../../utils/index.js";
 import { PassThrough } from "stream";
 import { Buffer } from "buffer";
-import { uploadFileToCloudinary } from "../../../../configs/cloudinary.config.js";
+import {
+  uploadFileToCloudinary,
+  deleteFileFromCloudinary,
+} from "../../../../configs/cloudinary.config.js";
 
 const getPipelineData = () => {
   return [
@@ -358,7 +361,7 @@ export const downloadTransactionById = apiResponseHandler(async (req, res) => {
   let upload;
 
   if (transaction.receipt) {
-    if (transaction.receipt?.public_id !== null) {
+    if (transaction.receipt?.public_id) {
       await deleteFileFromCloudinary(transaction.receipt?.public_id);
     }
 
