@@ -1,4 +1,4 @@
-import { v2, UploadApiOptions } from "cloudinary";
+import { v2, UploadApiResponse } from "cloudinary";
 import { CustomErrors } from "../middleware/custom/custom.errors.js";
 import dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
@@ -16,7 +16,7 @@ v2.config({
  * @param {Buffer} buffer
  * @param {string} folder
  * @param {string} format
- * @returns {Promise<UploadApiOptions>}
+ * @returns {Promise<UploadApiResponse>}
  */
 const uploadFileToCloudinary = async (buffer, folder, format) => {
   return new Promise((resolve, reject) => {

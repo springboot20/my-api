@@ -8,6 +8,8 @@ import mongoose from "mongoose";
 import PDFDocument from "pdfkit";
 import { formatDate, formatMoney } from "../../../../utils/index.js";
 import { PassThrough } from "stream";
+import { Buffer } from "buffer";
+import { uploadFileToCloudinary } from "../../../../configs/cloudinary.config.js";
 
 const getPipelineData = () => {
   return [
@@ -291,8 +293,12 @@ const getStatusColor = (status) => {
       return "#6b7280";
   }
 };
-
-// Separate function to generate PDF buffer
+/**
+ * Separate function to generate PDF buffer
+ *
+ * @param {any} transaction
+ * @returns {Promise<Buffer>}
+ */
 const generateTransactionPDF = (transaction) => {
   return new Promise((resolve, reject) => {
     try {
@@ -306,6 +312,9 @@ const generateTransactionPDF = (transaction) => {
         },
       });
       const passthrough = new PassThrough();
+      /**
+       * @type {Uint8Array[]}
+       */
       const chunks = [];
 
       // Collect PDF data
@@ -346,6 +355,27 @@ export const downloadTransactionById = apiResponseHandler(async (req, res) => {
 
   // Generate PDF in memory first
   const pdfBuffer = await generateTransactionPDF(transaction);
+  let upload;
+
+  if (transaction.receipt) {
+    if (transaction.receipt?.public_id !== null) {
+      await deleteFileFromCloudinary(transaction.receipt?.public_id);
+    }
+
+    upload = await uploadFileToCloudinary(
+      pdfBuffer,
+      `${process.env.CLOUDINARY_BASE_FOLDER}/transaction-receipts`,
+      "pdf"
+    );
+  }
+
+  const receipt = {
+    url: upload?.secure_url,
+    public_id: upload?.public_id,
+  };
+
+  transaction.receipt = receipt;
+  await transaction.save();
 
   // Set headers and send buffer
   res.setHeader("Content-Type", "application/pdf");
@@ -395,7 +425,7 @@ export const getReceiptData = apiResponseHandler(async (req, res) => {
           email: transaction.user.email,
         }
       : null,
-    shareUrl: `${req.protocol}://${req.get("host")}/receipt/${transaction._id}`,
+    shareUrl: `${transaction?.receipt?.url}`,
     shareText: `Transaction Receipt - ${transaction.reference}\nAmount: ${formatMoney(
       transaction.amount,
       transaction.currency === "NGN" ? "NGN" : "USD",
@@ -403,9 +433,5 @@ export const getReceiptData = apiResponseHandler(async (req, res) => {
     )}\nStatus: ${transaction.status}`,
   };
 
-  return res.status(StatusCodes.OK).json({
-    success: true,
-    data: receiptData,
-    message: "Receipt data retrieved successfully",
-  });
+  return new ApiResponse(StatusCodes.OK, receiptData, "Receipt data retrieved successfully");
 });
