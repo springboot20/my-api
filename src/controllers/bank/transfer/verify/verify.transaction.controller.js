@@ -255,11 +255,11 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   try {
     const fromAccount = await AccountModel.findOne({
       account_number: transaction.detail.senderAccountNumber,
-    });
+    }).populate("user", "_id firstname lastname email avatar");
 
     const toAccount = await AccountModel.findOne({
       account_number: transaction.detail.receiverAccountNumber,
-    });
+    }).populate("user", "_id firstname lastname email avatar");
 
     if (!fromAccount || !toAccount) {
       throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
@@ -269,39 +269,45 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
     await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
 
     const mainType = transaction.type?.toUpperCase();
-    const mirrorType = mirrorTransaction?.type?.toUpperCase();
 
-    // Notify users
+    // Sender notification
     if (fromAccount?.user) {
       emitSocketEventToUser(
         req,
         ["TRANSFER", "WITHDRAW"].includes(mainType)
           ? socketEvents.DEBIT_TRANSACTION
           : socketEvents.DEPOSIT_TRANSACTION,
-        `users-${fromAccount.user.toString()}`,
+        `users-${fromAccount.user?._id.toString()}`,
         {
-          _id: transaction.toObject()?._id,
-          data: transaction.toObject(),
+          _id: transaction._id,
+          data: {
+            to: toAccount?.user,
+            type: transaction.type, // Keep original for sender
+            message: `Successful transfer transaction to ${toAccount?.user?.firstname} ${toAccount?.user?.lastname}`,
+          },
           type: AvailableRequestMessageTypes.TRANSACTION,
           isRead: false,
-          createdAt: transaction.toObject()?.createdAt,
+          createdAt: transaction.createdAt,
         }
       );
     }
 
+    // Receiver notification
     if (mirrorTransaction && toAccount?.user) {
       emitSocketEventToUser(
         req,
-        mirrorType === "DEPOSIT"
-          ? socketEvents.DEPOSIT_TRANSACTION
-          : socketEvents.DEBIT_TRANSACTION,
-        `users-${toAccount.user.toString()}`,
+        socketEvents.DEPOSIT_TRANSACTION, // Always deposit for receiver
+        `users-${toAccount.user?._id.toString()}`,
         {
-          _id: transaction.toObject()?._id,
-          data: mirrorTransaction.toObject(),
+          _id: mirrorTransaction._id,
+          data: {
+            from: fromAccount?.user,
+            type: "DEPOSIT", // Force deposit type
+            message: `Successful transfer transaction from ${fromAccount?.user?.firstname} ${fromAccount?.user?.lastname}`,
+          },
           type: AvailableRequestMessageTypes.TRANSACTION,
           isRead: false,
-          createdAt: transaction.toObject()?.createdAt,
+          createdAt: mirrorTransaction.createdAt,
         }
       );
     }
