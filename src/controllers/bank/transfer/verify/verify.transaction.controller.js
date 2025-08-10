@@ -8,6 +8,8 @@ import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
 import { PaymentStatuses, paystackStatus } from "../../../../constants.js";
 import { createHmac, timingSafeEqual } from "crypto";
+import { emitSocketEventToUser } from "../../../../socket/socket.js";
+import socketEvents from "../../../../enums/socket-events.js";
 
 /**
  * Transfer funds between two wallets
@@ -42,11 +44,10 @@ export const transferBetweenWallets = async (fromWalletId, toWalletId, amount) =
     }),
   ]);
 };
+
 export const verifyPaystackWebhook = apiResponseHandler(
   /**
    * @route POST /api/payment/paystack/webhook
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
    */
   async (req) => {
     if (!req.body) return false;
@@ -65,22 +66,22 @@ export const verifyPaystackWebhook = apiResponseHandler(
       throw new CustomErrors("Invalid webhook signature", StatusCodes.UNAUTHORIZED);
     }
 
-    if (!isValidPaystackEvent) {
-      return false;
-    }
+    if (!isValidPaystackEvent) return false;
 
     const reference = req.body?.reference;
-    const transactionStatus = req.body?.status;
-    const paymentConfirmed = transactionStatus === paystackStatus.success;
+    const _paystackStatus = req.body?.status; // ✅ FIX: define this
+    const paymentConfirmed = _paystackStatus === paystackStatus.success;
 
     const transaction = await TransactionModel.findOne({ reference });
-    const mirrorTransaction = await TransactionModel.findOne({ reference: `${reference}-MIRROR` });
+    const mirrorTransaction = await TransactionModel.findOne({
+      reference: `${reference}-MIRROR`,
+    });
 
     if (!transaction) {
       throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
     }
 
-    // Skip if already verified
+    // ✅ Skip if already verified on both ends
     if (
       transaction.status === PaymentStatuses.COMPLETED &&
       (!mirrorTransaction || mirrorTransaction.status === PaymentStatuses.COMPLETED)
@@ -92,69 +93,81 @@ export const verifyPaystackWebhook = apiResponseHandler(
       );
     }
 
-    // Update status
-    transaction.transactionStatus = transactionStatus;
-    transaction.status = paymentConfirmed ? PaymentStatuses.COMPLETED : PaymentStatuses.FAILED;
-
-    if (mirrorTransaction) {
-      mirrorTransaction.transactionStatus = transactionStatus;
-      mirrorTransaction.status = paymentConfirmed
-        ? PaymentStatuses.COMPLETED
-        : PaymentStatuses.FAILED;
-    }
+    // Store gateway status
+    transaction.transactionStatus = _paystackStatus;
+    if (mirrorTransaction) mirrorTransaction.transactionStatus = _paystackStatus;
 
     if (!paymentConfirmed) {
-      await transaction.save();
-      if (mirrorTransaction) await mirrorTransaction.save();
+      transaction.status = PaymentStatuses.FAILED;
+      if (mirrorTransaction) mirrorTransaction.status = PaymentStatuses.FAILED;
+
+      await Promise.all([
+        transaction.save(),
+        mirrorTransaction ? mirrorTransaction.save() : Promise.resolve(),
+      ]);
 
       throw new CustomErrors(
-        "Transaction failed during webhook verification",
+        "Transaction verification failed",
         StatusCodes.INTERNAL_SERVER_ERROR,
         [],
-        {
-          transaction,
-          mirrorTransaction,
-        }
+        { transaction, mirrorTransaction }
       );
     }
 
-    const fromAccount = await AccountModel.findOne({
-      account_number: transaction.detail.senderAccountNumber,
-    });
-    const toAccount = await AccountModel.findOne({
-      account_number: transaction.detail.receiverAccountNumber,
-    });
+    // ✅ Payment success — mark both COMPLETED and save immediately
+    transaction.status = PaymentStatuses.COMPLETED;
+    if (mirrorTransaction) mirrorTransaction.status = PaymentStatuses.COMPLETED;
 
-    if (!fromAccount || !toAccount) {
-      throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
-    }
+    await Promise.all([
+      transaction.save(),
+      mirrorTransaction ? mirrorTransaction.save() : Promise.resolve(),
+    ]);
 
+    // ✅ Post-payment handling (won’t affect saved status)
     try {
+      const fromAccount = await AccountModel.findOne({
+        account_number: transaction.detail.senderAccountNumber,
+      });
+
+      const toAccount = await AccountModel.findOne({
+        account_number: transaction.detail.receiverAccountNumber,
+      });
+
+      if (!fromAccount || !toAccount) {
+        throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
+      }
+
+      // Wallet transfer
       await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
 
-      await transaction.save();
-      if (mirrorTransaction) await mirrorTransaction.save();
+      // Socket events
+      emitSocketEventToUser(
+        req,
+        socketEvents.DEBIT_TRANSACTION,
+        `users-${fromAccount?.user?.toString()}`,
+        transaction.toObject()
+      );
+
+      if (mirrorTransaction) {
+        emitSocketEventToUser(
+          req,
+          socketEvents.DEPOSIT_TRANSACTION,
+          `users-${toAccount?.user?.toString()}`,
+          mirrorTransaction.toObject()
+        );
+      }
 
       return new ApiResponse(
         StatusCodes.OK,
         { transaction, mirrorTransaction },
-        "Webhook payment verification successful"
+        "Payment verified successfully"
       );
-    } catch (error) {
-      transaction.status = PaymentStatuses.FAILED;
-      if (mirrorTransaction) mirrorTransaction.status = PaymentStatuses.FAILED;
-
-      await transaction.save();
-      if (mirrorTransaction) await mirrorTransaction.save();
-
-      throw new CustomErrors(
-        "Transaction failed during wallet transfer",
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        [],
-        {
-          transaction,
-          mirrorTransaction,
-        }
+    } catch (postProcessError) {
+      console.error("Post-payment processing failed:", postProcessError);
+      return new ApiResponse(
+        StatusCodes.OK,
+        { transaction, mirrorTransaction, warning: "Post-processing failed" },
+        "Payment completed but with post-processing errors"
       );
     }
   }
@@ -168,17 +181,16 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   }
 
   const transaction = await TransactionModel.findOne({ reference });
-
   if (!transaction) {
     throw new CustomErrors("Transaction not found", StatusCodes.NOT_FOUND);
   }
 
-  // ✅ Attempt to find mirror transaction (receiver's record)
+  // ✅ Find mirror transaction if exists
   const mirrorTransaction = await TransactionModel.findOne({
     reference: `${reference}-MIRROR`,
   });
 
-  // ✅ Check for double completion
+  // ✅ Early exit if already completed on both sides
   if (
     transaction.status === PaymentStatuses.COMPLETED &&
     (!mirrorTransaction || mirrorTransaction.status === PaymentStatuses.COMPLETED)
@@ -195,71 +207,83 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
   const _paystackStatus = verifyResponse.data.status;
   const paymentConfirmed = _paystackStatus === paystackStatus.success;
 
+  // Store gateway status
   transaction.transactionStatus = _paystackStatus;
-  transaction.status = paymentConfirmed ? PaymentStatuses.COMPLETED : PaymentStatuses.FAILED;
+  if (mirrorTransaction) mirrorTransaction.transactionStatus = _paystackStatus;
 
-  if (mirrorTransaction) {
-    mirrorTransaction.transactionStatus = _paystackStatus;
-    mirrorTransaction.status = paymentConfirmed
-      ? PaymentStatuses.COMPLETED
-      : PaymentStatuses.FAILED;
-  }
-
+  // ❌ If payment failed, mark both as failed immediately
   if (!paymentConfirmed) {
-    await transaction.save();
-    if (mirrorTransaction) await mirrorTransaction.save();
+    transaction.status = PaymentStatuses.FAILED;
+    if (mirrorTransaction) mirrorTransaction.status = PaymentStatuses.FAILED;
+
+    await Promise.all([
+      transaction.save(),
+      mirrorTransaction ? mirrorTransaction.save() : Promise.resolve(),
+    ]);
 
     throw new CustomErrors(
       "Transaction verification failed",
       StatusCodes.INTERNAL_SERVER_ERROR,
       [],
-      {
-        transaction,
-        mirrorTransaction,
-      }
+      { transaction, mirrorTransaction }
     );
   }
 
-  const fromAccount = await AccountModel.findOne({
-    account_number: transaction.detail.senderAccountNumber,
-  });
+  // ✅ Payment success — mark both COMPLETED and save immediately
+  transaction.status = PaymentStatuses.COMPLETED;
+  if (mirrorTransaction) mirrorTransaction.status = PaymentStatuses.COMPLETED;
 
-  const toAccount = await AccountModel.findOne({
-    account_number: transaction.detail.receiverAccountNumber,
-  });
+  await Promise.all([
+    transaction.save(),
+    mirrorTransaction ? mirrorTransaction.save() : Promise.resolve(),
+  ]);
 
-  if (!fromAccount || !toAccount) {
-    throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
-  }
-
+  // ✅ Now handle post-payment operations separately
   try {
+    const fromAccount = await AccountModel.findOne({
+      account_number: transaction.detail.senderAccountNumber,
+    });
+
+    const toAccount = await AccountModel.findOne({
+      account_number: transaction.detail.receiverAccountNumber,
+    });
+
+    if (!fromAccount || !toAccount) {
+      throw new CustomErrors("Sender or receiver account not found", StatusCodes.NOT_FOUND);
+    }
+
+    // Wallet transfer
     await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
 
-    await transaction.save();
-    if (mirrorTransaction) await mirrorTransaction.save();
+    // Notify users
+    emitSocketEventToUser(
+      req,
+      socketEvents.DEBIT_TRANSACTION,
+      `users-${fromAccount?.user?.toString()}`,
+      transaction.toObject()
+    );
+
+    if (mirrorTransaction) {
+      emitSocketEventToUser(
+        req,
+        socketEvents.DEPOSIT_TRANSACTION,
+        `users-${toAccount?.user?.toString()}`,
+        mirrorTransaction.toObject()
+      );
+    }
 
     return new ApiResponse(
       StatusCodes.OK,
       { transaction, mirrorTransaction },
       "Payment verified successfully"
     );
-  } catch (error) {
-    transaction.status = PaymentStatuses.FAILED;
-    await transaction.save();
-
-    if (mirrorTransaction) {
-      mirrorTransaction.status = PaymentStatuses.FAILED;
-      await mirrorTransaction.save();
-    }
-
-    throw new CustomErrors(
-      "Transaction verification failed",
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      [],
-      {
-        transaction,
-        mirrorTransaction,
-      }
+  } catch (postProcessError) {
+    // ❗ Payment is still completed — only log post-processing issues
+    console.error("Post-payment processing failed:", postProcessError);
+    return new ApiResponse(
+      StatusCodes.OK,
+      { transaction, mirrorTransaction, warning: "Post-processing failed" },
+      "Payment completed but with post-processing errors"
     );
   }
 });

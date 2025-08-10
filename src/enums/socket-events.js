@@ -10,4 +10,8 @@ export default {
   REQUEST_STATUS_UPADATE: "request-status-update",
   REQUEST_UPADATED: "request-updated",
   ADMIN_MESSAGE_BROADCAST: "admin-message-broadcast",
+  TRANSFER_TRANSACTION: "transfer-transaction",
+  DEPOSIT_TRANSACTION: "deposit-transaction",
+  DEBIT_TRANSACTION: "debit-transaction",
+  WIDTHDRAW_TRANSACTION: "withdraw-transaction",
 };

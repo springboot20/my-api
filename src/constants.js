@@ -144,6 +144,21 @@ const AvailableRequestStatusEnums = Object.values(AvailableRequestStatus);
 const AvailableRequestActionsEnums = Object.values(AvailableRequestActions);
 const AvailableRequestPrioritiesEnums = Object.values(AvailableRequestPriorities);
 
+const AvailableRequestMessageTypes = {
+  NEW_REQUEST: "NEW_REQUEST",
+  STATUS_UPDATE: "STATUS_UPDATE",
+  ADMIN_RESPONSE: "ADMIN_RESPONSE",
+  WARNING: "WARNING",
+  APPROVAL_REQUIRED: "APPROVAL_REQUIRED",
+  DEADLINE_REMINDER: "DEADLINE_REMINDER",
+  SYSTEM_MAINTENANCE: "SYSTEM_MAINTENANCE",
+  SECURITY_ALERT: "SECURITY_ALERT",
+  SYSTEM_UPDATE: "SYSTEM_UPDATE",
+  INFO: "INFO",
+};
+
+const AvaliableRequestMessageTypesEnums = Object.values(AvailableRequestMessageTypes);
+
 export {
   paystack_urls,
   paystackStatus,
@@ -173,4 +188,6 @@ export {
   AvailableRequestActionsEnums,
   AvailableRequestPriorities,
   AvailableRequestPrioritiesEnums,
+  AvailableRequestMessageTypes,
+  AvaliableRequestMessageTypesEnums,
 };

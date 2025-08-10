@@ -2,16 +2,20 @@ import { Schema, model } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import {
   AvailableRequestActionsEnums,
+  AvailableRequestMessageTypes,
   AvailableRequestPriorities,
   AvailableRequestPrioritiesEnums,
   AvailableRequestStatus,
   AvailableRequestStatusEnums,
+  AvaliableRequestMessageTypesEnums,
 } from "../../constants.js";
 
 const RequestMessageSchema = new Schema(
   {
     type: {
       type: String,
+      enum: AvaliableRequestMessageTypesEnums,
+      default: AvailableRequestMessageTypes.NEW_REQUEST,
     },
     adminMessageTitle: {
       type: String,
