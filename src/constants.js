@@ -155,6 +155,7 @@ const AvailableRequestMessageTypes = {
   SECURITY_ALERT: "SECURITY_ALERT",
   SYSTEM_UPDATE: "SYSTEM_UPDATE",
   INFO: "INFO",
+  TRANSACTION: "TRANSACTION",
 };
 
 const AvaliableRequestMessageTypesEnums = Object.values(AvailableRequestMessageTypes);

@@ -6,7 +6,11 @@ import { CustomErrors } from "../../../../middleware/custom/custom.errors.js";
 import { TransactionModel, AccountModel, WalletModel } from "../../../../models/index.js";
 import { StatusCodes } from "http-status-codes";
 import PaymentService from "../../../../service/payment/payment.service.js";
-import { PaymentStatuses, paystackStatus } from "../../../../constants.js";
+import {
+  AvailableRequestMessageTypes,
+  PaymentStatuses,
+  paystackStatus,
+} from "../../../../constants.js";
 import { createHmac, timingSafeEqual } from "crypto";
 import { emitSocketEventToUser } from "../../../../socket/socket.js";
 import socketEvents from "../../../../enums/socket-events.js";
@@ -140,19 +144,28 @@ export const verifyPaystackWebhook = apiResponseHandler(
       // Wallet transfer
       await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
 
-      // Socket events
-      emitSocketEventToUser(
-        req,
-        socketEvents.DEBIT_TRANSACTION,
-        `users-${fromAccount?.user?.toString()}`,
-        transaction.toObject()
-      );
+      const mainType = transaction.type?.toUpperCase();
+      const mirrorType = mirrorTransaction?.type?.toUpperCase();
 
-      if (mirrorTransaction) {
+      // Notify users
+      if (fromAccount?.user) {
         emitSocketEventToUser(
           req,
-          socketEvents.DEPOSIT_TRANSACTION,
-          `users-${toAccount?.user?.toString()}`,
+          ["TRANSFER", "WITHDRAW"].includes(mainType)
+            ? socketEvents.DEBIT_TRANSACTION
+            : socketEvents.DEPOSIT_TRANSACTION,
+          `users-${fromAccount.user.toString()}`,
+          transaction.toObject()
+        );
+      }
+
+      if (mirrorTransaction && toAccount?.user) {
+        emitSocketEventToUser(
+          req,
+          mirrorType === "DEPOSIT"
+            ? socketEvents.DEPOSIT_TRANSACTION
+            : socketEvents.DEBIT_TRANSACTION,
+          `users-${toAccount.user.toString()}`,
           mirrorTransaction.toObject()
         );
       }
@@ -255,20 +268,41 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
     // Wallet transfer
     await transferBetweenWallets(fromAccount.wallet, toAccount.wallet, transaction.amount);
 
-    // Notify users
-    emitSocketEventToUser(
-      req,
-      socketEvents.DEBIT_TRANSACTION,
-      `users-${fromAccount?.user?.toString()}`,
-      transaction.toObject()
-    );
+    const mainType = transaction.type?.toUpperCase();
+    const mirrorType = mirrorTransaction?.type?.toUpperCase();
 
-    if (mirrorTransaction) {
+    // Notify users
+    if (fromAccount?.user) {
       emitSocketEventToUser(
         req,
-        socketEvents.DEPOSIT_TRANSACTION,
-        `users-${toAccount?.user?.toString()}`,
-        mirrorTransaction.toObject()
+        ["TRANSFER", "WITHDRAW"].includes(mainType)
+          ? socketEvents.DEBIT_TRANSACTION
+          : socketEvents.DEPOSIT_TRANSACTION,
+        `users-${fromAccount.user.toString()}`,
+        {
+          _id: transaction.toObject()?._id,
+          data: transaction.toObject(),
+          type: AvailableRequestMessageTypes.TRANSACTION,
+          isRead: false,
+          createdAt: transaction.toObject()?.createdAt,
+        }
+      );
+    }
+
+    if (mirrorTransaction && toAccount?.user) {
+      emitSocketEventToUser(
+        req,
+        mirrorType === "DEPOSIT"
+          ? socketEvents.DEPOSIT_TRANSACTION
+          : socketEvents.DEBIT_TRANSACTION,
+        `users-${toAccount.user.toString()}`,
+        {
+          _id: transaction.toObject()?._id,
+          data: mirrorTransaction.toObject(),
+          type: AvailableRequestMessageTypes.TRANSACTION,
+          isRead: false,
+          createdAt: transaction.toObject()?.createdAt,
+        }
       );
     }
 
