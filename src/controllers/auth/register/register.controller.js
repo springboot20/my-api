@@ -25,9 +25,12 @@ export const registerAdminUser = apiResponseHandler(async (req) => {
 
   if (!user) throw new CustomErrors("error while creating user", StatusCodes.INTERNAL_SERVER_ERROR);
 
+  const username = email.split("@")[0];
+
   await ProfileModel.create({
     userId: user?._id,
     role,
+    username: `@${username}`,
   });
 
   const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryTokens();
@@ -95,6 +98,8 @@ export const register = apiResponseHandler(async (req) => {
     throw new CustomErrors("user with username or email already exists", StatusCodes.CONFLICT);
   }
 
+  const username = email.split("@")[0];
+
   const user = await UserModel.create({
     email,
     lastname,
@@ -115,6 +120,7 @@ export const register = apiResponseHandler(async (req) => {
   await ProfileModel.create({
     userId: user?._id,
     role,
+    username: `@${username}`,
   });
 
   const createdUser = await UserModel.findById(user._id).select("-password -refreshToken");
