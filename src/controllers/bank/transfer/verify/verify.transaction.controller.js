@@ -270,6 +270,9 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
 
     const mainType = transaction.type?.toUpperCase();
 
+    console.log(fromAccount?.user);
+    console.log(toAccount?.user);
+
     // Sender notification
     if (fromAccount?.user) {
       emitSocketEventToUser(
@@ -281,6 +284,7 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
         {
           _id: transaction._id,
           data: {
+            _id: transaction._id,
             to: toAccount?.user,
             type: transaction.type, // Keep original for sender
             message: `Successful transfer transaction to ${toAccount?.user?.firstname} ${toAccount?.user?.lastname}`,
@@ -301,6 +305,7 @@ export const verifyPaystackCallback = apiResponseHandler(async (req, res) => {
         {
           _id: mirrorTransaction._id,
           data: {
+            _id: mirrorTransaction._id,
             from: fromAccount?.user,
             type: "DEPOSIT", // Force deposit type
             message: `Successful transfer transaction from ${fromAccount?.user?.firstname} ${fromAccount?.user?.lastname}`,
