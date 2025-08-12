@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as messageRequestController from "../../controllers/message/message.controller.js";
+import * as messageRequestController from "../../controllers/message/index.js";
 
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
