@@ -11,6 +11,9 @@ import * as path from "path";
 import * as url from "url";
 import fs from "fs";
 import * as yaml from "yaml";
+import passport from "./passport/index.js";
+import session from "express-session";
+import cookieParser from "cookie-parser";
 
 import {
   healthcheck,
@@ -86,6 +89,18 @@ app.options("*", (req, res, next) => {
   console.log(`OPTIONS request received: ${req.path} - Origin: ${req.headers.origin || "none"}`);
   cors(corsOptions)(req, res, next);
 });
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+
+app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(express.json({ limit: "16kb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "16kb" }));

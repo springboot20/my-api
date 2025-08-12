@@ -17,10 +17,9 @@ export const generateTokens = async (userId) => {
 
     let accessPayload = {
       _id: user._id,
-      username: user.username,
+      username: `${user.firstname} ${user.lastname}`,
       role: user.role,
       email: user.email,
-      isEmailVerified: user.isEmailVerified,
     };
 
     let refreshPayload = {

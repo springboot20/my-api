@@ -18,6 +18,8 @@ import {
 } from "./users/users.controller.js";
 import { createUserProfile, getUserProfile } from "./profile/profile.controller.js";
 
+export * from "./provider/provider.controller.js";
+
 export {
   login,
   register,

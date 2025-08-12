@@ -13,6 +13,7 @@ import {
   getUserById,
   registerAdminUser,
   adminDeleteUser,
+  handleSocialLogin,
 } from "../../controllers/auth/index.js";
 import { verifyJWT } from "../../middleware/auth/auth.middleware.js";
 import { checkPermissions } from "../../utils/permissions.js";
@@ -29,9 +30,13 @@ import { RoleEnums } from "../../constants.js";
 
 import { Router } from "express";
 
+import passport from "passport";
+
 const router = Router();
 
 router.route("/register").post(userRegisterValidation(), validate, register);
+
+router.route("/register/admin").post(userRegisterValidation(), validate, registerAdminUser);
 
 router.route("/login").post(userLoginValidation(), validate, login);
 
@@ -72,5 +77,20 @@ router
   .delete(verifyJWT, checkPermissions(RoleEnums.ADMIN), adminDeleteUser);
 
 router.route("/users/current-user").get(verifyJWT, getCurrentUser);
+
+// SSO routes
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }),
+  (req, res) => {
+    res.send("redirecting...");
+  }
+);
+
+router.get(
+  "/google/redirect",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  handleSocialLogin
+);
 
 export default router;
