@@ -54,7 +54,7 @@ try {
       async (_, __, profile, callback) => {
         console.log(profile);
 
-        const user = await UserModel.findOne({ email: profile.email });
+        const user = await UserModel.findOne({ email: profile._json.email });
 
         if (user) {
           if (user.loginType !== LoginType.GOOGLE) {
@@ -76,14 +76,14 @@ try {
           }
         } else {
           const createdUser = await UserModel.create({
-            email: profile.email,
+            email: profile._json.email,
             // There is a check for traditional logic so the password does not matter in this login method
-            password: profile.sub, // Set user's password as sub (coming from the google)
-            lastname: profile.email?.split("@")[0], // as email is unique, this username will be unique
-            firstname: profile.email?.split("@")[0], // as email is unique, this username will be unique
+            password: profile._json.sub, // Set user's password as sub (coming from the google)
+            lastname: profile._json.email?.split("@")[0], // as email is unique, this username will be unique
+            firstname: profile._json.email?.split("@")[0], // as email is unique, this username will be unique
             role: RoleEnums.USER,
             avatar: {
-              url: profile.picture,
+              url: profile._json.picture,
               localPath: "",
             }, // set avatar as user's google picture
             loginType: LoginType.GOOGLE.toLowerCase(),
@@ -94,7 +94,7 @@ try {
 
             await ProfileModel.create({
               userId: createdUser?._id,
-              username: `@${profile.email?.split("@")[0]}`,
+              username: `@${profile._json.email?.split("@")[0]}`,
               isEmailVerified: true, // email will be already verified
               role: RoleEnums.USER,
             });
