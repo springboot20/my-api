@@ -33,7 +33,7 @@ try {
         if (user) callback(null, user);
         else callback(new CustomErrors("User does not exist", StatusCodes.NOT_FOUND), null);
       } catch (error) {
-        next(
+        callback(
           new CustomErrors(
             "Something went wrong while deserializing the user. Error: " + error,
             StatusCodes.INTERNAL_SERVER_ERROR
@@ -90,7 +90,7 @@ try {
           });
 
           if (createdUser) {
-            next(null, createdUser);
+            callback(null, createdUser);
 
             await ProfileModel.create({
               userId: createdUser?._id,
@@ -99,7 +99,13 @@ try {
               role: RoleEnums.USER,
             });
           } else {
-            next(new ApiError(500, "Error while registering the user"), null);
+            callback(
+              new CustomErrors(
+                "Error while registering the user",
+                StatusCodes.INTERNAL_SERVER_ERROR
+              ),
+              null
+            );
           }
         }
       }

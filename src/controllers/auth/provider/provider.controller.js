@@ -1,5 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import { apiResponseHandler } from "../../../middleware/api/api.response.middleware.js";
+import {
+  ApiResponse,
+  apiResponseHandler,
+} from "../../../middleware/api/api.response.middleware.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { UserModel } from "../../../models/index.js";
 import { generateTokens } from "../../../utils/jwt.js";
@@ -23,12 +26,18 @@ export const handleSocialLogin = apiResponseHandler(async (req, res) => {
       ? process.env?.["CLIENT_SSO_REDIRECT_URL_PROD"]
       : process.env?.["CLIENT_SSO_REDIRECT_URL_DEV"];
 
+  const loggedInUser = await UserModel.findById(user._id).select(
+    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
+  );
+
   return res
     .status(301)
     .cookie("accessToken", accessToken, options) // set the access token in the cookie
     .cookie("refreshToken", refreshToken, options) // set the refresh token in the cookie
     .redirect(
       // redirect user to the frontend with access and refresh token in case user is not using cookies
-      `${client_sso_redirect_url}?accessToken=${accessToken}&refreshToken=${refreshToken}`
+      `${client_sso_redirect_url}?accessToken=${accessToken}&refreshToken=${refreshToken}&user=${encodeURIComponent(
+        JSON.stringify(loggedInUser)
+      )}`
     );
 });

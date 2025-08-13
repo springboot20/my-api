@@ -39,7 +39,11 @@ const handleError = (err, req, res, next) => {
     customError.statusCode = StatusCodes.INTERNAL_SERVER_ERROR; // Default to 500 if invalid status code is detected
   }
 
-  res.status(customError.statusCode).json(customError);
+  res.status(customError.statusCode).json({
+    message: customError.message,
+    statusCode: customError.statusCode,
+    ...(process.env.NODE_ENV === "development" && { stack: customError.stack }),
+  });
 };
 
 export { handleError, notFoundError };
