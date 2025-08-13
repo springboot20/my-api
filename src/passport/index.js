@@ -79,8 +79,8 @@ try {
             email: profile._json.email,
             // There is a check for traditional logic so the password does not matter in this login method
             password: profile._json.sub, // Set user's password as sub (coming from the google)
-            lastname: profile._json.email?.split("@")[0], // as email is unique, this username will be unique
-            firstname: profile._json.email?.split("@")[0], // as email is unique, this username will be unique
+            lastname: profile._json.family_name,
+            firstname: profile._json.given_name,
             role: RoleEnums.USER,
             avatar: {
               url: profile._json.picture,
@@ -94,8 +94,8 @@ try {
 
             await ProfileModel.create({
               userId: createdUser?._id,
-              username: `@${profile._json.email?.split("@")[0]}`,
-              isEmailVerified: true, // email will be already verified
+              username: `@${profile._json.email?.split("@")[0]}` ?? profile._json.name,
+              isEmailVerified: profile._json.email_verified, // email will be already verified
               role: RoleEnums.USER,
             });
           } else {

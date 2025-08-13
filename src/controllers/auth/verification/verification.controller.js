@@ -6,7 +6,7 @@ import { ProfileModel, UserModel } from "../../../models/index.js";
 import { CustomErrors } from "../../../middleware/custom/custom.errors.js";
 import { validateToken } from "../../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
-import { generateTokens } from "../login/login.controller.js";
+import { generateTokens } from "../../../utils/jwt.js"; 
 import bcrypt from "bcrypt";
 import { sendMail } from "../../../service/email.service.js";
 
