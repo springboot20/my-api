@@ -87,9 +87,17 @@ router.get(
   }
 );
 
+const client_sso_redirect_url =
+  process.env?.["NODE_ENV"] === "production"
+    ? process.env?.["CLIENT_SSO_REDIRECT_URL_PROD"]
+    : process.env?.["CLIENT_SSO_REDIRECT_URL_DEV"];
+
 router.get(
   "/google/redirect",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", {
+    failureRedirect: `${client_sso_redirect_url}?error=GOOGLE_REGISTERED`,
+    failureMessage: true,
+  }),
   handleSocialLogin
 );
 
