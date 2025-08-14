@@ -58,9 +58,21 @@ passport.use(
 
         if (user) {
           if (user.loginType !== LoginType.GOOGLE) {
-            return callback(null, false, { reason: "wrong-login-method" });
+            return callback(null, false, {
+              reason: "wrong-login-method",
+              message: `You have previously registered using ${user.loginType
+                ?.toLowerCase()
+                ?.split("_")
+                .join(" ")}. Please use the ${user.loginType
+                ?.toLowerCase()
+                ?.split("_")
+                .join(" ")} login option to access your account.`,
+            });
           }
-          return callback(null, user, { reason: "GOOGLE_REGISTERED" });
+          return callback(null, user, {
+            reason: "GOOGLE_REGISTERED",
+            message: "This Google account is already registered. Please log in instead.",
+          });
         } else {
           const createdUser = await UserModel.create({
             email: profile._json.email,

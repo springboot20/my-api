@@ -105,8 +105,11 @@ router.get(
 
       if (!user) {
         const reason = info?.reason;
+        const message = info?.message;
         return res.redirect(
-          `${client_sso_redirect_url}/error?reason=${encodeURIComponent(reason)}`
+          `${client_sso_redirect_url}/error?reason=${encodeURIComponent(
+            reason
+          )}&message=${encodeURIComponent(message)}`
         );
       }
 
