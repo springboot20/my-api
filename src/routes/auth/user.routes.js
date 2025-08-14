@@ -95,7 +95,7 @@ const client_sso_redirect_url =
 router.get(
   "/google/redirect",
   passport.authenticate("google", {
-    failureRedirect: `${client_sso_redirect_url}?error=GOOGLE_REGISTERED`,
+    failureRedirect: `${client_sso_redirect_url}/error?error=GOOGLE_REGISTERED`,
     failureMessage: true,
   }),
   handleSocialLogin
