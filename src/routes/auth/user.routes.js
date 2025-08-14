@@ -92,12 +92,31 @@ const client_sso_redirect_url =
     ? process.env?.["CLIENT_SSO_REDIRECT_URL_PROD"]
     : process.env?.["CLIENT_SSO_REDIRECT_URL_DEV"];
 
+const successRedirect =
+  process.env?.["NODE_ENV"] === "production"
+    ? process.env?.["BASE_URL_PROD"]
+    : process.env?.["BASE_URL_DEV"];
+
 router.get(
   "/google/redirect",
-  passport.authenticate("google", {
-    failureRedirect: `${client_sso_redirect_url}/error?error=GOOGLE_REGISTERED`,
-    failureMessage: true,
-  }),
+  (req, res, next) => {
+    passport.authenticate("google", (error, user, info) => {
+      if (error) return res.redirect(`${client_sso_redirect_url}/error?reason=server-error`);
+
+      if (!user) {
+        const reason = info?.reason;
+        return res.redirect(
+          `${client_sso_redirect_url}/error?reason=${encodeURIComponent(reason)}`
+        );
+      }
+
+      req.logIn(user, (error) => {
+        if (error) return res.redirect(`${client_sso_redirect_url}/error?reason=server-error`);
+
+        return res.redirect(`${successRedirect}/app/overview`);
+      });
+    })(req, res, next);
+  },
   handleSocialLogin
 );
 
