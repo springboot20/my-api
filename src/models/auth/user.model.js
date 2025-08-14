@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { AvailableRoles, RoleEnums } from "../../constants.js";
+import { AvailableLoginType, AvailableRoles, LoginType, RoleEnums } from "../../constants.js";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const userSchema = new Schema(
@@ -55,13 +55,13 @@ const userSchema = new Schema(
     emailVerificationTokenExpiry: { type: Date },
     loginType: {
       type: String,
-      enum: ["email_and_password", "google"],
-      default: "email_and_password",
+      enum: AvailableLoginType,
+      default: LoginType.EMAIL_PASSWORD,
     },
     isDeleted: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   { timestamps: true }
 );
