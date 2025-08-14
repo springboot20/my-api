@@ -109,7 +109,7 @@ router.get("/google/redirect", (req, res, next) => {
       return res.redirect(
         `${clientRedirectUrl}/error?reason=${encodeURIComponent(
           reason
-        )}&message=${encodedURIComponent(message)}`
+        )}&message=${encodeURIComponent(message)}`
       );
     }
 
