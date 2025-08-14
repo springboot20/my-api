@@ -81,46 +81,41 @@ router.route("/users/current-user").get(verifyJWT, getCurrentUser);
 // SSO routes
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] }),
+  passport.authenticate("google", { scope: ["profile", "email"], prompt: "select_account" }),
   (req, res) => {
     res.send("redirecting...");
   }
 );
 
-const client_sso_redirect_url =
-  process.env?.["NODE_ENV"] === "production"
+function getClientRedirectUrl() {
+  return process.env?.["NODE_ENV"] === "production"
     ? process.env?.["CLIENT_SSO_REDIRECT_URL_PROD"]
     : process.env?.["CLIENT_SSO_REDIRECT_URL_DEV"];
+}
 
-const successRedirect =
-  process.env?.["NODE_ENV"] === "production"
-    ? process.env?.["BASE_URL_PROD"]
-    : process.env?.["BASE_URL_DEV"];
+router.get("/google/redirect", (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, user, info) => {
+    const clientRedirectUrl = getClientRedirectUrl();
 
-router.get(
-  "/google/redirect",
-  (req, res, next) => {
-    passport.authenticate("google", (error, user, info) => {
-      if (error) return res.redirect(`${client_sso_redirect_url}/error?reason=server-error`);
+    if (err) {
+      console.error("Google auth error:", err);
+      return res.redirect(`${clientRedirectUrl}/error?reason=server-error`);
+    }
 
-      if (!user) {
-        const reason = info?.reason;
-        const message = info?.message;
-        return res.redirect(
-          `${client_sso_redirect_url}/error?reason=${encodeURIComponent(
-            reason
-          )}&message=${encodeURIComponent(message)}`
-        );
-      }
+    if (!user) {
+      const reason = info?.reason || "auth-failed";
+      const message = info?.message;
+      
+      return res.redirect(
+        `${clientRedirectUrl}/error?reason=${encodeURIComponent(
+          reason
+        )}&message=${encodedURIComponent(message)}`
+      );
+    }
 
-      req.logIn(user, (error) => {
-        if (error) return res.redirect(`${client_sso_redirect_url}/error?reason=server-error`);
-
-        return res.redirect(`${successRedirect}/app/overview`);
-      });
-    })(req, res, next);
-  },
-  handleSocialLogin
-);
+    req.user = user;
+    return handleSocialLogin(req, res);
+  })(req, res, next);
+});
 
 export default router;

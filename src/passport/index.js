@@ -9,14 +9,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const callback_url =
-  process.env.NODE_ENV === "production"
+const getCallbackUrl = () => {
+  return process.env.NODE_ENV === "production"
     ? process.env.GOOGLE_CALLBACK_URL_PROD
     : process.env.GOOGLE_CALLBACK_URL_DEV;
+};
+
 const clientID = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-console.log(callback_url, clientID, clientSecret);
 
 passport.serializeUser((user, callback) => {
   process.nextTick(() => {
@@ -48,13 +48,23 @@ passport.use(
     {
       clientID,
       clientSecret,
-      callbackURL: callback_url,
+      callbackURL: getCallbackUrl(),
     },
     async (_, __, profile, callback) => {
       try {
         console.log(profile);
 
-        const user = await UserModel.findOne({ email: profile._json.email });
+        const email = profile.emails?.[0]?.value || profile._json.email;
+
+        if (!email) {
+          return callback(null, false, {
+            reason: "no-email",
+            message:
+              "No email provided by Google. Please ensure your Google account has an email address.",
+          });
+        }
+
+        const user = await UserModel.findOne({ email });
 
         if (user) {
           if (user.loginType !== LoginType.GOOGLE) {
@@ -69,10 +79,15 @@ passport.use(
                 .join(" ")} login option to access your account.`,
             });
           }
-          return callback(null, user, {
-            reason: "GOOGLE_REGISTERED",
-            message: "This Google account is already registered. Please log in instead.",
-          });
+
+          // Update user info from Google (in case profile changed)
+          user.avatar = user.avatar || {
+            url: profile.photos?.[0]?.value || profile._json?.picture,
+            localPath: "",
+          };
+          await user.save();
+
+          return callback(null, user);
         } else {
           const createdUser = await UserModel.create({
             email: profile._json.email,
@@ -85,7 +100,7 @@ passport.use(
               url: profile._json.picture,
               localPath: "",
             }, // set avatar as user's google picture
-            loginType: LoginType.GOOGLE.toLowerCase(),
+            loginType: LoginType.GOOGLE,
           });
 
           if (createdUser) {
