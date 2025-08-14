@@ -10,10 +10,10 @@ const getPipelineData = () => {
   return [
     {
       $lookup: {
-        from: "profiles",
+        from: "users",
         localField: "user",
-        foreignField: "user",
-        as: "profile",
+        foreignField: "_id",
+        as: "user",
         pipeline: [
           {
             $project: {
@@ -48,7 +48,7 @@ const getPipelineData = () => {
     // add field for user and account looked up for
     {
       $addFields: {
-        user_profile: { $first: "$profile" },
+        user: { $first: "$user" },
         account: { $first: "$account" },
       },
     },
