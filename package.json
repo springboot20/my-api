@@ -4,6 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
+    "start": "node ./src/server.js",
     "dev": "nodemon ./src/server.js",
     "generate:docs": "node ./src/documentation/swagger.js"
   },
